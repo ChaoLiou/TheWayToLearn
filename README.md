@@ -16,17 +16,31 @@ This project keeps the order. Each segment of the video is explained **linearly*
 
 ## What you get
 
-For each video, a folder under `workspace/<video title>/` containing a self-contained `plan.html` with a fixed five-part structure:
+Each video becomes a folder under `workspace/<video title>/` with a self-contained `plan.html` in a fixed five-part structure. The screenshots below are from a real run on [Message Queues in System Design Interviews w/ Meta Staff Engineer](https://www.youtube.com/watch?v=1ISRd0bS714) (Hello Interview, 27 min, 13 segments).
 
-1. **Background & outline** – what you need to know before watching, and the video's outline
-2. **The author's line of reasoning** – how the conclusion is built step by step
-3. **Segment-by-segment walkthrough** – for every segment: summary with timestamps and screenshots, an AI supplement, terms explained in place (hover for translation, click for a longer note), and any **errata / outdated claims** backed by verbatim transcript quotes
-4. **Summary**
-5. **Three next steps** – three directions, each with suggested YouTube search keywords
+**1. Background & outline** – what to know before watching, the outline, links to neighbouring videos on the atlas, and estimated vs. actual time per stage.
 
-Every `plan.html` embeds three Mermaid diagrams: a reasoning-chain flowchart, a mind map (topic → segments → terms), and a term-relationship graph.
+![Background and outline](docs/img/01-outline.png)
 
-Once you have two or more videos, `workspace/atlas.html` is a **learning atlas**: each video is a waypoint, routes between them are typed (prerequisite / deepens / contrasts / applies / related), and waypoints are grouped into topic regions. Each plan links back to the atlas and to its neighbours.
+**2. The author's line of reasoning** – a prose walkthrough plus a Mermaid reasoning chain: one node per segment, and on each edge the clue that segment hands to the next.
+
+<img src="docs/img/02-reasoning-chain.png" width="340" alt="Reasoning chain">
+
+**3. Segment-by-segment walkthrough** – for every segment: what the author said, timestamped screenshots, the thread picked up from the previous segment, the reasoning step, an AI supplement, terms explained in place (hover for translation, click ⓘ for more), and **errata / outdated claims** backed by a verbatim transcript quote.
+
+![One segment](docs/img/03-segment.png)
+
+**4. Summary** – one paragraph tracing the whole line, an errata table, a mind map (topic → segments → terms), and a term-relationship graph.
+
+![Summary, errata table and mind map](docs/img/04-summary-mindmap.png)
+
+**5. Three next steps** – go deeper, go sideways, go up a level; each with YouTube search keywords.
+
+![Three next steps](docs/img/05-next-steps.png)
+
+**Learning atlas** – with two or more videos, `workspace/atlas.html` shows every video as a waypoint, typed routes between them (prerequisite / deepens / contrasts / applies / related), and topic regions. Each plan links back to the atlas and to its neighbours.
+
+![Learning atlas](docs/img/06-atlas.png)
 
 Intermediate results (`transcript.json`, `segments.json`, `frames/`, `analysis.json`, `timings.json`) are files on disk, so any stage can be rerun without refetching the video.
 

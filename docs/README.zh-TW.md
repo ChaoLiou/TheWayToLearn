@@ -16,17 +16,31 @@
 
 ## 你會得到什麼
 
-每支影片在 `workspace/<影片標題>/` 下有一份獨立的 `plan.html`，固定五個部分：
+每支影片在 `workspace/<影片標題>/` 下有一份獨立的 `plan.html`，固定五個部分。以下截圖來自實際跑過的 [Message Queues in System Design Interviews w/ Meta Staff Engineer](https://www.youtube.com/watch?v=1ISRd0bS714)（Hello Interview，27 分鐘，13 段）。
 
-1. **前情提要 & Outline** —— 看這支影片前需要的背景，以及影片大綱
-2. **YouTuber 的思維推導** —— 作者如何一步步推出結論
-3. **逐段說明** —— 每段包含：附時間戳與截圖的摘要、AI 補充說明、就地解釋的術語（hover 看翻譯，點 icon 看更多），以及有逐字引文佐證的**勘誤／過時**標記
-4. **總結**
-5. **推薦三個下一步** —— 三個方向，各附建議在 YouTube 搜尋的關鍵字
+**1. 前情提要 & Outline** —— 看之前需要先懂的背景、影片大綱、學習地圖上相鄰站的連結，以及各階段預估 vs 實際耗時。
 
-每份 `plan.html` 內嵌三張 Mermaid 圖：推理鏈流程圖、心智圖（主題 → 各段 → 術語）、術語關聯圖。
+![前情提要與 Outline](img/01-outline.png)
 
-有兩支以上影片後，`workspace/atlas.html` 就是**學習地圖（Atlas）**：每支影片是一站（waypoint），站與站之間的 route 有型別（prerequisite / deepens / contrasts / applies / related），並依主題分成 region。每份 plan 頂部都能回到地圖、跳到相鄰站。
+**2. YouTuber 的思維推導** —— 一段文字推導，加上 Mermaid 推理鏈：每段一個節點，邊上寫這段留給下一段的線索。
+
+<img src="img/02-reasoning-chain.png" width="340" alt="推理鏈">
+
+**3. 逐段說明** —— 每段包含：作者說了什麼、附時間戳的截圖、承上（上一段留下的線索）、推理、AI 補充、就地解釋的術語（hover 看翻譯，點 ⓘ 看更多），以及有逐字引文佐證的**勘誤／過時**標記。
+
+![單一段落](img/03-segment.png)
+
+**4. 總結** —— 一段話串起整條線、勘誤總整理表、心智圖（主題 → 各段 → 術語），以及術語關聯圖。
+
+![總結、勘誤表與心智圖](img/04-summary-mindmap.png)
+
+**5. 推薦三個下一步** —— 往下挖深、往旁邊對照、往上應用，各附 YouTube 搜尋關鍵字。
+
+![推薦三個下一步](img/05-next-steps.png)
+
+**學習地圖（Atlas）** —— 有兩支以上影片後，`workspace/atlas.html` 把每支影片畫成一站，站與站之間的 route 有型別（prerequisite / deepens / contrasts / applies / related），並依主題分成 region。每份 plan 頂部都能回到地圖、跳到相鄰站。
+
+![學習地圖](img/06-atlas.png)
 
 中間產物（`transcript.json`、`segments.json`、`frames/`、`analysis.json`、`timings.json`）都落地成檔案，任何階段都能重跑，不必重抓影片。
 
