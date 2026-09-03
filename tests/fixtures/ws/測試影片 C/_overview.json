@@ -1,5 +1,5 @@
 {
-  "topic": "從 A 到 B",
+  "topic": "深入 B",
   "prerequisites": [
     {
       "concept": "K",
@@ -8,7 +8,7 @@
   ],
   "outline": [
     {
-      "video_id": "abcdefghijk",
+      "video_id": "zzzzzzzzzzz",
       "role": "起點",
       "line": "建立 X 與 A/B 的關係"
     }
@@ -39,8 +39,8 @@
     }
   ],
   "takeaways": [
-    "理解 X 的本質",
-    "知道 A 為何失敗",
-    "認識 B 的優勢"
+    "B 的實作細節",
+    "B 的限制",
+    "B 與 C 的比較"
   ]
 }

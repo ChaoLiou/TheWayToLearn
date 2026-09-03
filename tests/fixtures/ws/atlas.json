@@ -1,0 +1,21 @@
+{
+  "regions": [
+    {
+      "id": "ab",
+      "name": "A 與 B",
+      "blurb": "從 A 到 B",
+      "waypoints": [
+        "abcdefghijk",
+        "zzzzzzzzzzz"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "from": "abcdefghijk",
+      "to": "zzzzzzzzzzz",
+      "type": "deepens",
+      "via": "共同術語 B"
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %}</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; }
+  }
+  body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size:1.9rem; } h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:3rem; }
+  h3 { margin-top:2rem; } h4 { margin:1.5rem 0 .3rem; color:var(--accent); }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  table { border-collapse:collapse; font-size:.9rem; } td,th { border:1px solid var(--line); padding:.2rem .6rem; }
+  a { color:var(--accent); }
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  /* mermaid：可點開全視窗 */
+  .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
+  .mm-wrap::after { content:"⤢ 點擊放大"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
+  .mm-wrap:hover { border-color:var(--accent); }
+  .mm-wrap svg { max-width:100%; height:auto; }
+  .mm-wrap svg[width] { max-width:none; height:auto; }   /* flowchart：不縮小，寬了就橫向捲 */
+  .legend { display:flex; flex-wrap:wrap; gap:.3rem .9rem; font-size:.85rem; color:var(--muted); margin:.2rem 0 .5rem; }
+  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px; margin-right:.3rem; vertical-align:-.05em; }
+  .mindmap-node text, .mindmap-node tspan { font-size:15px !important; }
+  .mindmap-node .section-root text { font-size:18px !important; font-weight:700; }
+  /* 圖的文字描述，預設收合 */
+  details.desc { margin:.4rem 0 1.2rem; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+  details.desc summary { cursor:pointer; padding:.4rem .8rem; color:var(--muted); font-size:.9rem; user-select:none; }
+  details.desc[open] summary { border-bottom:1px solid var(--line); }
+  details.desc > div { padding:.6rem 1rem; font-size:.92rem; overflow-x:auto; }
+  details.desc ol, details.desc ul { margin:.2rem 0; padding-left:1.4rem; }
+  /* 全視窗 viewer（mermaid + lightbox 共用） */
+  #viewer { position:fixed; inset:0; background:var(--overlay); z-index:100; display:flex; flex-direction:column; }
+  #viewer[hidden] { display:none; }
+  .v-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .8rem; color:#fff; font-size:.9rem;
+           background:rgba(0,0,0,.4); }
+  .v-bar .cap { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .v-bar button { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.3);
+                  border-radius:4px; padding:.2rem .6rem; cursor:pointer; font-size:.9rem; }
+  .v-bar button:hover { background:rgba(255,255,255,.25); }
+  .v-stage { flex:1; overflow:hidden; position:relative; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .v-stage.drag { cursor:grabbing; }
+  .v-content { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .v-content img { display:block; max-width:none; }
+  .v-content svg { display:block; background:var(--bg); border-radius:6px; }
+  .v-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.5); color:#fff;
+           border:none; font-size:2rem; padding:.4rem .7rem; cursor:pointer; border-radius:6px; }
+  .v-nav.prev { left:.5rem; } .v-nav.next { right:.5rem; }
+  .v-nav[hidden] { display:none; }
+
+{% block css %}{% endblock %}
+</style>
+</head>
+<body>
+{% block body %}{% endblock %}
+
+<!-- 全視窗 viewer -->
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <span class="cap"></span>
+    <button data-act="zoomout" title="縮小 (-)">−</button>
+    <button data-act="zoomin" title="放大 (+)">+</button>
+    <button data-act="fit" title="最佳視角 (F)">Fit</button>
+    <button data-act="reset" title="原始大小 (1)">1:1</button>
+    <button data-act="close" title="關閉 (Esc)">✕</button>
+  </div>
+  <div class="v-stage">
+    <div class="v-content"></div>
+    <button class="v-nav prev" data-act="prev" hidden title="上一張 (←)">‹</button>
+    <button class="v-nav next" data-act="next" hidden title="下一張 (→)">›</button>
+  </div>
+</div>
+
+<script id="tips-data" type="application/json">{{ tips | tojson }}</script>
+
+
+{% block json %}{% endblock %}
+<script type="module">
+
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
+    flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
+  await mermaid.run({ querySelector: ".mermaid" });
+
+  /* mindmap 配色：不吃 mermaid 主題，依 section 上色，線與節點同色，深淺主題都看得清 */
+  const PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"];
+  const css = getComputedStyle(document.documentElement);
+  const fg = css.getPropertyValue("--fg").trim(), bg = css.getPropertyValue("--bg").trim(), accent = css.getPropertyValue("--accent").trim();
+  const sectionOf = (el) => { const m = (el.getAttribute("class") || "").match(/section-(?:edge-)?(-?\d+)/); return m ? +m[1] : null; };
+  const colorOf = (sec) => sec === null || sec < 0 ? accent : PALETTE[sec % PALETTE.length];
+  const setImp = (el, props) => Object.entries(props).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
+  const paintMindmap = (svg) => {
+    // mermaid 主題用 !important 上色，所以這裡也要 !important 才蓋得掉
+    svg.querySelectorAll(".mindmap-edges path, path.edge").forEach((p) => {
+      setImp(p, { stroke: colorOf(sectionOf(p)), "stroke-width": "2.5px", "stroke-opacity": ".75", fill: "none" });
+    });
+    svg.querySelectorAll(".mindmap-node").forEach((n) => {
+      const sec = sectionOf(n), c = colorOf(sec), isRoot = sec === null || sec < 0;
+      n.querySelectorAll("rect, circle, path, polygon").forEach((sh) => {
+        setImp(sh, { fill: isRoot ? c : `color-mix(in srgb, ${c} 28%, ${bg})`, "fill-opacity": "1", stroke: c, "stroke-width": "2px" });
+      });
+      n.querySelectorAll("text, tspan").forEach((t) => setImp(t, { fill: isRoot ? "#fff" : fg }));
+      n.querySelectorAll("foreignObject span, foreignObject div, foreignObject p").forEach((t) => setImp(t, { color: isRoot ? "#fff" : fg }));
+    });
+  };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => { if (svg.querySelector(".mindmap-node")) paintMindmap(svg); });
+
+  /* hover 顯示完整文字：短標籤 → 完整說明（render.py 產生的對照表），用 SVG <title> */
+  const TIPS = JSON.parse(document.getElementById("tips-data").textContent);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const addTitle = (g, text) => { const t = document.createElementNS(SVGNS, "title"); t.textContent = text; g.prepend(t); };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => {
+    svg.querySelectorAll(".node, .mindmap-node, .edgeLabel, .cluster").forEach((g) => {
+      if (g.querySelector(":scope > title")) return;
+      const key = (g.textContent || "").replace(/\s+/g, "");
+      if (TIPS[key]) addTitle(g, TIPS[key]);
+    });
+    // mindmap 的線 = 上下層包含關係
+    svg.querySelectorAll(".mindmap-edges path, path.edge.section-edge-0, path[class*='section-edge-']").forEach((p) => {
+      if (!p.querySelector("title")) addTitle(p, "上層 → 下層：段落包含在此段首次定義的術語");
+    });
+  });
+
+  /* ---------- viewer：pan / zoom / fit，mermaid 與截圖共用 ---------- */
+  const V = {
+    el: document.getElementById("viewer"),
+    stage: document.querySelector("#viewer .v-stage"),
+    content: document.querySelector("#viewer .v-content"),
+    cap: document.querySelector("#viewer .cap"),
+    prev: document.querySelector("#viewer .prev"),
+    next: document.querySelector("#viewer .next"),
+    items: [], idx: 0, s: 1, tx: 0, ty: 0, w: 0, h: 0,
+  };
+  const apply = () => V.content.style.transform = `translate(${V.tx}px,${V.ty}px) scale(${V.s})`;
+  const fit = () => {
+    const sw = V.stage.clientWidth, sh = V.stage.clientHeight;
+    V.s = Math.min(sw / V.w, sh / V.h) * 0.95;
+    V.tx = (sw - V.w * V.s) / 2; V.ty = (sh - V.h * V.s) / 2; apply();
+  };
+  const reset = () => { V.s = 1; V.tx = (V.stage.clientWidth - V.w) / 2; V.ty = (V.stage.clientHeight - V.h) / 2; apply(); };
+  const zoomAt = (f, cx, cy) => {
+    const ns = Math.min(20, Math.max(0.05, V.s * f));
+    V.tx = cx - (cx - V.tx) * (ns / V.s); V.ty = cy - (cy - V.ty) * (ns / V.s); V.s = ns; apply();
+  };
+  const show = (i) => {
+    V.idx = (i + V.items.length) % V.items.length;
+    const it = V.items[V.idx];
+    V.content.replaceChildren();
+    V.cap.textContent = (V.items.length > 1 ? `${V.idx + 1}/${V.items.length} · ` : "") + it.caption;
+    V.prev.hidden = V.next.hidden = V.items.length < 2;
+    if (it.type === "svg") {
+      const svg = it.node.cloneNode(true);
+      const vb = svg.viewBox.baseVal;
+      V.w = vb.width || svg.width.baseVal.value || 800; V.h = vb.height || svg.height.baseVal.value || 600;
+      svg.removeAttribute("style"); svg.setAttribute("width", V.w); svg.setAttribute("height", V.h);
+      V.content.appendChild(svg); fit();
+    } else {
+      const img = new Image();
+      img.onload = () => { V.w = img.naturalWidth; V.h = img.naturalHeight; V.content.appendChild(img); fit(); };
+      img.src = it.src;
+    }
+  };
+  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; show(i); };
+  const close = () => { V.el.hidden = true; V.content.replaceChildren(); };
+
+  V.el.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act) return;
+    ({ zoomin: () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       zoomout: () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       fit, reset, close, prev: () => show(V.idx - 1), next: () => show(V.idx + 1) })[act]();
+  });
+  V.stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = V.stage.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  let drag = null;
+  V.stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    drag = { x: e.clientX - V.tx, y: e.clientY - V.ty }; V.stage.classList.add("drag"); V.stage.setPointerCapture(e.pointerId);
+  });
+  V.stage.addEventListener("pointermove", (e) => { if (drag) { V.tx = e.clientX - drag.x; V.ty = e.clientY - drag.y; apply(); } });
+  V.stage.addEventListener("pointerup", () => { drag = null; V.stage.classList.remove("drag"); });
+  V.stage.addEventListener("dblclick", (e) => { const r = V.stage.getBoundingClientRect(); zoomAt(1.6, e.clientX - r.left, e.clientY - r.top); });
+  addEventListener("keydown", (e) => {
+    if (V.el.hidden) return;
+    const k = { Escape: close, ArrowLeft: () => show(V.idx - 1), ArrowRight: () => show(V.idx + 1),
+                "+": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2), "=": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+                "-": () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2), f: fit, F: fit, "1": reset, "0": fit }[e.key];
+    if (k) { e.preventDefault(); k(); }
+  });
+  addEventListener("resize", () => { if (!V.el.hidden) fit(); });
+
+  /* mermaid → viewer */
+  document.querySelectorAll(".mm-wrap").forEach((w) => {
+    w.addEventListener("click", () => {
+      const svg = w.querySelector("svg"); if (!svg) return;
+      open([{ type: "svg", node: svg, caption: w.dataset.cap || "" }]);
+    });
+  });
+
+{% block js %}{% endblock %}
+</script>
+</body>
+</html>

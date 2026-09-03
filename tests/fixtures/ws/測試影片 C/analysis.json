@@ -1,0 +1,73 @@
+{
+  "video_id": "zzzzzzzzzzz",
+  "vision_used": false,
+  "author_reasoning": "從問題 X 出發，先試 A，發現限制，導向 B。",
+  "segments": [
+    {
+      "id": 1,
+      "title": "問題定義",
+      "builds_on": "前情提要中的基礎概念 K。",
+      "reasoning": "因為有 K，作者先把問題 X 說清楚。",
+      "explanation": "X 的本質是……",
+      "leads_to": "X 該怎麼解？",
+      "terms": [
+        {
+          "term": "X",
+          "definition": "待解問題",
+          "related": [
+            {
+              "term": "A",
+              "rel": "第一個解法"
+            }
+          ],
+          "zh": "X（中文）",
+          "more": "更多說明"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "第一個嘗試",
+      "builds_on": "上一段留下「X 該怎麼解」。",
+      "reasoning": "因為要解 X，作者先試最直覺的 A。",
+      "explanation": "",
+      "leads_to": "A 在大規模時會失敗。",
+      "terms": [
+        {
+          "term": "A",
+          "definition": "直覺方法",
+          "related": [
+            "B"
+          ],
+          "zh": "A（中文）",
+          "more": "更多說明"
+        }
+      ],
+      "issues": [
+        {
+          "level": "wrong",
+          "t": 10,
+          "quote": "方法 A 永遠不會失敗",
+          "note": "A 在大規模時會失敗，作者自己下一段也承認。",
+          "evidence": "本片第 3 段"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "結論",
+      "builds_on": "上一段指出 A 在大規模失敗。",
+      "reasoning": "因為 A 失敗，所以需要 B。",
+      "explanation": "B 相對 A 的差異……",
+      "leads_to": "總結收束",
+      "terms": [
+        {
+          "term": "B",
+          "definition": "改良方法",
+          "zh": "B（中文）",
+          "more": "更多說明"
+        }
+      ]
+    }
+  ]
+}

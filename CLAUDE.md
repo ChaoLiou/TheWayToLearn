@@ -13,7 +13,9 @@ uv run scripts/estimate.py <url> ...      # 估時間成本，不下載
 uv run scripts/fetch.py <url>             # 抓字幕 + meta
 uv run scripts/screenshot.py <id>         # 下載 + ffmpeg 抽幀（讀 segments.json）
 uv run scripts/validate.py <segments|analysis|overview> <file.json>
-uv run scripts/render.py                  # 組 workspace/plan.html
+uv run scripts/render.py                  # 每支影片各自產 plan.html
+uv run scripts/atlas.py --status          # 學習地圖：列新站與共同術語
+uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html
 ```
 測試不碰網路：`tests/fixtures/ws/` 是一組完整的 workspace 樣本，改 schema / template / validator 後跑 pytest 就能驗。
 
@@ -65,19 +67,24 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 `input.yaml` 每個 URL 有 `vision: true | false | auto`（**預設 true**），決定 analyze 階段 agent 是否逐張讀截圖。`auto` 由 agent 在 segment 階段判斷並寫回 `segments.json`。
 
+## 學習地圖（Atlas）
+
+workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 更新 atlas.json。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
+
 ## 改規則不改程式
 
 行為都外置，改對應檔案即可：
 - 切段 / 截圖挑選 / vision auto 判斷 → `rules/segment.md`
 - 線性推進與 AI 說明風格 → `rules/narrative.md`（硬規則由 `scripts/validate.py check_analysis` 執行，新增硬規則要同步加檢查 + 測試）
-- 跨影片彙整、三個下一步 → `rules/overview.md`
+- 彙整、takeaways、三個下一步 → `rules/overview.md`
+- 學習地圖的 route / region 判斷 → `rules/atlas.md`
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
 - agent 輸出格式 → `schemas/*.json`
 
 ## Skill 拆分
 
-`.claude/skills/` 下：`/learn` 總指揮 + 六個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`。
+`.claude/skills/` 下：`/learn` 總指揮 + 七個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
 共用慣例：`/learn-<stage> <video_id> [--force] [--vision ...]`；預設不覆蓋既有輸出。`/learn` 另有 `--from <stage>`、`--dry-run`。
 

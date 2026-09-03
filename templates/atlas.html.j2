@@ -1,0 +1,85 @@
+{% extends "_base.html.j2" %}
+{% block title %}學習地圖 · Atlas{% endblock %}
+{% block css %}
+  main { max-width: 1100px; }
+  .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
+  .region { margin:2rem 0; padding:1rem 1.2rem; border:2px dashed var(--line); border-radius:12px; }
+  .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
+  .region h3 i { display:inline-block; width:.9rem; height:.9rem; border-radius:3px; }
+  .region .blurb { color:var(--muted); margin:0 0 .8rem; }
+  .wps { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1rem; }
+  .wp { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:8px; padding:.9rem 1.1rem; display:flex; flex-direction:column; gap:.4rem; }
+  .wp h4 { margin:0; font-size:1.05rem; } .wp h4 a { text-decoration:none; }
+  .wp .meta { color:var(--muted); font-size:.85rem; }
+  .wp ul { margin:.2rem 0; padding-left:1.2rem; font-size:.93rem; }
+  .wp .terms { font-size:.8rem; color:var(--muted); }
+  .wp .terms code { font-size:.78rem; }
+  .routes { font-size:.88rem; margin-top:.2rem; }
+  .routes .rt { display:inline-block; font-size:.72rem; font-weight:700; padding:0 .45rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
+  .routes .via { color:var(--muted); }
+  .wp .open { margin-top:auto; padding-top:.4rem; }
+  .wp .open a { font-weight:600; }
+  .mm-wrap .node { cursor:pointer; }
+  .route-legend { font-size:.85rem; color:var(--muted); margin:.3rem 0 .8rem; }
+  .route-legend span { margin-right:1rem; }
+{% endblock %}
+{% block body %}
+<main>
+<h1>🗺 學習地圖</h1>
+<p class="stats"><span>{{ waypoints|length }} 站</span><span>{{ regions|length }} 個主題區</span><span>{{ routes|length }} 條 route</span><span>更新於 {{ generated }}</span></p>
+
+{% if waypoints|length >= 2 %}
+<h2>地圖</h2>
+<p class="route-legend">箭頭：<span><b>先看</b> A → B：先看 A 再看 B</span><span><b>深入</b> B 深入 A 的主題</span><span><b>對照</b> 兩者對照</span><span><b>應用</b> B 把 A 用到場景</span><span><b>相關</b> 無方向</span>· 點節點開啟該站，hover 看 takeaways</p>
+<div class="mm-wrap" data-cap="學習地圖"><pre class="mermaid">
+{{ map_mermaid }}
+</pre></div>
+{% endif %}
+
+<h2>各站</h2>
+{% macro card(w, color) %}
+<div class="wp" style="border-left-color:{{ color }}">
+  <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
+  <div class="meta">{{ w.channel }} · {{ w.duration|dur }} · {{ w.n_segments }} 段 · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
+  <div><b>{{ w.topic }}</b></div>
+  <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
+  {% if w.terms %}<div class="terms">術語：{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}…共 {{ w.terms|length }} 個{% endif %}</div>{% endif %}
+  {% if w.routes_in or w.routes_out %}
+  <div class="routes">
+    {% for e in w.routes_in %}<div><span class="rt">{{ route_zh[e.type] }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+    {% for e in w.routes_out %}<div><span class="rt">{{ route_zh[e.type] }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+  <div class="open"><a href="{{ w.href }}">開啟學習規劃 →</a></div>
+</div>
+{% endmacro %}
+{% for r in regions %}
+<section class="region" style="border-color:{{ r.color }}">
+  <h3><i style="background:{{ r.color }}"></i>{{ r.name }}</h3>
+  <p class="blurb">{{ r.blurb }}</p>
+  <div class="wps">{% for w in r.members %}{{ card(w, r.color) }}{% endfor %}</div>
+</section>
+{% endfor %}
+{% if unplaced %}
+<section class="region">
+  <h3><i style="background:var(--muted)"></i>未分區</h3>
+  <p class="blurb">還沒歸入主題區的站。{% if waypoints|length >= 2 %}跑 <code>/learn-atlas</code> 決定它們的 route 與 region。{% endif %}</p>
+  <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)') }}{% endfor %}</div>
+</section>
+{% endif %}
+</main>
+{% endblock %}
+{% block json %}
+<script id="links-data" type="application/json">{{ links | tojson }}</script>
+{% endblock %}
+{% block js %}
+  /* 地圖節點 → 該站 plan.html */
+  const LINKS = JSON.parse(document.getElementById("links-data").textContent);
+  document.querySelectorAll(".mermaid svg .node").forEach((g) => {
+    const key = (g.textContent || "").replace(/\s+/g, "");
+    const href = LINKS[key];
+    if (!href) return;
+    g.style.cursor = "pointer";
+    g.addEventListener("click", (e) => { e.stopPropagation(); location.href = href; });
+  });
+{% endblock %}

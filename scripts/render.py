@@ -194,6 +194,32 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
     return v
 
 
+ROUTE_ZH = {"prerequisite": "先看", "deepens": "深入", "contrasts": "對照", "applies": "應用", "related": "相關"}
+
+
+def atlas_context(ws: Path, vid: str, out_dir: Path) -> dict | None:
+    """這支影片在學習地圖上的位置：region、進出 route（含對方 plan.html 的相對路徑）。"""
+    p = ws / "atlas.json"
+    if not p.exists():
+        return None
+    atlas = load_json(p)
+    titles = {}
+    for d in ws.iterdir():
+        if d.is_dir() and not d.name.startswith((".", "_")) and (d / "meta.json").exists():
+            m = load_json(d / "meta.json")
+            titles[m["video_id"]] = {"title": m["title"], "href": f"../{quote(d.name)}/plan.html"}
+    region = next((r for r in atlas["regions"] if vid in r["waypoints"]), None)
+    links = []
+    for e in atlas["routes"]:
+        if vid == e["from"] and e["to"] in titles:
+            links.append({"dir": "→", "type": ROUTE_ZH[e["type"]], "via": e["via"], **titles[e["to"]]})
+        elif vid == e["to"] and e["from"] in titles:
+            links.append({"dir": "←", "type": ROUTE_ZH[e["type"]], "via": e["via"], **titles[e["from"]]})
+    if region is None and not links:
+        return {"atlas_href": "../atlas.html", "region": None, "links": []}
+    return {"atlas_href": "../atlas.html", "region": region, "links": links}
+
+
 def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     overview = load_json(overview_path)
     order = [o["video_id"] for o in overview["outline"]]
@@ -214,6 +240,8 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     if not videos:
         raise SystemExit("沒有任何可 render 的影片")
     tg, edges, legend = term_graph(videos, tips)
+    ws = out.parent.parent if out.parent != overview_path.parent.parent else out.parent
+    atlas = atlas_context(ws, videos[0]["id"], out.parent) if len(videos) == 1 else None
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
     env.filters["ts"] = fmt_ts
     env.filters["dur"] = fmt_dur
@@ -226,6 +254,7 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
         term_edges=edges,
         term_legend=legend,
         tips=tips,
+        atlas=atlas,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
     out.write_text(html, encoding="utf-8")

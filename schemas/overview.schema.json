@@ -2,17 +2,98 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "_overview.json — 跨影片彙整，/learn-render 前由 agent 產生",
   "type": "object",
-  "required": ["topic", "prerequisites", "outline", "summary", "next_steps"],
+  "required": [
+    "topic",
+    "prerequisites",
+    "outline",
+    "summary",
+    "next_steps",
+    "takeaways"
+  ],
   "properties": {
-    "topic": {"type": "string"},
-    "prerequisites": {"type": "array", "items": {"type": "object", "required": ["concept", "note"],
-      "properties": {"concept": {"type": "string"}, "note": {"type": "string"}}}},
-    "outline": {"type": "array", "items": {"type": "object", "required": ["video_id", "role", "line"],
-      "properties": {"video_id": {"type": "string"}, "role": {"type": "string"}, "line": {"type": "string"}}}},
-    "summary": {"type": "string"},
-    "next_steps": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "object",
-      "required": ["direction", "why", "search_keywords"],
-      "properties": {"direction": {"type": "string"}, "why": {"type": "string"},
-        "search_keywords": {"type": "array", "minItems": 1, "items": {"type": "string"}}}}}
+    "topic": {
+      "type": "string"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "concept",
+          "note"
+        ],
+        "properties": {
+          "concept": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "outline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "video_id",
+          "role",
+          "line"
+        ],
+        "properties": {
+          "video_id": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "string"
+    },
+    "next_steps": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "direction",
+          "why",
+          "search_keywords"
+        ],
+        "properties": {
+          "direction": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "search_keywords": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "takeaways": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "description": "看完這支影片會學到什麼，3–5 條、每條一句；atlas 的節點卡片用"
+    }
   }
 }
