@@ -63,7 +63,7 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 ## vision 模式（每支影片各自設定）
 
-`input.yaml` 每個 URL 有 `vision: true | false | auto`，決定 analyze 階段 agent 是否逐張讀截圖。`auto` 由 agent 在 segment 階段判斷並寫回 `segments.json`。
+`input.yaml` 每個 URL 有 `vision: true | false | auto`（**預設 true**），決定 analyze 階段 agent 是否逐張讀截圖。`auto` 由 agent 在 segment 階段判斷並寫回 `segments.json`。
 
 ## 改規則不改程式
 
@@ -85,7 +85,7 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 設計原則：
 - 每個階段的輸入/輸出落地成檔案（transcript JSON、segments JSON、截圖目錄），讓中間結果可重用、失敗可從中斷點重跑，不必重抓影片。
-- 多個 URL 時，每支影片獨立跑完整 pipeline，再合併成一份規劃；「前情提要」與「下一步推薦」是跨影片彙整的。
+- 每支影片獨立資料夾、獨立 `plan.html` 與 `_overview.json`（預設不合併）；使用者明確要求時才用 `render.py --combined` 合併多支。
 - skill 定義（給 agent 的指令）與程式碼分開放：skill 負責「何時、如何呼叫」，程式負責確定性的抓取/切段/截圖；LLM 判斷（分段語意、術語、說明）留在 analyze 階段。
 
 ## 常用指令

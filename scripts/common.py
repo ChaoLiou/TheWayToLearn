@@ -87,7 +87,7 @@ def load_input(p: Path) -> dict:
     data.setdefault("out", str(DEFAULT_WORKSPACE))
     for v in data["videos"]:
         v["id"] = video_id(v["url"])
-        v.setdefault("vision", "auto")
+        v.setdefault("vision", True)
     return data
 
 

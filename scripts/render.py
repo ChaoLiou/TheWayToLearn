@@ -16,7 +16,15 @@ from urllib.parse import quote
 from jinja2 import Environment, FileSystemLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DEFAULT_WORKSPACE, TEMPLATES, find_video_dir, fmt_dur, fmt_ts, load_json
+from common import (
+    DEFAULT_WORKSPACE,
+    TEMPLATES,
+    find_video_dir,
+    fmt_dur,
+    fmt_ts,
+    load_json,
+    video_id,
+)
 
 PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"]
 
@@ -152,7 +160,7 @@ def term_graph(videos: list[dict], tips: Tips) -> tuple[str, list[dict], list[di
     return "\n".join(lines), edges, legend
 
 
-def load_video(vdir: Path, tips: Tips) -> dict | None:
+def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
     need = ["meta.json", "segments.json", "analysis.json"]
     if not all((vdir / n).exists() for n in need):
         return None
@@ -168,7 +176,7 @@ def load_video(vdir: Path, tips: Tips) -> dict | None:
         s["summary"] = src.get("summary", "")
         s["shots"] = [sh for sh in src.get("shots", []) if sh.get("file")]
         for sh in s["shots"]:
-            sh["href"] = f"{quote(vdir.name)}/{quote(sh['file'])}"
+            sh["href"] = href_prefix + quote(sh["file"])
             sh["seg_title"] = s["title"]
     v["all_shots"] = [sh for s in v["analysis"]["segments"] for sh in s["shots"]]
     for i, sh in enumerate(v["all_shots"]):
@@ -181,32 +189,25 @@ def load_video(vdir: Path, tips: Tips) -> dict | None:
     return v
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
-    ap.add_argument("--out", type=Path)
-    ap.add_argument("--ids", help="只包含這些 id（逗號分隔），預設全部")
-    args = ap.parse_args(argv)
-
-    ws = args.workspace
-    ov_path = ws / "_overview.json"
-    if not ov_path.exists():
-        raise SystemExit(f"缺 {ov_path}：先由 agent 依 rules/overview.md 產生")
-    overview = load_json(ov_path)
+def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
+    overview = load_json(overview_path)
     order = [o["video_id"] for o in overview["outline"]]
-    if args.ids:
-        order = [i for i in args.ids.split(",") if i]
+    by_id = {}
+    for d in video_dirs:
+        if (d / "meta.json").exists():
+            by_id[load_json(d / "meta.json")["video_id"]] = d
     videos, tips = [], Tips()
     for vid in order:
-        vdir = find_video_dir(vid, ws)
-        v = load_video(vdir, tips) if vdir else None
+        vdir = by_id.get(vid)
+        # 截圖相對路徑：plan.html 跟 frames 同資料夾就不用前綴
+        prefix = "" if vdir and vdir == out.parent else (f"{quote(vdir.name)}/" if vdir else "")
+        v = load_video(vdir, tips, prefix) if vdir else None
         if v is None:
             print(f"略過 {vid}：缺 meta/segments/analysis")
             continue
         videos.append(v)
     if not videos:
         raise SystemExit("沒有任何可 render 的影片")
-
     tg, edges, legend = term_graph(videos, tips)
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
     env.filters["ts"] = fmt_ts
@@ -222,9 +223,41 @@ def main(argv=None):
         tips=tips,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
-    out = args.out or ws / "plan.html"
     out.write_text(html, encoding="utf-8")
     print(f"OK → {out}")
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("ids", nargs="*", help="video id 或 URL；不給 = workspace 下全部")
+    ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--combined", action="store_true", help="多支合併成一份 plan.html")
+    ap.add_argument("--out", type=Path, help="--combined 時的輸出路徑，預設 workspace/plan.html")
+    args = ap.parse_args(argv)
+
+    ws = args.workspace
+    if args.ids:
+        dirs = []
+        for x in args.ids:
+            d = find_video_dir(video_id(x), ws)
+            if not d:
+                raise SystemExit(f"workspace 裡沒有 {x}")
+            dirs.append(d)
+    else:
+        dirs = sorted(d for d in ws.iterdir() if d.is_dir() and not d.name.startswith((".", "_")) and (d / "meta.json").exists())
+
+    if args.combined:
+        ov = ws / "_overview.json"
+        if not ov.exists():
+            raise SystemExit(f"缺 {ov}：先由 agent 依 rules/overview.md 產生")
+        render(ov, dirs, args.out or ws / "plan.html")
+        return
+    for d in dirs:
+        ov = d / "_overview.json"
+        if not ov.exists():
+            print(f"略過 {d.name}：缺 _overview.json（agent 依 rules/overview.md 產生）")
+            continue
+        render(ov, [d], d / "plan.html")
 
 
 if __name__ == "__main__":

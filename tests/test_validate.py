@@ -9,7 +9,7 @@ from validate import check_analysis, check_schema, check_segments
 FX = Path(__file__).parent / "fixtures/ws"
 ANALYSIS = json.loads((FX / "測試影片 A: B/analysis.json").read_text())
 SEGMENTS = json.loads((FX / "測試影片 A: B/segments.json").read_text())
-OVERVIEW = json.loads((FX / "_overview.json").read_text())
+OVERVIEW = json.loads((FX / "測試影片 A: B/_overview.json").read_text())
 
 
 def test_fixtures_pass():

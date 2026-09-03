@@ -132,7 +132,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("urls", nargs="*")
     ap.add_argument("--input", type=Path)
-    ap.add_argument("--vision", default="auto", choices=["true", "false", "auto"])
+    ap.add_argument("--vision", default="true", choices=["true", "false", "auto"])
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--json", action="store_true", help="只輸出 JSON")
     args = ap.parse_args(argv)

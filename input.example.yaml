@@ -3,6 +3,6 @@ lang: [zh-TW, zh, en]   # 字幕語言優先序
 out: workspace           # 每支影片一個子目錄 workspace/<video_id>/
 videos:
   - url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-    vision: auto         # true | false | auto
+    vision: true         # true | false | auto（預設 true）
   - url: https://youtu.be/xxxxxxxxxxx
     vision: false
