@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ overview.topic }} — 學習規劃</title>
 <style>
-  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85); }
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; }
   @media (prefers-color-scheme: dark) {
-    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9); }
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; }
   }
   body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg);
          font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
@@ -23,6 +25,19 @@
          border-radius:999px; margin-right:.4rem; vertical-align:.1em; white-space:nowrap; }
   .tag.r { background:var(--accent); color:#fff; }
   .tag.ai { background:var(--card); color:var(--accent); border:1px solid var(--accent); }
+  /* 勘誤／過時 */
+  .issues { margin:.8rem 0; }
+  .issue { border-left:4px solid; border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .issue.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+  .issue.debatable { border-color:var(--debat); background:var(--debat-bg); }
+  .issue .lvl { display:inline-block; font-size:.72rem; font-weight:700; padding:.05rem .5rem; border-radius:999px; color:#fff; margin-right:.4rem; }
+  .issue.wrong .lvl { background:var(--wrong); } .issue.debatable .lvl { background:var(--debat); }
+  .issue blockquote { margin:.3rem 0; padding-left:.6rem; border-left:2px solid var(--line); color:var(--muted); font-style:italic; }
+  .issue .ev { font-size:.85rem; color:var(--muted); }
+  table.issues-sum td { vertical-align:top; } table.issues-sum td.q { color:var(--muted); font-style:italic; max-width:24rem; }
+  table.issues-sum tr.wrong td:first-child { border-left:4px solid var(--wrong); }
+  table.issues-sum tr.debatable td:first-child { border-left:4px solid var(--debat); }
+  .legend-issues span { margin-right:1rem; } .legend-issues i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px; margin-right:.3rem; vertical-align:-.05em; }
   .frames { display:flex; flex-wrap:wrap; gap:.6rem; }
   .frames figure { margin:0; max-width:280px; }
   .frames img { width:100%; border:1px solid var(--line); border-radius:4px; cursor:zoom-in; }
@@ -167,6 +182,19 @@
     {% endfor %}
   </dl>
   {% endif %}
+  {% if s.issues %}
+  <div class="issues">
+    {% for iss in s.issues %}
+    <div class="issue {{ iss.level }}">
+      <span class="lvl">{{ '確定錯誤／已過時' if iss.level == 'wrong' else '見仁見智' }}</span>
+      <a href="{{ v.meta.url }}&t={{ iss.t|int }}s" target="_blank" rel="noopener" class="muted">{{ iss.t|ts }}</a>
+      <blockquote>「{{ iss.quote }}」</blockquote>
+      <div>{{ iss.note }}</div>
+      {% if iss.evidence %}<div class="ev">依據：{{ iss.evidence }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
   <div class="bridge"><b>留給下一段</b> {{ s.leads_to }}</div>
 </section>
 {% endfor %}
@@ -175,6 +203,18 @@
 <!-- 4 -->
 <h2>4. 總結</h2>
 <p>{{ overview.summary }}</p>
+{% set all_issues = videos | map(attribute='issues') | sum(start=[]) %}
+{% if all_issues %}
+<h4>勘誤總整理</h4>
+<p class="legend-issues muted"><span><i style="background:var(--wrong)"></i>確定錯誤／已過時</span><span><i style="background:var(--debat)"></i>見仁見智（取決於版本或情境）</span></p>
+<div style="overflow-x:auto"><table class="issues-sum">
+<tr><th>段落</th><th>原話（transcript 逐字）</th><th>說明</th></tr>
+{% for v in videos %}{% for iss in v.issues %}
+<tr class="{{ iss.level }}"><td><a href="#{{ v.id }}-s{{ iss.seg_id }}">{{ iss.seg_id }}. {{ iss.seg_title }}</a><br><span class="muted">{{ iss.t|ts }}</span></td>
+<td class="q">「{{ iss.quote }}」</td><td>{{ iss.note }}{% if iss.evidence %}<br><span class="ev">依據：{{ iss.evidence }}</span>{% endif %}</td></tr>
+{% endfor %}{% endfor %}
+</table></div>
+{% endif %}
 <div class="mm-wrap" data-cap="Mindmap"><pre class="mermaid">
 {{ mindmap }}
 </pre></div>

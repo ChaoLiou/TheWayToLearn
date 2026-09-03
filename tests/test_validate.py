@@ -48,3 +48,17 @@ def test_shot_outside_segment():
     s = copy.deepcopy(SEGMENTS)
     s["segments"][0]["shots"][0]["t"] = 999
     assert any("不在段落時間內" in e for e in check_segments(s))
+
+
+def test_issue_quote_must_be_verbatim():
+    from validate import validate
+    assert validate("analysis", FX / "測試影片 A: B/analysis.json") == []
+    a = json.loads((FX / "測試影片 A: B/analysis.json").read_text())
+    a["segments"][1]["issues"][0]["quote"] = "AI 自己轉譯的句子"
+    tmp = FX / "測試影片 A: B/_tmp_analysis.json"
+    tmp.write_text(json.dumps(a, ensure_ascii=False))
+    try:
+        errs = validate("analysis", tmp)
+    finally:
+        tmp.unlink()
+    assert any("逐字引文" in e for e in errs)

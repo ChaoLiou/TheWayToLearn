@@ -181,6 +181,11 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
     v["all_shots"] = [sh for s in v["analysis"]["segments"] for sh in s["shots"]]
     for i, sh in enumerate(v["all_shots"]):
         sh["idx"] = i
+    v["issues"] = [
+        dict(iss, seg_id=s["id"], seg_title=s["title"])
+        for s in v["analysis"]["segments"] for iss in s.get("issues", [])
+    ]
+    v["issues"].sort(key=lambda x: (x["level"] != "wrong", x["seg_id"], x["t"]))
     v["chain_mermaid"] = reasoning_chain(v["id"].replace("-", "_"), v["analysis"], tips)
     # 圖的文字描述（預設收合）
     v["chain_desc"] = [

@@ -40,11 +40,16 @@ def check_segments(data) -> list[str]:
     return errs
 
 
-def check_analysis(data) -> list[str]:
-    """rules/narrative.md 硬規則 1–4。"""
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def check_analysis(data, transcript: dict | None = None) -> list[str]:
+    """rules/narrative.md 硬規則 1–4、6。transcript 給了才比對 issues 的逐字引文。"""
     errs = []
     segs = data["segments"]
     seen_terms: dict[str, int] = {}
+    full = _norm(" ".join(e["text"] for e in transcript["events"])) if transcript else None
     for i, s in enumerate(segs, 1):
         if s["id"] != i:
             errs.append(f"segment {s['id']}: id 必須從 1 連續遞增")
@@ -60,6 +65,10 @@ def check_analysis(data) -> list[str]:
                 errs.append(f"segment {i}: 術語「{t['term']}」已在第 {seen_terms[key]} 段定義過")
             else:
                 seen_terms[key] = i
+        # 規則 6：勘誤引文必須逐字來自 transcript
+        for j, iss in enumerate(s.get("issues", []), 1):
+            if full is not None and _norm(iss["quote"]) not in full:
+                errs.append(f"segment {i}.issues[{j}]: quote 不是 transcript 逐字引文：「{iss['quote'][:40]}…」")
     return errs
 
 
@@ -73,9 +82,12 @@ CHECKS = {"segments": check_segments, "analysis": check_analysis, "overview": ch
 def validate(kind: str, path: Path) -> list[str]:
     data = load_json(path)
     errs = check_schema(kind, data)
-    if not errs:
-        errs += CHECKS[kind](data)
-    return errs
+    if errs:
+        return errs
+    if kind == "analysis":
+        tp = path.parent / "transcript.json"
+        return check_analysis(data, load_json(tp) if tp.exists() else None)
+    return CHECKS[kind](data)
 
 
 def main(argv=None):

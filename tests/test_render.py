@@ -56,3 +56,13 @@ def test_combined_render_uses_dir_prefix(tmp_path):
     render.main(["--workspace", str(ws), "--combined"])
     html = (ws / "plan.html").read_text(encoding="utf-8")
     assert 'src="%E6%B8%AC%E8%A9%A6%E5%BD%B1%E7%89%87%20A%3A%20B/frames/s01_30.jpg"' in html
+
+
+def test_issues_rendered_per_segment_and_summary(tmp_path):
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert html.count('class="issue wrong"') == 1
+    assert "勘誤總整理" in html and '<tr class="wrong">' in html
+    assert "方法 A 永遠不會失敗" in html

@@ -17,7 +17,7 @@ description: 由 agent 逐段寫「承上／推理／AI 補充／術語／留給
    - 第 N 段的 segment summary + 該時間範圍的 transcript
    - vision 為 true 時，該段的 frames（用 Read 看圖）
    不要一次把整份 transcript 讀進來寫全部段落。
-3. 每段填 `builds_on`（回應上一段 leads_to）、`reasoning`、`explanation`、`terms`、`leads_to`。每個 term：`term` 原文、`zh` 中文、`definition` 一句話、`more` 更多說明、`related` 寫成 `[{"term": "B", "rel": "關係 ≤12 字"}]`（見 rules/narrative.md 第 5 條）。
+3. 每段填 `builds_on`（若這段有明顯錯誤或過時內容，另填 `issues`：逐字引文 + level + note，見 rules/narrative.md 第 6 條）（回應上一段 leads_to）、`reasoning`、`explanation`、`terms`、`leads_to`。每個 term：`term` 原文、`zh` 中文、`definition` 一句話、`more` 更多說明、`related` 寫成 `[{"term": "B", "rel": "關係 ≤12 字"}]`（見 rules/narrative.md 第 5 條）。
 4. `vision_used` 填實際有沒有看圖；`frames` 填有看的圖路徑。
 5. 寫檔後跑 `uv run scripts/validate.py analysis workspace/<影片標題>/analysis.json`，不過就修。
 6. 把耗時寫進 `timings.json` 的 `analyze`。

@@ -116,6 +116,46 @@
             "items": {
               "type": "string"
             }
+          },
+          "issues": {
+            "type": "array",
+            "description": "這段作者說錯或已過時的內容；沒有就省略或空陣列",
+            "items": {
+              "type": "object",
+              "required": [
+                "level",
+                "quote",
+                "t",
+                "note"
+              ],
+              "properties": {
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "wrong",
+                    "debatable"
+                  ],
+                  "description": "wrong = 確定錯誤或已不存在（紅）；debatable = 可能對可能錯、見仁見智（橘）"
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 8,
+                  "description": "transcript 逐字引文（validator 會比對 transcript.json）"
+                },
+                "t": {
+                  "type": "number",
+                  "description": "引文在影片中的秒數"
+                },
+                "note": {
+                  "type": "string",
+                  "description": "哪裡錯／過時，現況是什麼"
+                },
+                "evidence": {
+                  "type": "string",
+                  "description": "依據（版本號、文件、年份）"
+                }
+              }
+            }
           }
         }
       }
