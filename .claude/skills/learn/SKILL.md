@@ -16,7 +16,8 @@ description: 使用者貼 YouTube 連結並要求學習、整理、做筆記、�
 ## 流程（每步都用對應的階段 skill，不要自己重做它的工作）
 
 0. **估算**：先跑 `/learn-estimate`，把分階段 + 總和的表格原樣給使用者看。使用者未明說「直接跑」時，等確認再繼續。
-1. 沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）。
+1. **判定輸出語言**：看使用者這次下指令用的語言——中文 → `zh-TW`，英文 → `en`（其他語言用 BCP-47 碼）。寫進 `workspace/input.yaml` 的 `output_lang`，並在 `/learn-fetch` 時帶 `--output-lang`（會存進該站 `meta.json`，之後所有階段與 HTML 介面都跟著它）。使用者明說要哪種語言就照他說的。
+   沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）。
 2. 對每支影片依序：`/learn-fetch` → `/learn-segment` → `/learn-shot` → `/learn-analyze`。
    - 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）。
    - agent 產的 JSON 一定要過 `uv run scripts/validate.py <kind> <file>`，不過就修到過。

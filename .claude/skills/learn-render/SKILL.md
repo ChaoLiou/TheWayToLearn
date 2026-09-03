@@ -5,6 +5,8 @@ description: 已有 analysis.json 時，產生該影片的 _overview.json 並組
 
 # /learn-render
 
+**語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
+
 預設**每支影片各自一份**：`workspace/<影片標題>/plan.html`，`_overview.json` 也放在該資料夾。
 
 ## 1. 彙整（agent 做，每支影片各做一次）

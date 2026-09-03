@@ -1,5 +1,5 @@
 {% extends "_base.html.j2" %}
-{% block title %}{{ overview.topic }} — 學習規劃{% endblock %}
+{% block title %}{{ overview.topic }} — {{ S.plan_title_suffix }}{% endblock %}
 {% block css %}
   .seg { border-left:3px solid var(--accent); padding-left:1rem; margin:2rem 0; }
   .bridge { background:var(--card); border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
@@ -48,24 +48,24 @@
 {% block body %}
 <main>
 <h1>{{ overview.topic }}</h1>
-<p class="muted">學習規劃 · {{ videos|length }} 支影片 · 產生於 {{ generated }}</p>
+<p class="muted">{{ S.f("plan_meta", n=videos|length, t=generated) }}</p>
 {% if atlas %}
 <div class="card atlas-nav">
-  <b>🗺 <a href="{{ atlas.atlas_href }}">學習地圖</a></b>
-  {% if atlas.region %} · 主題區：<b>{{ atlas.region.name }}</b>{% endif %}
+  <b>🗺 <a href="{{ atlas.atlas_href }}">{{ S.atlas }}</a></b>
+  {% if atlas.region %} · {{ S.region }}: <b>{{ atlas.region.name }}</b>{% endif %}
   {% if atlas.links %}
   <ul>{% for l in atlas.links %}<li><span class="rt">{{ l.type }} {{ l.dir }}</span><a href="{{ l.href }}">{{ l.title }}</a> <span class="muted">· {{ l.via }}</span></li>{% endfor %}</ul>
-  {% else %}<div class="muted">這一站還沒有連到其他站。</div>{% endif %}
+  {% else %}<div class="muted">{{ S.no_links }}</div>{% endif %}
 </div>
 {% endif %}
 
 <!-- 1 -->
-<h2>1. 前情提要 &amp; Outline</h2>
+<h2>{{ S.h_prereq }}</h2>
 <div class="card">
-  <h4>看之前需要先懂</h4>
+  <h4>{{ S.prereq_box }}</h4>
   <ul>{% for p in overview.prerequisites %}<li><b>{{ p.concept }}</b> — {{ p.note }}</li>{% endfor %}</ul>
 </div>
-<h4>Outline</h4>
+<h4>{{ S.outline }}</h4>
 <ol>
 {% for o in overview.outline %}
   {% set v = (videos | selectattr('id', 'equalto', o.video_id) | list | first) %}
@@ -74,17 +74,17 @@
 </ol>
 
 <!-- 2 -->
-<h2>2. YouTuber 的思維推導</h2>
+<h2>{{ S.h_reasoning }}</h2>
 {% for v in videos %}
 <h3 id="v-{{ v.id }}">{{ v.meta.title }}</h3>
 <p class="muted">
-  {{ v.meta.channel }} · {{ v.meta.duration|dur }} · 字幕 {{ v.meta.transcript_lang }} ·
+  {{ v.meta.channel }} · {{ v.meta.duration|dur }} · {{ S.subs }} {{ v.meta.transcript_lang }} ·
   vision={{ 'on' if v.analysis.vision_used else 'off' }}
   {% if v.segments.vision_reason %}（{{ v.segments.vision_reason }}）{% endif %} ·
   <a href="{{ v.meta.url }}" target="_blank" rel="noopener">YouTube</a>
 </p>
 {% if v.estimate or v.timings %}
-<table><tr><th>階段</th><th>預估</th><th>實際</th></tr>
+<table><tr><th>{{ S.stage }}</th><th>{{ S.est }}</th><th>{{ S.actual }}</th></tr>
 {% for st in ['fetch','segment','shot','analyze','render'] %}
 <tr><td>{{ st }}</td>
   <td>{{ v.estimate.stages[st].sec|dur if v.estimate and st in v.estimate.stages else '–' }}</td>
@@ -92,45 +92,45 @@
 {% endfor %}</table>
 {% endif %}
 <p>{{ v.analysis.author_reasoning }}</p>
-<div class="mm-wrap" data-cap="推理鏈 · {{ v.meta.title }}"><pre class="mermaid">
+<div class="mm-wrap" data-cap="{{ S.chain_cap }} · {{ v.meta.title }}"><pre class="mermaid">
 {{ v.chain_mermaid }}
 </pre></div>
-<details class="desc"><summary>推理鏈的文字說明</summary><div>
-  <p class="muted">每個節點是一段，箭頭上的字是該段留給下一段的線索。hover 節點看該段摘要、hover 箭頭文字看完整線索。</p>
+<details class="desc"><summary>{{ S.chain_desc_summary }}</summary><div>
+  <p class="muted">{{ S.chain_desc }}</p>
   <ol>{% for c in v.chain_desc %}<li><a href="#{{ v.id }}-s{{ c.id }}">{{ c.title }}</a>{% if not loop.last %} → <i>{{ c.leads_to }}</i>{% endif %}</li>{% endfor %}</ol>
 </div></details>
 {% endfor %}
 
 <!-- 3 -->
-<h2>3. 逐段說明</h2>
+<h2>{{ S.h_segments }}</h2>
 {% for v in videos %}
 <h3>{{ v.meta.title }}</h3>
 {% for s in v.analysis.segments %}
 <section class="seg" id="{{ v.id }}-s{{ s.id }}">
   <h4>{{ s.id }}. {{ s.title }} <span class="muted"><a href="{{ v.meta.url }}&t={{ s.start|int }}s" target="_blank" rel="noopener">{{ s.start|ts }}</a>–{{ s.end|ts }}</span></h4>
-  {% if s.summary %}<p><i>作者說：</i>{{ s.summary }}</p>{% endif %}
+  {% if s.summary %}<p><i>{{ S.author_says }}</i>{{ s.summary }}</p>{% endif %}
   {% if s.shots %}
   <div class="frames">
     {% for sh in s.shots %}<figure><img src="{{ sh.href }}" alt="{{ sh.why }}" loading="lazy" data-video="{{ v.id }}" data-idx="{{ sh.idx }}"><figcaption>{{ sh.t|ts }} · {{ sh.why }}</figcaption></figure>{% endfor %}
   </div>
   {% endif %}
-  <div class="bridge"><b>承上</b> {{ s.builds_on }}</div>
-  <p><span class="tag r">推理</span>{{ s.reasoning }}</p>
-  {% if s.explanation %}<p><span class="tag ai">AI 補充</span>{{ s.explanation }}</p>{% endif %}
+  <div class="bridge"><b>{{ S.builds_on }}</b> {{ s.builds_on }}</div>
+  <p><span class="tag r">{{ S.reasoning }}</span>{{ s.reasoning }}</p>
+  {% if s.explanation %}<p><span class="tag ai">{{ S.ai_note }}</span>{{ s.explanation }}</p>{% endif %}
   {% if s.terms %}
   <dl class="terms">
     {% for t in s.terms %}
     {% set tid = v.id ~ '-' ~ s.id ~ '-' ~ loop.index %}
-    <dt><span class="term" data-zh="{{ t.zh }}">{{ t.term }}</span><button class="info" data-term="{{ tid }}" title="更多說明" aria-label="更多說明">i</button></dt>
-    <dd>{{ t.definition }}{% if t.related %} <span class="muted">相關：{% for r in t.related %}{{ r.term if r is mapping else r }}{% if not loop.last %}、{% endif %}{% endfor %}</span>{% endif %}</dd>
+    <dt><span class="term" data-zh="{{ t.zh }}">{{ t.term }}</span><button class="info" data-term="{{ tid }}" title="{{ S.more }}" aria-label="{{ S.more }}">i</button></dt>
+    <dd>{{ t.definition }}{% if t.related %} <span class="muted">{{ S.related }}: {% for r in t.related %}{{ r.term if r is mapping else r }}{% if not loop.last %}{{ S.sep }}{% endif %}{% endfor %}</span>{% endif %}</dd>
     <dialog id="term-{{ tid }}">
-      <button class="close" data-close aria-label="關閉">✕</button>
+      <button class="close" data-close aria-label="{{ S.close }}">✕</button>
       <h3>{{ t.term }}</h3>
       <div class="zh">{{ t.zh }}</div>
       <p>{{ t.definition }}</p>
       {% if t.more %}<p>{{ t.more }}</p>{% endif %}
-      {% if t.related %}<p class="muted">相關術語：{% for r in t.related %}{{ r.term if r is mapping else r }}{% if r is mapping and r.rel %}（{{ r.rel }}）{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}</p>{% endif %}
-      <p class="muted">出處：第 {{ s.id }} 段「{{ s.title }}」</p>
+      {% if t.related %}<p class="muted">{{ S.related_terms }}: {% for r in t.related %}{{ r.term if r is mapping else r }}{% if r is mapping and r.rel %} ({{ r.rel }}){% endif %}{% if not loop.last %}{{ S.sep }}{% endif %}{% endfor %}</p>{% endif %}
+      <p class="muted">{{ S.f("source_seg", id=s.id, title=s.title) }}</p>
     </dialog>
     {% endfor %}
   </dl>
@@ -139,65 +139,65 @@
   <div class="issues">
     {% for iss in s.issues %}
     <div class="issue {{ iss.level }}">
-      <span class="lvl">{{ '確定錯誤／已過時' if iss.level == 'wrong' else '見仁見智' }}</span>
+      <span class="lvl">{{ S.lvl_wrong if iss.level == 'wrong' else S.lvl_debatable }}</span>
       <a href="{{ v.meta.url }}&t={{ iss.t|int }}s" target="_blank" rel="noopener" class="muted">{{ iss.t|ts }}</a>
       <blockquote>「{{ iss.quote }}」</blockquote>
       <div>{{ iss.note }}</div>
-      {% if iss.evidence %}<div class="ev">依據：{{ iss.evidence }}</div>{% endif %}
+      {% if iss.evidence %}<div class="ev">{{ S.evidence }}: {{ iss.evidence }}</div>{% endif %}
     </div>
     {% endfor %}
   </div>
   {% endif %}
-  <div class="bridge"><b>留給下一段</b> {{ s.leads_to }}</div>
+  <div class="bridge"><b>{{ S.leads_to }}</b> {{ s.leads_to }}</div>
 </section>
 {% endfor %}
 {% endfor %}
 
 <!-- 4 -->
-<h2>4. 總結</h2>
+<h2>{{ S.h_summary }}</h2>
 <p>{{ overview.summary }}</p>
 {% set all_issues = videos | map(attribute='issues') | sum(start=[]) %}
 {% if all_issues %}
-<h4>勘誤總整理</h4>
-<p class="legend-issues muted"><span><i style="background:var(--wrong)"></i>確定錯誤／已過時</span><span><i style="background:var(--debat)"></i>見仁見智（取決於版本或情境）</span></p>
+<h4>{{ S.issues_sum }}</h4>
+<p class="legend-issues muted"><span><i style="background:var(--wrong)"></i>{{ S.lvl_wrong }}</span><span><i style="background:var(--debat)"></i>{{ S.lvl_debatable_long }}</span></p>
 <div style="overflow-x:auto"><table class="issues-sum">
-<tr><th>段落</th><th>原話（transcript 逐字）</th><th>說明</th></tr>
+<tr><th>{{ S.col_seg }}</th><th>{{ S.col_quote }}</th><th>{{ S.col_note }}</th></tr>
 {% for v in videos %}{% for iss in v.issues %}
 <tr class="{{ iss.level }}"><td><a href="#{{ v.id }}-s{{ iss.seg_id }}">{{ iss.seg_id }}. {{ iss.seg_title }}</a><br><span class="muted">{{ iss.t|ts }}</span></td>
-<td class="q">「{{ iss.quote }}」</td><td>{{ iss.note }}{% if iss.evidence %}<br><span class="ev">依據：{{ iss.evidence }}</span>{% endif %}</td></tr>
+<td class="q">「{{ iss.quote }}」</td><td>{{ iss.note }}{% if iss.evidence %}<br><span class="ev">{{ S.evidence }}: {{ iss.evidence }}</span>{% endif %}</td></tr>
 {% endfor %}{% endfor %}
 </table></div>
 {% endif %}
 <div class="mm-wrap" data-cap="Mindmap"><pre class="mermaid">
 {{ mindmap }}
 </pre></div>
-<details class="desc"><summary>Mindmap 的文字說明</summary><div>
-  <p class="muted">根 = 主題；第二層 = 影片；第三層 = 段落；第四層 = 該段首次定義的術語。</p>
+<details class="desc"><summary>{{ S.mindmap_desc_summary }}</summary><div>
+  <p class="muted">{{ S.mindmap_desc }}</p>
   <ul><li><b>{{ overview.topic }}</b>
     <ul>{% for v in videos %}<li>{{ v.meta.title }}
-      <ul>{% for s in v.analysis.segments %}<li><a href="#{{ v.id }}-s{{ s.id }}">{{ s.id }}. {{ s.title }}</a>{% if s.terms %} — {{ s.terms|map(attribute='term')|join('、') }}{% endif %}</li>{% endfor %}</ul>
+      <ul>{% for s in v.analysis.segments %}<li><a href="#{{ v.id }}-s{{ s.id }}">{{ s.id }}. {{ s.title }}</a>{% if s.terms %} — {{ s.terms|map(attribute='term')|join(S.sep) }}{% endif %}</li>{% endfor %}</ul>
     </li>{% endfor %}</ul>
   </li></ul>
 </div></details>
 {% if term_graph %}
-<h4>術語關聯圖</h4>
+<h4>{{ S.term_graph }}</h4>
 <p class="legend">{% for g in term_legend %}<span><i style="background:{{ g.color }}"></i>{{ g.title }}</span>{% endfor %}</p>
-<div class="mm-wrap" data-cap="術語關聯圖"><pre class="mermaid">
+<div class="mm-wrap" data-cap="{{ S.term_graph }}"><pre class="mermaid">
 {{ term_graph }}
 </pre></div>
-<details class="desc"><summary>術語關聯圖的文字說明</summary><div>
-  <p class="muted">節點顏色 = 首次定義的段落（見上方圖例）；箭頭 A → B 表示 A 的定義牽涉 B，線上文字是關係；雙箭頭且標籤前有 ⇄ = 兩者定義互相引用。hover 節點看定義、hover 線上文字看完整關係。</p>
+<details class="desc"><summary>{{ S.term_graph_desc_summary }}</summary><div>
+  <p class="muted">{{ S.term_graph_desc }}</p>
   <ul>{% for e in term_edges %}<li><b>{{ e.a }}</b> {{ '⇄' if e.both else '→' }} <b>{{ e.b }}</b>{% if e.rel %}：{{ e.a }} → {{ e.b }} {{ e.rel }}{% endif %}{% if e.both and e.rel_back %}；{{ e.b }} → {{ e.a }} {{ e.rel_back }}{% endif %}</li>{% endfor %}</ul>
 </div></details>
 {% endif %}
 
 <!-- 5 -->
-<h2>5. 推薦三個下一步</h2>
+<h2>{{ S.h_next }}</h2>
 {% for n in overview.next_steps %}
 <div class="card">
   <h4>{{ loop.index }}. {{ n.direction }}</h4>
   <p>{{ n.why }}</p>
-  <p>YouTube 搜尋：{% for k in n.search_keywords %}<a href="{{ k|yt_search }}" target="_blank" rel="noopener"><code>{{ k }}</code></a>{{ ' ' }}{% endfor %}</p>
+  <p>{{ S.yt_search }}{% for k in n.search_keywords %}<a href="{{ k|yt_search }}" target="_blank" rel="noopener"><code>{{ k }}</code></a>{{ ' ' }}{% endfor %}</p>
 </div>
 {% endfor %}
 

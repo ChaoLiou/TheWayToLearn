@@ -35,7 +35,7 @@ def parse_json3(p: Path) -> list[dict]:
     return out
 
 
-def fetch(url: str, langs: list[str], vdir: Path) -> dict:
+def fetch(url: str, langs: list[str], vdir: Path, output_lang: str = "zh-TW") -> dict:
     cmd = [
         "yt-dlp", "--skip-download", "--no-playlist",
         "--write-subs", "--write-auto-subs",
@@ -67,6 +67,7 @@ def fetch(url: str, langs: list[str], vdir: Path) -> dict:
         "chapters": [{"title": c["title"], "start": c["start_time"], "end": c["end_time"]}
                      for c in (info.get("chapters") or [])],
         "transcript_lang": chosen_lang,
+        "output_lang": output_lang,  # 產出文件的語言，/learn 依使用者對話語言決定
     }
     (vdir / "info.info.json").unlink()
     save_json(vdir / "meta.json", meta)
@@ -77,7 +78,8 @@ def fetch(url: str, langs: list[str], vdir: Path) -> dict:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("url")
-    ap.add_argument("--lang", default="zh-TW,zh,en")
+    ap.add_argument("--lang", default="zh-TW,zh,en", help="字幕語言優先序")
+    ap.add_argument("--output-lang", default="zh-TW", help="產出文件的語言（zh-TW / en …），跟著使用者的對話語言")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args(argv)
@@ -92,7 +94,7 @@ def main(argv=None):
     tmp = args.workspace / f".tmp-{vid}"
     tmp.mkdir(parents=True, exist_ok=True)
     t0 = time.monotonic()
-    meta = fetch(url, args.lang.split(","), tmp)
+    meta = fetch(url, args.lang.split(","), tmp, args.output_lang)
     vdir = video_dir(vid, args.workspace, title=meta["title"])
     for f in tmp.iterdir():
         f.replace(vdir / f.name)

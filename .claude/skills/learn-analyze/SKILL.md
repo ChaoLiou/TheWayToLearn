@@ -5,6 +5,8 @@ description: 由 agent 逐段寫「承上／推理／AI 補充／術語／留給
 
 # /learn-analyze（agent 自己做，沒有 script）
 
+**語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
+
 輸入：`segments.json`、`transcript.json`、`meta.json`；vision 為 true 時再加 `frames/*.jpg`。
 輸出：`workspace/<影片標題>/analysis.json`，格式 `schemas/analysis.schema.json`。
 

@@ -66,3 +66,15 @@ def test_issues_rendered_per_segment_and_summary(tmp_path):
     assert html.count('class="issue wrong"') == 1
     assert "勘誤總整理" in html and '<tr class="wrong">' in html
     assert "方法 A 永遠不會失敗" in html
+
+
+def test_english_output_lang_switches_ui(tmp_path):
+    import json
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    mp = ws / "測試影片 A: B" / "meta.json"
+    m = json.loads(mp.read_text()); m["output_lang"] = "en"; mp.write_text(json.dumps(m))
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert "1. Prerequisites &amp; Outline" in html and "Builds on" in html and 'lang="en"' in html
+    assert "承上" not in html and "留給下一段" not in html

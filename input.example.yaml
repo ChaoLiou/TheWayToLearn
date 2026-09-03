@@ -1,5 +1,6 @@
 # /learn input.yaml
 lang: [zh-TW, zh, en]   # 字幕語言優先序
+output_lang: zh-TW       # 產出文件的語言：跟著使用者下指令的語言（zh-TW / en …）
 out: workspace           # 每支影片一個子目錄 workspace/<video_id>/
 videos:
   - url: https://www.youtube.com/watch?v=dQw4w9WgXcQ

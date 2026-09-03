@@ -25,6 +25,7 @@ from common import (
     load_json,
     video_id,
 )
+from i18n import Strings, norm_lang
 
 PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"]
 
@@ -57,14 +58,14 @@ def rel_of(r) -> tuple[str, str]:
     return r, ""
 
 
-def reasoning_chain(vid: str, analysis: dict, tips: Tips) -> str:
+def reasoning_chain(vid: str, analysis: dict, tips: Tips, S: Strings) -> str:
     lines = ["flowchart TD"]
     segs = analysis["segments"]
     for s in segs:
         lab = tips.add(mm_label(f'{s["id"]}. {s["title"]}', 40), f'{s["id"]}. {s["title"]}\n\n{s.get("summary", "")}')
         lines.append(f'  {vid}_{s["id"]}["{lab}"]')
     for a, b in pairwise(segs):
-        lab = tips.add(mm_label(a["leads_to"], 24), f"留給下一段：{a['leads_to']}")
+        lab = tips.add(mm_label(a["leads_to"], 24), f"{S.leads_to_tip}{a['leads_to']}")
         lines.append(f'  {vid}_{a["id"]} -->|"{lab}"| {vid}_{b["id"]}')
     return "\n".join(lines)
 
@@ -95,7 +96,7 @@ def mindmap(overview: dict, videos: list[dict], tips: Tips) -> str:
     return "\n".join(lines)
 
 
-def term_graph(videos: list[dict], tips: Tips) -> tuple[str, list[dict], list[dict]]:
+def term_graph(videos: list[dict], tips: Tips, S: Strings) -> tuple[str, list[dict], list[dict]]:
     """術語依「首次定義的段落」同色；邊有方向與關係說明；A↔B 互相關聯時合成一條雙向邊。
     回傳 (mermaid, edges, legend)。"""
     ids: dict[str, str] = {}
@@ -127,7 +128,7 @@ def term_graph(videos: list[dict], tips: Tips) -> tuple[str, list[dict], list[di
                         continue
                     if b not in ids:  # related 指到沒定義的術語：補一個節點
                         ids[b] = f"t{len(ids)}"
-                        defs[b] = {"term": name, "definition": "（本片未單獨定義）"}
+                        defs[b] = {"term": name, "definition": S.term_undefined}
                     if (b, a) in seen:  # 反向已存在 → 合併成雙向
                         seen[(b, a)]["both"] = True
                         seen[(b, a)]["rel_back"] = rel
@@ -160,7 +161,7 @@ def term_graph(videos: list[dict], tips: Tips) -> tuple[str, list[dict], list[di
     return "\n".join(lines), edges, legend
 
 
-def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
+def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | None:
     need = ["meta.json", "segments.json", "analysis.json"]
     if not all((vdir / n).exists() for n in need):
         return None
@@ -186,7 +187,7 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
         for s in v["analysis"]["segments"] for iss in s.get("issues", [])
     ]
     v["issues"].sort(key=lambda x: (x["level"] != "wrong", x["seg_id"], x["t"]))
-    v["chain_mermaid"] = reasoning_chain(v["id"].replace("-", "_"), v["analysis"], tips)
+    v["chain_mermaid"] = reasoning_chain(v["id"].replace("-", "_"), v["analysis"], tips, S)
     # 圖的文字描述（預設收合）
     v["chain_desc"] = [
         {"id": s["id"], "title": s["title"], "leads_to": s["leads_to"]} for s in v["analysis"]["segments"]
@@ -194,10 +195,7 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str) -> dict | None:
     return v
 
 
-ROUTE_ZH = {"prerequisite": "先看", "deepens": "深入", "contrasts": "對照", "applies": "應用", "related": "相關"}
-
-
-def atlas_context(ws: Path, vid: str, out_dir: Path) -> dict | None:
+def atlas_context(ws: Path, vid: str, S: Strings) -> dict | None:
     """這支影片在學習地圖上的位置：region、進出 route（含對方 plan.html 的相對路徑）。"""
     p = ws / "atlas.json"
     if not p.exists():
@@ -212,9 +210,9 @@ def atlas_context(ws: Path, vid: str, out_dir: Path) -> dict | None:
     links = []
     for e in atlas["routes"]:
         if vid == e["from"] and e["to"] in titles:
-            links.append({"dir": "→", "type": ROUTE_ZH[e["type"]], "via": e["via"], **titles[e["to"]]})
+            links.append({"dir": "→", "type": S.route(e["type"]), "via": e["via"], **titles[e["to"]]})
         elif vid == e["to"] and e["from"] in titles:
-            links.append({"dir": "←", "type": ROUTE_ZH[e["type"]], "via": e["via"], **titles[e["from"]]})
+            links.append({"dir": "←", "type": S.route(e["type"]), "via": e["via"], **titles[e["from"]]})
     if region is None and not links:
         return {"atlas_href": "../atlas.html", "region": None, "links": []}
     return {"atlas_href": "../atlas.html", "region": region, "links": links}
@@ -228,20 +226,23 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
         if (d / "meta.json").exists():
             by_id[load_json(d / "meta.json")["video_id"]] = d
     videos, tips = [], Tips()
+    # 輸出語言：第一支影片的 meta.output_lang（/learn 依對話語言寫入），預設 zh-TW
+    first = by_id.get(order[0]) if order else None
+    S = Strings(norm_lang(load_json(first / "meta.json").get("output_lang") if first else None))
     for vid in order:
         vdir = by_id.get(vid)
         # 截圖相對路徑：plan.html 跟 frames 同資料夾就不用前綴
         prefix = "" if vdir and vdir == out.parent else (f"{quote(vdir.name)}/" if vdir else "")
-        v = load_video(vdir, tips, prefix) if vdir else None
+        v = load_video(vdir, tips, prefix, S) if vdir else None
         if v is None:
             print(f"略過 {vid}：缺 meta/segments/analysis")
             continue
         videos.append(v)
     if not videos:
         raise SystemExit("沒有任何可 render 的影片")
-    tg, edges, legend = term_graph(videos, tips)
+    tg, edges, legend = term_graph(videos, tips, S)
     ws = out.parent.parent if out.parent != overview_path.parent.parent else out.parent
-    atlas = atlas_context(ws, videos[0]["id"], out.parent) if len(videos) == 1 else None
+    atlas = atlas_context(ws, videos[0]["id"], S) if len(videos) == 1 else None
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
     env.filters["ts"] = fmt_ts
     env.filters["dur"] = fmt_dur
@@ -255,6 +256,7 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
         term_legend=legend,
         tips=tips,
         atlas=atlas,
+        S=S,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
     out.write_text(html, encoding="utf-8")

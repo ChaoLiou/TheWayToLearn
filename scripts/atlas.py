@@ -16,9 +16,9 @@ from jinja2 import Environment, FileSystemLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DEFAULT_WORKSPACE, SCHEMAS, TEMPLATES, fmt_dur, load_json
+from i18n import Strings, norm_lang
 from render import PALETTE, Tips, mm_label
 
-ROUTE_ZH = {"prerequisite": "先看", "deepens": "深入", "contrasts": "對照", "applies": "應用", "related": "相關"}
 ROUTE_ARROW = {"prerequisite": "-->", "deepens": "-->", "contrasts": "<-->", "applies": "-->", "related": "---"}
 
 
@@ -35,6 +35,7 @@ def load_waypoints(ws: Path) -> list[dict]:
             "takeaways": ov.get("takeaways", []), "summary": ov["summary"], "terms": terms,
             "prerequisites": [p["concept"] for p in ov.get("prerequisites", [])],
             "n_segments": len(an["segments"]), "has_plan": (d / "plan.html").exists(),
+            "output_lang": norm_lang(meta.get("output_lang")),
             "href": f"{quote(d.name)}/plan.html",
         })
     return wps
@@ -111,7 +112,7 @@ def status(ws: Path) -> None:
     print(f"\n規則在 rules/atlas.md；更新 {ws / 'atlas.json'} 後跑 uv run scripts/atlas.py")
 
 
-def map_mermaid(wps: list[dict], atlas: dict, tips: Tips) -> tuple[str, dict, list[dict]]:
+def map_mermaid(wps: list[dict], atlas: dict, tips: Tips, S: Strings) -> tuple[str, dict, list[dict]]:
     by_id = {w["id"]: w for w in wps}
     nid = {w["id"]: f"w{i}" for i, w in enumerate(wps)}
     lines = ["%%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 70}}}%%", "graph LR"]
@@ -143,7 +144,7 @@ def map_mermaid(wps: list[dict], atlas: dict, tips: Tips) -> tuple[str, dict, li
     for e in atlas["routes"]:
         if e["from"] not in nid or e["to"] not in nid:
             continue
-        lab = tips.add(ROUTE_ZH[e["type"]], f"{ROUTE_ZH[e['type']]}：{by_id[e['from']]['title']} → {by_id[e['to']]['title']}\n{e['via']}")
+        lab = tips.add(S.route(e["type"]), f"{S.route(e['type'])}: {by_id[e['from']]['title']} → {by_id[e['to']]['title']}\n{e['via']}")
         lines.append(f'  {nid[e["from"]]} {ROUTE_ARROW[e["type"]]}|"{lab}"| {nid[e["to"]]}')
     lines.append("  linkStyle default stroke-width:2px,stroke-opacity:0.8")
     return "\n".join(lines), links, legend
@@ -163,13 +164,16 @@ def render(ws: Path) -> Path:
     for gi, r in enumerate(atlas["regions"]):
         regions.append(dict(r, color=PALETTE[gi % len(PALETTE)], members=[by_id[x] for x in r["waypoints"] if x in by_id]))
     unplaced = [w for w in wps if w["region"] is None]
+    # 地圖語言：atlas.json 的 lang，否則取多數站的 output_lang
+    lang = atlas.get("lang") or (max({w["output_lang"] for w in wps}, key=[w["output_lang"] for w in wps].count) if wps else None)
+    S = Strings(norm_lang(lang))
     tips = Tips()
-    mm, links, legend = map_mermaid(wps, atlas, tips)
+    mm, links, legend = map_mermaid(wps, atlas, tips, S)
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
     env.filters["dur"] = fmt_dur
     html = env.get_template("atlas.html.j2").render(
         waypoints=wps, regions=regions, unplaced=unplaced, routes=atlas["routes"], by_id=by_id,
-        map_mermaid=mm, links=links, legend=legend, tips=tips, route_zh=ROUTE_ZH,
+        map_mermaid=mm, links=links, legend=legend, tips=tips, S=S,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
     out = ws / "atlas.html"

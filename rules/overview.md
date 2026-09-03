@@ -1,6 +1,6 @@
 # 彙整規則（每支影片各自一份 _overview.json；合併多支時同樣適用）
 
-改這個檔案就是改 /learn-render 前置的 overview 產生行為。
+改這個檔案就是改 /learn-render 前置的 overview 產生行為。內文語言依該站 `meta.output_lang`（見 rules/narrative.md「輸出語言」）；`search_keywords` 用最可能搜到好影片的語言（通常英文）。
 
 ## 前情提要（prerequisites）
 - 列出看這批影片前需要先懂的概念，每個 1–2 句。不解釋影片內會定義的術語。

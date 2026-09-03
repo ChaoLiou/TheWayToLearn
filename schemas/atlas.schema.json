@@ -2,19 +2,82 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "atlas.json — 學習地圖：waypoint 之間的 route 與 region，由 agent 維護",
   "type": "object",
-  "required": ["regions", "routes"],
+  "required": [
+    "regions",
+    "routes"
+  ],
   "properties": {
-    "regions": {"type": "array", "items": {"type": "object", "required": ["id", "name", "blurb", "waypoints"],
-      "properties": {
-        "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
-        "name": {"type": "string", "maxLength": 30},
-        "blurb": {"type": "string", "description": "這個主題區在學什麼，1–2 句"},
-        "waypoints": {"type": "array", "items": {"type": "string"}, "description": "video_id 列表"}}}},
-    "routes": {"type": "array", "items": {"type": "object", "required": ["from", "to", "type", "via"],
-      "properties": {
-        "from": {"type": "string"}, "to": {"type": "string"},
-        "type": {"type": "string", "enum": ["prerequisite", "deepens", "contrasts", "applies", "related"],
-                 "description": "prerequisite: 先看 from 再看 to｜deepens: to 深入 from 的某主題｜contrasts: to 與 from 對照｜applies: to 把 from 的概念用到場景｜related: 相關，無方向"},
-        "via": {"type": "string", "description": "為什麼有這條 route：共同概念或承接關係，≤ 40 字"}}}}
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "blurb",
+          "waypoints"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "blurb": {
+            "type": "string",
+            "description": "這個主題區在學什麼，1–2 句"
+          },
+          "waypoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "video_id 列表"
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "type",
+          "via"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "prerequisite",
+              "deepens",
+              "contrasts",
+              "applies",
+              "related"
+            ],
+            "description": "prerequisite: 先看 from 再看 to｜deepens: to 深入 from 的某主題｜contrasts: to 與 from 對照｜applies: to 把 from 的概念用到場景｜related: 相關，無方向"
+          },
+          "via": {
+            "type": "string",
+            "description": "為什麼有這條 route：共同概念或承接關係，≤ 40 字"
+          }
+        }
+      }
+    },
+    "lang": {
+      "type": "string",
+      "description": "atlas.html 的介面語言（zh-TW / en）；省略則取多數站的 output_lang"
+    }
   }
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="{{ S.lang }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,7 +23,7 @@
   code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
   /* mermaid：可點開全視窗 */
   .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
-  .mm-wrap::after { content:"⤢ 點擊放大"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
+  .mm-wrap::after { content:"{{ S.click_to_enlarge }}"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
   .mm-wrap:hover { border-color:var(--accent); }
   .mm-wrap svg { max-width:100%; height:auto; }
   .mm-wrap svg[width] { max-width:none; height:auto; }   /* flowchart：不縮小，寬了就橫向捲 */
@@ -66,16 +66,16 @@
 <div id="viewer" hidden>
   <div class="v-bar">
     <span class="cap"></span>
-    <button data-act="zoomout" title="縮小 (-)">−</button>
-    <button data-act="zoomin" title="放大 (+)">+</button>
-    <button data-act="fit" title="最佳視角 (F)">Fit</button>
-    <button data-act="reset" title="原始大小 (1)">1:1</button>
-    <button data-act="close" title="關閉 (Esc)">✕</button>
+    <button data-act="zoomout" title="{{ S.zoom_out }}">−</button>
+    <button data-act="zoomin" title="{{ S.zoom_in }}">+</button>
+    <button data-act="fit" title="{{ S.fit }}">Fit</button>
+    <button data-act="reset" title="{{ S.reset }}">1:1</button>
+    <button data-act="close" title="{{ S.close }}">✕</button>
   </div>
   <div class="v-stage">
     <div class="v-content"></div>
-    <button class="v-nav prev" data-act="prev" hidden title="上一張 (←)">‹</button>
-    <button class="v-nav next" data-act="next" hidden title="下一張 (→)">›</button>
+    <button class="v-nav prev" data-act="prev" hidden title="{{ S.prev }}">‹</button>
+    <button class="v-nav next" data-act="next" hidden title="{{ S.next }}">›</button>
   </div>
 </div>
 
@@ -126,7 +126,7 @@
     });
     // mindmap 的線 = 上下層包含關係
     svg.querySelectorAll(".mindmap-edges path, path.edge.section-edge-0, path[class*='section-edge-']").forEach((p) => {
-      if (!p.querySelector("title")) addTitle(p, "上層 → 下層：段落包含在此段首次定義的術語");
+      if (!p.querySelector("title")) addTitle(p, {{ S.mindmap_edge_tip | tojson }});
     });
   });
 

@@ -36,7 +36,10 @@ def title_dirname(title: str, limit: int = 80) -> str:
     """YouTube title → 可當資料夾名的字串。"""
     name = _BAD_FS.sub(" ", title)
     name = re.sub(r"\s+", " ", name).strip(" .")
-    return name[:limit].rstrip(" .") or "untitled"
+    if len(name) > limit:  # 在字邊界截斷，避免留下半個字或孤立的「(」
+        cut = name[:limit]
+        name = cut[: cut.rfind(" ")] if " " in cut[limit // 2 :] else cut
+    return name.rstrip(" .-(（[") or "untitled"
 
 
 def find_video_dir(vid: str, workspace: Path = DEFAULT_WORKSPACE) -> Path | None:
@@ -85,6 +88,7 @@ def load_input(p: Path) -> dict:
     data = load_yaml(p)
     data.setdefault("lang", ["zh-TW", "zh", "en"])
     data.setdefault("out", str(DEFAULT_WORKSPACE))
+    data.setdefault("output_lang", "zh-TW")  # /learn 依對話語言填
     for v in data["videos"]:
         v["id"] = video_id(v["url"])
         v.setdefault("vision", True)

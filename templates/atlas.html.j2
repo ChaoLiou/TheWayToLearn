@@ -1,5 +1,5 @@
 {% extends "_base.html.j2" %}
-{% block title %}學習地圖 · Atlas{% endblock %}
+{% block title %}{{ S.atlas_title }}{% endblock %}
 {% block css %}
   main { max-width: 1100px; }
   .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
@@ -25,32 +25,32 @@
 {% endblock %}
 {% block body %}
 <main>
-<h1>🗺 學習地圖</h1>
-<p class="stats"><span>{{ waypoints|length }} 站</span><span>{{ regions|length }} 個主題區</span><span>{{ routes|length }} 條 route</span><span>更新於 {{ generated }}</span></p>
+<h1>{{ S.atlas_h1 }}</h1>
+<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span>{{ S.f("n_route", n=routes|length) }}</span><span>{{ S.f("updated", t=generated) }}</span></p>
 
 {% if waypoints|length >= 2 %}
-<h2>地圖</h2>
-<p class="route-legend">箭頭：<span><b>先看</b> A → B：先看 A 再看 B</span><span><b>深入</b> B 深入 A 的主題</span><span><b>對照</b> 兩者對照</span><span><b>應用</b> B 把 A 用到場景</span><span><b>相關</b> 無方向</span>· 點節點開啟該站，hover 看 takeaways</p>
-<div class="mm-wrap" data-cap="學習地圖"><pre class="mermaid">
+<h2>{{ S.h_map }}</h2>
+<p class="route-legend">{{ S.route_legend | safe }}</p>
+<div class="mm-wrap" data-cap="{{ S.map_cap }}"><pre class="mermaid">
 {{ map_mermaid }}
 </pre></div>
 {% endif %}
 
-<h2>各站</h2>
+<h2>{{ S.h_stations }}</h2>
 {% macro card(w, color) %}
 <div class="wp" style="border-left-color:{{ color }}">
   <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
-  <div class="meta">{{ w.channel }} · {{ w.duration|dur }} · {{ w.n_segments }} 段 · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
+  <div class="meta">{{ w.channel }} · {{ w.duration|dur }} · {{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
   <div><b>{{ w.topic }}</b></div>
   <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
-  {% if w.terms %}<div class="terms">術語：{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}…共 {{ w.terms|length }} 個{% endif %}</div>{% endif %}
+  {% if w.terms %}<div class="terms">{{ S.terms }}{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}{{ S.f("terms_total", n=w.terms|length) }}{% endif %}</div>{% endif %}
   {% if w.routes_in or w.routes_out %}
   <div class="routes">
-    {% for e in w.routes_in %}<div><span class="rt">{{ route_zh[e.type] }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
-    {% for e in w.routes_out %}<div><span class="rt">{{ route_zh[e.type] }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+    {% for e in w.routes_in %}<div><span class="rt">{{ S.route(e.type) }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+    {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
   </div>
   {% endif %}
-  <div class="open"><a href="{{ w.href }}">開啟學習規劃 →</a></div>
+  <div class="open"><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
 </div>
 {% endmacro %}
 {% for r in regions %}
@@ -62,8 +62,8 @@
 {% endfor %}
 {% if unplaced %}
 <section class="region">
-  <h3><i style="background:var(--muted)"></i>未分區</h3>
-  <p class="blurb">還沒歸入主題區的站。{% if waypoints|length >= 2 %}跑 <code>/learn-atlas</code> 決定它們的 route 與 region。{% endif %}</p>
+  <h3><i style="background:var(--muted)"></i>{{ S.unplaced }}</h3>
+  <p class="blurb">{{ S.unplaced_desc }}{% if waypoints|length >= 2 %} {{ S.unplaced_hint | safe }}{% endif %}</p>
   <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)') }}{% endfor %}</div>
 </section>
 {% endif %}

@@ -2,6 +2,12 @@
 
 改這個檔案就是改 AI 逐段說明的行為。analyze 階段的 skill 會把整份檔案讀進 prompt。
 
+## 輸出語言
+- 所有內文（summary、builds_on、reasoning、explanation、definition、more、note…）用該站 `meta.json` 的 `output_lang`：使用者用中文對話 → `zh-TW`；用英文 → `en`。
+- 術語的 `term` **永遠是英文原文**，不翻譯。`zh` 欄位 = 用輸出語言寫的簡短對譯／注釋；輸出語言本身是英文時 `zh` 可留空字串。
+- 勘誤的 `quote` 永遠是 transcript 原文，不翻譯。
+- HTML 的固定介面文字由 `scripts/i18n.py` 依 `output_lang` 切換，不用管。
+
 ## 硬規則（validate.py 會檢查）
 1. 第 N 段的 `builds_on` 必須回應第 N-1 段的 `leads_to`。第 1 段的 `builds_on` 描述「前情提要」中的哪個背景被用上。
 2. 每段的 `leads_to` 必須留下一個具體線索、問題或未完成的推論給下一段。最後一段的 `leads_to` 寫「總結收束」。

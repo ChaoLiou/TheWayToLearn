@@ -2,6 +2,9 @@
 
 改這個檔案就是改 /learn-atlas 的行為。名詞：**waypoint** = 一支影片的資料夾（一站），**route** = 兩站之間的關聯，**region** = 主題區。
 
+## 語言
+- region 的 `name`/`blurb`、route 的 `via` 用多數站的 `output_lang`；可在 atlas.json 加 `"lang": "en"` 強制介面語言。
+
 ## 什麼時候更新
 - workspace 下有 ≥ 2 個 waypoint 時，每新增一個就更新 `workspace/atlas.json`，然後重新 render `atlas.html`。
 - 只需決定「新站」與既有各站的 route，以及新站屬於哪個 region；既有 route 不動，除非新站讓某條 route 的型態明顯該改。

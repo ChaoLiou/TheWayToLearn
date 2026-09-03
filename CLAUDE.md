@@ -71,6 +71,10 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 更新 atlas.json。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
 
+## 輸出語言
+
+跟著使用者下指令的語言：`/learn` 判定後寫進 `input.yaml` 的 `output_lang` 與各站 `meta.json`；agent 產的所有內文用它，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（新語言只需加一組字串）。
+
 ## 改規則不改程式
 
 行為都外置，改對應檔案即可：

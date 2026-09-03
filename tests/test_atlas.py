@@ -46,7 +46,7 @@ def test_render_atlas_and_plan_nav(tmp_path):
     assert "深入 →" in html and "深入 ←" in html
     render.main(["--workspace", str(ws)])
     plan = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
-    assert 'href="../atlas.html"' in plan and "主題區：<b>A 與 B</b>" in plan
+    assert 'href="../atlas.html"' in plan and "主題區: <b>A 與 B</b>" in plan
     assert 'href="../%E6%B8%AC%E8%A9%A6%E5%BD%B1%E7%89%87%20C/plan.html"' in plan
 
 

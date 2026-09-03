@@ -32,3 +32,10 @@ def test_title_dirname():
     from common import title_dirname
     assert title_dirname('What Is X? "A/B" | C: D...') == "What Is X A B C D"
     assert len(title_dirname("x" * 200)) == 80
+
+
+def test_title_dirname_cuts_at_word_boundary():
+    from common import title_dirname
+    t = "Content Security Policy explained how to protect against Cross Site Scripting (XSS) and more"
+    d = title_dirname(t)
+    assert len(d) <= 80 and not d.endswith("(") and d.endswith(("Scripting", "(XSS)"))

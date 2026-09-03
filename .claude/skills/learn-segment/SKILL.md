@@ -5,6 +5,8 @@ description: 讀 transcript.json，由 agent 切成意義段落、挑截圖時�
 
 # /learn-segment（agent 自己做，沒有 script）
 
+**語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
+
 輸入：`workspace/<影片標題>/transcript.json`、`meta.json`（有 chapters 可當參考，不必照抄）、input 的 vision 設定。
 輸出：`workspace/<影片標題>/segments.json`，格式 `schemas/segments.schema.json`。
 
