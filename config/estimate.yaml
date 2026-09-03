@@ -1,0 +1,37 @@
+# 時間成本估算係數。改這裡就會改 /learn-estimate 的結果，不用動程式。
+# 時間單位：秒；token 單位：個。
+
+download:
+  mbps: 20               # 假設下載頻寬 (Mbit/s)
+  max_height: 720        # screenshot.py 會抓的畫質，估算檔案大小用
+  overhead_sec: 8        # yt-dlp 啟動 + 合併
+
+fetch:
+  subs_sec: 6            # 抓字幕（不下載影片）
+
+segment:                 # agent 切段
+  base_sec: 30
+  per_min_video_sec: 2   # 每分鐘影片多讀多想的時間
+  minutes_per_segment: 3 # 平均幾分鐘影片切成一段（估段數用）
+  min_segments: 3
+  max_segments: 30
+
+shot:
+  frames_per_segment: 2
+  sec_per_frame: 2       # ffmpeg seek + 抽一幀
+
+analyze:                 # agent 逐段寫說明
+  sec_per_segment: 45
+  vision_sec_per_frame: 15
+  in_tokens_per_segment: 1800     # 上一段 analysis + 本段 transcript + 規則
+  out_tokens_per_segment: 700
+  vision_tokens_per_frame: 1200
+
+render:
+  sec: 5
+
+overview:                # 跨影片彙整（前情提要、總結、三個下一步）
+  base_sec: 40
+  per_video_sec: 20
+
+tokens_per_transcript_word: 1.6   # 中文字/英文字 → token 粗估

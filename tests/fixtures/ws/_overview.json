@@ -1,0 +1,7 @@
+{"topic":"從 A 到 B","prerequisites":[{"concept":"K","note":"基礎概念"}],
+ "outline":[{"video_id":"abcdefghijk","role":"起點","line":"建立 X 與 A/B 的關係"}],
+ "summary":"影片建立了 X → A → B 的推理鏈。",
+ "next_steps":[
+  {"direction":"往下挖深 B","why":"B 只講了概念","search_keywords":["B tutorial","B 實作"]},
+  {"direction":"對照 C","why":"B 的替代方案","search_keywords":["B vs C"]},
+  {"direction":"應用到 D","why":"實際場景","search_keywords":["B in D"]}]}

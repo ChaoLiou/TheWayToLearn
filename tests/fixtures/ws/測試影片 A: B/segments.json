@@ -1,0 +1,5 @@
+{"video_id":"abcdefghijk","vision":false,"vision_reason":"純講話","segments":[
+ {"id":1,"start":0,"end":200,"title":"問題定義","summary":"作者提出問題 X。","shots":[{"t":30,"why":"標題投影片","file":"frames/s01_30.jpg"}]},
+ {"id":2,"start":200,"end":400,"title":"第一個嘗試","summary":"用方法 A 解。","shots":[]},
+ {"id":3,"start":400,"end":600,"title":"結論","summary":"A 有限制，需要 B。","shots":[]}
+]}

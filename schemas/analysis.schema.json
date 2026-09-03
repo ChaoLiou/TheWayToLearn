@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "analysis.json — /learn-analyze 的輸出",
+  "type": "object",
+  "required": [
+    "video_id",
+    "vision_used",
+    "author_reasoning",
+    "segments"
+  ],
+  "properties": {
+    "video_id": {
+      "type": "string"
+    },
+    "vision_used": {
+      "type": "boolean"
+    },
+    "author_reasoning": {
+      "type": "string",
+      "description": "整支影片的思維推導，一段文字"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "builds_on",
+          "reasoning",
+          "explanation",
+          "leads_to",
+          "terms"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "builds_on": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reasoning": {
+            "type": "string",
+            "minLength": 1
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "leads_to": {
+            "type": "string",
+            "minLength": 1
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "term",
+                "zh",
+                "definition"
+              ],
+              "properties": {
+                "term": {
+                  "type": "string",
+                  "description": "原文（英文）術語"
+                },
+                "zh": {
+                  "type": "string",
+                  "description": "中文翻譯，hover 顯示"
+                },
+                "definition": {
+                  "type": "string",
+                  "description": "一句話定義，內文顯示"
+                },
+                "more": {
+                  "type": "string",
+                  "description": "更多說明，點 icon 開視窗顯示"
+                },
+                "related": {
+                  "type": "array",
+                  "description": "相關術語；建議用物件寫出關係",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "term",
+                          "rel"
+                        ],
+                        "properties": {
+                          "term": {
+                            "type": "string"
+                          },
+                          "rel": {
+                            "type": "string",
+                            "description": "A → B 的關係，≤ 12 字，例如「對照組」「實作於」「前提」"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
