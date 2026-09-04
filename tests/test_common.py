@@ -82,6 +82,6 @@ def test_clip_lines_merge_and_snap():
     lines = narrate.clip_lines(ev, 10.0, 17.0, 100.0)
     assert len(lines) == 1 and lines[0]["at"] == 100.0          # 短句併成一行，範圍外的不收
     assert lines[0]["text"].startswith("hello there this is")
-    long_ev = [{"start": i, "duration": 1.0, "text": "x" * 30} for i in range(6)]
+    long_ev = [{"start": i, "duration": 1.0, "text": "x" * 40} for i in range(6)]
     assert len(narrate.clip_lines(long_ev, 0.0, 6.0, 0.0)) == 6  # 太長就不併
     assert narrate.snap(ev, 10.4, 16.0) == (10.0, 16.5)
