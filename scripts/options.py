@@ -39,6 +39,10 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
         ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
     ]),
+    "narrate": ("--narrate", "true", "要不要順便產出聽力版（第 8 步）", [
+        ("true", "產出 lesson.mp3：TTS 講解與作者原聲交錯，plan.html 有播放器與講稿（預設）"),
+        ("false", "只產出網頁版，不做聲音；之後想要再跑 /learn-narrate 也可以"),
+    ]),
     "clips": ("clips（在 segments.json）", "整段", "聽力版要播多長的作者原聲", [
         ("整段", "段落完整播出（預設）；超過 150 秒的段落取其中核心 60–120 秒"),
         ("精華", "只播 20–40 秒的關鍵句，聽力版較短但脈絡較少"),
@@ -56,7 +60,7 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
 }
 
 SKILL_PARAMS: dict[str, list[str]] = {
-    "learn": ["shots", "vision", "output_lang", "lang"],
+    "learn": ["shots", "vision", "narrate", "output_lang", "lang"],
     "learn-estimate": ["shots", "vision"],
     "learn-fetch": ["lang", "output_lang", "force"],
     "learn-segment": ["shots", "vision"],

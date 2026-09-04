@@ -171,6 +171,9 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
     v["dir"] = vdir.name
     v["estimate"] = load_json(vdir / "estimate.json") if (vdir / "estimate.json").exists() else None
     v["lesson"] = load_json(vdir / "lesson.json") if (vdir / "lesson.json").exists() else None
+    st = vdir / "lesson.status.json"
+    v["lesson_status"] = load_json(st) if st.exists() and not v["lesson"] else None
+    v["lesson_src"] = href_prefix + "lesson.mp3"
     if v["lesson"]:
         v["lesson"]["href"] = href_prefix + quote(v["lesson"]["file"])
     v["timings"] = load_json(vdir / "timings.json") if (vdir / "timings.json").exists() else {}

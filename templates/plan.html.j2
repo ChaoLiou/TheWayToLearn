@@ -115,6 +115,17 @@
 </div>
 {% endif %}
 
+{% if videos|length == 1 and videos[0].lesson_status %}
+<div class="card lesson" id="lesson-pending" data-src="{{ videos[0].lesson_src }}"
+     data-state="{{ videos[0].lesson_status.state }}">
+  {% if videos[0].lesson_status.state == 'failed' %}
+  <b>{{ S.listen_failed }}</b>
+  {% else %}
+  <b>{{ S.listen_building }}</b> <span class="muted">{{ S.listen_building_hint }}</span>
+  <div class="acts"><button id="lesson-check">{{ S.check_now }}</button></div>
+  {% endif %}
+</div>
+{% endif %}
 {% if videos|length == 1 and videos[0].lesson %}
 {% set L = videos[0].lesson %}
 <div class="card lesson">
@@ -278,6 +289,17 @@
 <script id="shots-ids" type="application/json">{{ videos | map(attribute='id') | list | tojson }}</script>
 {% endblock %}
 {% block js %}
+  /* 聽力版還在產生：定期探測 lesson.mp3，好了就自動重新整理 */
+  const pend = document.getElementById("lesson-pending");
+  if (pend && pend.dataset.state !== "failed") {
+    const probe = () => {
+      const a = new Audio(pend.dataset.src);
+      a.addEventListener("loadedmetadata", () => location.reload(), { once: true });
+      a.load();
+    };
+    document.getElementById("lesson-check").addEventListener("click", probe);
+    setInterval(probe, 20000);
+  }
   const KSTR = { play: {{ S.play | tojson }}, pause: {{ S.pause | tojson }} };
   /* 聽力版：點章節跳到該時間 */
   const lesson = document.getElementById("lesson");

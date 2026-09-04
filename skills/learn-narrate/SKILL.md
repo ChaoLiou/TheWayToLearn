@@ -1,9 +1,9 @@
 ---
 name: learn-narrate
-description: [步驟 8/8·產出聽力版·選配] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
+description: [步驟 8/8·產出聽力版] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
 ---
 
-# /learn-narrate　—　步驟 8/8 產出聽力版（選配）
+# /learn-narrate　—　步驟 8/8 產出聽力版
 
 把 `analysis.json` 改寫成**寫給耳朵**的講稿，中間穿插作者的原聲片段，合成一份 `lesson.mp3`。
 
@@ -26,6 +26,8 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - 每個 `say` block ≤ 60 字，語言用該站 `meta.output_lang`。
 
 ## 3. 合成（script）
+
+被 `/learn` 呼叫時，步驟 6 render 之前應該已經跑過 `--mark-pending`；單獨執行這支 skill 時不需要，`narrate.py` 自己會標記狀態。
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> [--voice ...] [--rate +15%] [--force]
 ```

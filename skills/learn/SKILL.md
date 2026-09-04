@@ -51,6 +51,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 **選項**
 - `--shots`：`auto`（預設，只截看了才懂的畫面）｜`none`（完全不截圖，也不下載影片，步驟 4 直接跳過）｜`many`（投影片型影片，每段至少一張）。使用者說「畫面沒什麼東西」「重點都在講的內容」「不用截圖」就用 `none`。
 - `--vision`：AI 要不要逐張讀截圖，預設 `true`；`--shots none` 時自動失效。
+- `--narrate`：要不要順便產出聽力版（第 8 步），**預設 `true`**。使用者說「不用聲音」「只要網頁」就用 `false`。
 - 兩者都寫進 `workspace/input.yaml` 該支影片底下，並由 `/learn-segment` 寫進 `segments.json` 的 `shots_mode` / `vision`。
 
 **[1/8] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
@@ -59,11 +60,17 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）；跳過也要說「[N/7] X 跳過：<檔案> 已存在」。
 - agent 產的 JSON 一定要過 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py <kind> <file>`，不過就修到過。
 
-**[6/8] render**：每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
+**[6/8] render**：
+- 若 `--narrate true`，**render 之前**先跑一次
+  `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> --mark-pending`，
+  這樣產出的 `plan.html` 會顯示「🎧 聽力版產生中…」，並在完成後自動偵測、自動重新整理。
+- 每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
+- **render 完成後立刻把 `plan.html` 路徑給使用者**，告訴他可以先開始讀，聽力版還在做。
 
 **[7/8] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站連進知識地圖。只有一站就說「[7/8] atlas 跳過：只有一站」。
 
-**[8/8] narrate（選配）**：只有使用者要求「用聽的」「通勤聽」「做成 podcast」時才跑 `/learn-narrate`；否則收尾時提一句「想用聽的可以跑 /atlas:learn-narrate」。
+**[8/8] narrate**：`--narrate true`（預設）就跑 `/learn-narrate`；`false` 則跳過，並提一句「想用聽的可以跑 /atlas:learn-narrate」。
+完成後**再跑一次 `/learn-render`**，讓 `plan.html` 換成正式的播放器與講稿（使用者若還開著頁面，它也會自己重新整理）。
 
 **收尾回報**：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route。
 

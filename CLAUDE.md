@@ -95,7 +95,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 ## 步驟進度
 
-流程固定 8 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas → narrate（最後兩步條件／選配）。每個 script 跑完呼叫 `print_step()` 印 `[N/8] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
+流程固定 8 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas → narrate（atlas 需 ≥2 站；narrate 由 `--narrate` 控制，預設開）。每個 script 跑完呼叫 `print_step()` 印 `[N/8] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
 
 ## 改規則不改程式
 
@@ -111,6 +111,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 `narrate.py` 把 `narration.json` 的 `say`（edge-tts）與 `clip`（yt-dlp 音訊 + ffmpeg）串成 `lesson.mp3`：
 - clip 的起訖自動對齊 transcript 句子邊界（`snap`），逐句字幕併成順口長度（`clip_lines`）寫進 `lesson.json`
 - 片段以內容雜湊命名快取在 `lesson_parts/`，改字幕合併或章節不必重跑 TTS
+- `lesson.status.json` 讓步驟 6 產出的 `plan.html` 顯示「聽力版產生中」，完成後頁面自己偵測並重新整理（`--mark-pending` 可提前標記）
 - `plan.html` 有播放器、章節，以及 karaoke 講稿視窗（已唸過=一般色、目前=強調、未唸=灰、原聲=斜體，點任一句從那裡播）
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`

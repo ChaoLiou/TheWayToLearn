@@ -14,6 +14,7 @@ import json
 import shutil
 import subprocess
 import sys
+from datetime import UTC, datetime
 from itertools import pairwise
 from pathlib import Path
 
@@ -140,6 +141,14 @@ def clip_lines(events: list[dict], start: float, end: float, offset: float) -> l
     return out
 
 
+def mark(vdir: Path, state: str, **extra) -> None:
+    """寫 lesson.status.json，讓步驟 6 產出的 plan.html 知道聽力版正在做。"""
+    if state == "done":
+        (vdir / "lesson.status.json").unlink(missing_ok=True)
+        return
+    save_json(vdir / "lesson.status.json", {"state": state, "at": datetime.now(UTC).astimezone().isoformat(timespec="seconds"), **extra})
+
+
 def part_name(i: int, b: dict, voice: str, rate: str) -> str:
     """檔名帶內容雜湊：內容沒變就重用，調整字幕合併或章節時不必重跑 TTS。"""
     key = ({"kind": "say", "text": b["text"], "voice": voice, "rate": rate}
@@ -221,20 +230,32 @@ def main(argv=None):
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-cache", action="store_true", help="不重用 lesson_parts/ 裡的舊片段，全部重做")
+    ap.add_argument("--mark-pending", action="store_true",
+                    help="只標記「聽力版產生中」就結束；步驟 6 render 前先呼叫，plan.html 才會顯示處理中")
     args = ap.parse_args(argv)
 
     if not shutil.which("ffmpeg"):
         raise SystemExit("找不到 ffmpeg：sudo apt install ffmpeg")
     vid = video_id(args.id)
     vdir = video_dir(vid, args.workspace)
+    if args.mark_pending:
+        mark(vdir, "building")
+        print(f"已標記聽力版產生中 → {vdir / 'lesson.status.json'}")
+        return
     if not (vdir / "narration.json").exists():
         raise SystemExit(f"缺 {vdir / 'narration.json'}：先由 agent 依 rules/narration.md 產生")
     if (vdir / "lesson.mp3").exists() and not args.force:
         print(f"跳過：{vdir / 'lesson.mp3'} 已存在（--force 重做）")
         print_step("narrate", "已存在")
         return
-    with Timer(vdir, "narrate"):
-        lesson = build(vdir, vid, args.voice, args.rate, args.no_cache)
+    mark(vdir, "building")
+    try:
+        with Timer(vdir, "narrate"):
+            lesson = build(vdir, vid, args.voice, args.rate, args.no_cache)
+    except Exception:
+        mark(vdir, "failed")
+        raise
+    mark(vdir, "done")
     n_clip = sum(1 for e in lesson["timeline"] if e["kind"] == "clip")
     cache = f"，重用 {lesson['reused_parts']}/{lesson['total_parts']} 段" if lesson["reused_parts"] else ""
     print(f"OK {fmt_dur(lesson['duration'])}（{len(lesson['chapters'])} 章、{n_clip} 段原聲{cache}）→ {vdir / 'lesson.mp3'}")
