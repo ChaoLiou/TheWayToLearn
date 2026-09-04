@@ -1,0 +1,14 @@
+{
+  "name": "thewaytolearn",
+  "description": "把 YouTube 影片變成可導覽的學習規劃與知識地圖。",
+  "owner": {
+    "name": "chaol"
+  },
+  "plugins": [
+    {
+      "name": "thewaytolearn",
+      "source": "./",
+      "description": "YouTube 連結 → 抓字幕與關鍵截圖 → 線性推進的學習規劃（HTML + Mermaid）→ 學習地圖。"
+    }
+  ]
+}
