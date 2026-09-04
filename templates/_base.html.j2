@@ -169,8 +169,8 @@
       img.src = it.src;
     }
   };
-  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; show(i); };
-  const close = () => { V.el.hidden = true; V.content.replaceChildren(); };
+  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; document.body.style.overflow = "hidden"; show(i); };
+  const close = () => { V.el.hidden = true; document.body.style.overflow = ""; V.content.replaceChildren(); };
 
   V.el.addEventListener("click", (e) => {
     const act = e.target.closest("[data-act]")?.dataset.act;

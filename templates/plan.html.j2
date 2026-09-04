@@ -397,8 +397,8 @@
       if (K.nodes[K.idx]) K.nodes[K.idx].scrollIntoView({ block: "center", behavior: "smooth" });
     });
 
-    const openK = () => { K.el.hidden = false; K.idx = -1; paint(); };
-    const closeK = () => { K.el.hidden = true; };
+    const openK = () => { K.el.hidden = false; document.body.style.overflow = "hidden"; K.idx = -1; paint(); };
+    const closeK = () => { K.el.hidden = true; document.body.style.overflow = ""; };
     document.getElementById("kara-open").addEventListener("click", () => { openK(); if (lesson.paused) lesson.play(); });
     lesson.addEventListener("play", () => { if (K.el.hidden && !lesson.dataset.opened) { lesson.dataset.opened = "1"; openK(); } });
     K.el.addEventListener("click", (e) => {
