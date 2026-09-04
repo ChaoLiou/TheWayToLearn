@@ -6,7 +6,7 @@ description: 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/
 # /learn-fetch
 
 ```
-uv run scripts/fetch.py <url|id> [--lang zh-TW,zh,en] [--output-lang zh-TW|en] [--force]
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch.py <url|id> [--lang zh-TW,zh,en] [--output-lang zh-TW|en] [--force]
 ```
 
 - 輸出 `transcript.json`（events: start/duration/text）、`meta.json`（title/channel/duration/chapters/transcript_lang）。

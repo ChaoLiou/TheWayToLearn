@@ -13,9 +13,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    CONFIG,
     DEFAULT_WORKSPACE,
     Timer,
+    config_file,
     load_json,
     load_yaml,
     save_json,
@@ -74,7 +74,7 @@ def main(argv=None):
         print(f"跳過：{len(shots)} 張都已存在（--force 重截）")
         return
 
-    cfg = load_yaml(CONFIG / "estimate.yaml")
+    cfg = load_yaml(config_file("estimate.yaml"))
     with Timer(vdir, "shot"):
         video = download(vid, vdir, cfg["download"]["max_height"])
         for sid, sh in todo:

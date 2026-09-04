@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 兩種使用模式
+
+同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（`.claude-plugin/plugin.json`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
+- workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
+- 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
+- 改 skill 就改 `skills/<name>/SKILL.md`
+
 ## 常用指令
 
 ```bash
@@ -16,6 +23,7 @@ uv run scripts/validate.py <segments|analysis|overview> <file.json>
 uv run scripts/render.py                  # 每支影片各自產 plan.html
 uv run scripts/atlas.py --status          # 學習地圖：列新站與共同術語
 uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html
+uv run scripts/paths.py                   # 印出 workspace / 規則檔實際路徑
 ```
 測試不碰網路：`tests/fixtures/ws/` 是一組完整的 workspace 樣本，改 schema / template / validator 後跑 pytest 就能驗。
 
@@ -88,7 +96,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 ## Skill 拆分
 
-`.claude/skills/` 下：`/learn` 總指揮 + 七個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`。
+`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 七個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
 共用慣例：`/learn-<stage> <video_id> [--force] [--vision ...]`；預設不覆蓋既有輸出。`/learn` 另有 `--from <stage>`、`--dry-run`。
 
@@ -98,6 +106,13 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 - 每個階段的輸入/輸出落地成檔案（transcript JSON、segments JSON、截圖目錄），讓中間結果可重用、失敗可從中斷點重跑，不必重抓影片。
 - 每支影片獨立資料夾、獨立 `plan.html` 與 `_overview.json`（預設不合併）；使用者明確要求時才用 `render.py --combined` 合併多支。
 - skill 定義（給 agent 的指令）與程式碼分開放：skill 負責「何時、如何呼叫」，程式負責確定性的抓取/切段/截圖；LLM 判斷（分段語意、術語、說明）留在 analyze 階段。
+
+## 兩種使用模式
+
+同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（`.claude-plugin/plugin.json`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
+- workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
+- 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
+- 改 skill 就改 `skills/<name>/SKILL.md`
 
 ## 常用指令
 

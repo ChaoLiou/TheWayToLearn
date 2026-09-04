@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    CONFIG,
     DEFAULT_WORKSPACE,
+    config_file,
     fmt_dur,
     load_input,
     load_yaml,
@@ -125,7 +125,7 @@ def print_report(items: list[dict], cfg: dict) -> None:
     print(f"   總時間       {fmt_dur(grand['sec']):>10}")
     print(f"   總 tokens    {grand['tokens']:>10,}")
     print(f"   總下載       {grand['mb']:>8.1f} MB")
-    print(f"\n係數在 {CONFIG / 'estimate.yaml'}，改了重跑即可。")
+    print(f"\n係數在 {config_file('estimate.yaml')}，改了重跑即可（plugin 模式：複製到 ./learn.rules/estimate.yaml 再改）。")
 
 
 def main(argv=None):
@@ -137,7 +137,7 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true", help="只輸出 JSON")
     args = ap.parse_args(argv)
 
-    cfg = load_yaml(CONFIG / "estimate.yaml")
+    cfg = load_yaml(config_file("estimate.yaml"))
     if args.input:
         inp = load_input(args.input)
         videos = [(v["url"], str(v["vision"]).lower()) for v in inp["videos"]]

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from datetime import UTC, datetime
@@ -9,12 +10,43 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent  # repo 或 plugin 的根目錄（${CLAUDE_PLUGIN_ROOT}）
 CONFIG = ROOT / "config"
 SCHEMAS = ROOT / "schemas"
 RULES = ROOT / "rules"
 TEMPLATES = ROOT / "templates"
-DEFAULT_WORKSPACE = ROOT / "workspace"
+
+
+def _workspace() -> Path:
+    """workspace 位置：$LEARN_WORKSPACE > 目前目錄的 ./workspace（clone 模式下目前目錄就是 repo）。"""
+    env = os.environ.get("LEARN_WORKSPACE")
+    return Path(env).expanduser().resolve() if env else Path.cwd() / "workspace"
+
+
+DEFAULT_WORKSPACE = _workspace()
+
+
+def override_dir() -> Path:
+    """使用者自己的規則覆寫目錄：$LEARN_RULES > 目前目錄的 ./learn.rules。
+    plugin 模式下 rules/ config/ templates/ 會被更新覆蓋，要客製就複製到這裡改。"""
+    env = os.environ.get("LEARN_RULES")
+    return Path(env).expanduser().resolve() if env else Path.cwd() / "learn.rules"
+
+
+def rule_file(name: str) -> Path:
+    o = override_dir() / name
+    return o if o.exists() else RULES / name
+
+
+def config_file(name: str) -> Path:
+    o = override_dir() / name
+    return o if o.exists() else CONFIG / name
+
+
+def template_dirs() -> list[str]:
+    """Jinja 搜尋路徑：覆寫目錄的 templates/ 優先。"""
+    o = override_dir() / "templates"
+    return [str(o), str(TEMPLATES)] if o.is_dir() else [str(TEMPLATES)]
 
 _ID_RE = re.compile(r"(?:v=|youtu\.be/|/shorts/|/embed/|/live/)([A-Za-z0-9_-]{11})")
 

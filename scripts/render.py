@@ -18,11 +18,11 @@ from jinja2 import Environment, FileSystemLoader
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
     DEFAULT_WORKSPACE,
-    TEMPLATES,
     find_video_dir,
     fmt_dur,
     fmt_ts,
     load_json,
+    template_dirs,
     video_id,
 )
 from i18n import Strings, norm_lang
@@ -243,7 +243,7 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     tg, edges, legend = term_graph(videos, tips, S)
     ws = out.parent.parent if out.parent != overview_path.parent.parent else out.parent
     atlas = atlas_context(ws, videos[0]["id"], S) if len(videos) == 1 else None
-    env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
+    env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["ts"] = fmt_ts
     env.filters["dur"] = fmt_dur
     env.filters["yt_search"] = lambda q: "https://www.youtube.com/results?search_query=" + quote(q)

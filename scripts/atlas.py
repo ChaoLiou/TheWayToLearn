@@ -15,7 +15,13 @@ import jsonschema
 from jinja2 import Environment, FileSystemLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DEFAULT_WORKSPACE, SCHEMAS, TEMPLATES, fmt_dur, load_json
+from common import (
+    DEFAULT_WORKSPACE,
+    SCHEMAS,
+    fmt_dur,
+    load_json,
+    template_dirs,
+)
 from i18n import Strings, norm_lang
 from render import PALETTE, Tips, mm_label
 
@@ -169,7 +175,7 @@ def render(ws: Path) -> Path:
     S = Strings(norm_lang(lang))
     tips = Tips()
     mm, links, legend = map_mermaid(wps, atlas, tips, S)
-    env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True)
+    env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["dur"] = fmt_dur
     html = env.get_template("atlas.html.j2").render(
         waypoints=wps, regions=regions, unplaced=unplaced, routes=atlas["routes"], by_id=by_id,

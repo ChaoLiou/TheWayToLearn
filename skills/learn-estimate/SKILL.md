@@ -6,8 +6,8 @@ description: 只給 YouTube 連結就估「下載、分析各階段時間、toke
 # /learn-estimate
 
 ```
-uv run scripts/estimate.py <url> [<url> ...] [--vision true|false|auto]
-uv run scripts/estimate.py --input input.yaml
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <url> [<url> ...] [--vision true|false|auto]
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py --input input.yaml
 ```
 
 - 把 script 印出的表格**原樣**貼給使用者（每支影片分階段 + 小計；最後全部總和 + 跨影片彙整）。

@@ -13,6 +13,11 @@ description: 使用者貼 YouTube 連結並要求學習、整理、做筆記、�
 /learn --dry-run <url> ...        # 只列各階段會跳過/執行
 ```
 
+## 執行位置
+- 以 plugin 安裝時 `${CLAUDE_PLUGIN_ROOT}` 指向 plugin 目錄；clone repo 使用時未設定，`${CLAUDE_PLUGIN_ROOT:-.}` 會落到目前目錄。所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`。
+- workspace 在使用者目前目錄的 `./workspace/`（或 `$LEARN_WORKSPACE`）。
+- **第 0 步之前先跑** `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/paths.py"`：它印出每個規則檔實際在哪（使用者可用 `./learn.rules/` 覆寫），之後讀規則就讀它印的路徑。
+
 ## 流程（每步都用對應的階段 skill，不要自己重做它的工作）
 
 0. **估算**：先跑 `/learn-estimate`，把分階段 + 總和的表格原樣給使用者看。使用者未明說「直接跑」時，等確認再繼續。
@@ -20,13 +25,13 @@ description: 使用者貼 YouTube 連結並要求學習、整理、做筆記、�
    沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）。
 2. 對每支影片依序：`/learn-fetch` → `/learn-segment` → `/learn-shot` → `/learn-analyze`。
    - 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）。
-   - agent 產的 JSON 一定要過 `uv run scripts/validate.py <kind> <file>`，不過就修到過。
+   - agent 產的 JSON 一定要過 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py <kind> <file>`，不過就修到過。
 3. 每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
 4. workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`：把新站連進學習地圖，產出 `workspace/atlas.html`。
 5. 回報：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route。
 
 ## 規則檔（改行為就改這些，不改程式）
-- `rules/segment.md`、`rules/narrative.md`、`rules/overview.md`、`rules/output.md`
+- `rules/segment.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）、`rules/narrative.md`、`rules/overview.md`、`rules/output.md`
 - `config/estimate.yaml`（估算係數）
 - `schemas/*.json`（agent 輸出格式）
 

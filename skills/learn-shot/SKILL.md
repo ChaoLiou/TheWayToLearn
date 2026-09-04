@@ -6,7 +6,7 @@ description: 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 wor
 # /learn-shot
 
 ```
-uv run scripts/screenshot.py <id> [--force] [--keep-video]
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/screenshot.py <id> [--force] [--keep-video]
 ```
 
 - 需要 `ffmpeg`（`sudo apt install ffmpeg`）。
