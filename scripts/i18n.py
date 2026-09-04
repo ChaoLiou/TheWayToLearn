@@ -31,7 +31,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "listen": "🎧 聽力版", "listen_hint": "TTS 講解與作者原聲交錯；點章節可跳。",
         "chapters": "章節", "clip_mark": "原聲",
         "open_script": "🎤 開啟講稿", "kara_hint": "邊聽邊看逐句講稿，點任一句從那裡開始",
-        "script": "講稿", "restart": "⏮ 重頭", "play": "▶ 播放", "pause": "⏸ 暫停", "back_to_now": "回到目前",
+        "script": "講稿", "speed": "速度", "restart": "⏮ 重頭", "play": "▶ 播放", "pause": "⏸ 暫停", "back_to_now": "回到目前",
         "leads_to_tip": "留給下一段：", "term_undefined": "（本片未單獨定義）", "sep": "、",
         # atlas
         "atlas_title": "學習地圖 · Atlas", "atlas_h1": "🗺 學習地圖", "n_wp": "{n} 站", "n_region": "{n} 個主題區",
@@ -64,7 +64,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "listen": "🎧 Audio lesson", "listen_hint": "Narration interleaved with the author's own words; click a chapter to jump.",
         "chapters": "Chapters", "clip_mark": "original audio",
         "open_script": "🎤 Open script", "kara_hint": "Follow line by line; click any line to start there",
-        "script": "Script", "restart": "⏮ Restart", "play": "▶ Play", "pause": "⏸ Pause", "back_to_now": "Back to current",
+        "script": "Script", "speed": "Speed", "restart": "⏮ Restart", "play": "▶ Play", "pause": "⏸ Pause", "back_to_now": "Back to current",
         "leads_to_tip": "Leads to: ", "term_undefined": "(not defined separately in this video)", "sep": ", ",
         "atlas_title": "Learning Atlas", "atlas_h1": "🗺 Learning Atlas", "n_wp": "{n} station(s)", "n_region": "{n} region(s)",
         "n_route": "{n} route(s)", "updated": "updated {t}", "h_map": "Map",
