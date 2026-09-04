@@ -33,7 +33,7 @@ claude
 
 | 指令 | 做什麼 |
 |---|---|
-| `/learn <url> [--vision true\|false\|auto]` | 估成本 → 抓字幕 → 切段 → 截圖 → 逐段分析 → 產 `plan.html` → 更新學習地圖 |
+| `/learn <url> [--shots auto\|none\|many] [--vision true\|false\|auto]` | 估成本 → 抓字幕 → 切段 → 截圖 → 逐段分析 → 產 `plan.html` → 更新學習地圖 |
 | `/learn-estimate <url>` | 只估時間／token／磁碟 |
 | `/learn-render` | 已有資料，只重產 `plan.html` |
 | `/learn-atlas` | 重整學習地圖 `workspace/atlas.html` |

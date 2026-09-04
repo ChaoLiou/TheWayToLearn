@@ -21,3 +21,14 @@ def test_vision_true_costs_more():
     off, on = estimate_one(META, "false", cfg), estimate_one(META, "true", cfg)
     assert on["total"]["sec"] > off["total"]["sec"]
     assert on["vision_extra_if_true"] is None
+
+
+def test_shots_none_skips_frames_and_download():
+    cfg = load_yaml(CONFIG / "estimate.yaml")
+    auto, none = estimate_one(META, "true", cfg, "auto"), estimate_one(META, "true", cfg, "none")
+    assert none["assumed"]["frames"] == 0 and none["assumed"]["download_mb"] == 0
+    assert none["stages"]["shot"]["sec"] == 0
+    assert none["total"]["sec"] < auto["total"]["sec"]
+    assert none["vision_extra_if_true"] is None
+    many = estimate_one(META, "false", cfg, "many")
+    assert many["assumed"]["frames"] > auto["assumed"]["frames"]

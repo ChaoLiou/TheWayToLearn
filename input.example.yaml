@@ -4,6 +4,7 @@ output_lang: zh-TW       # 產出文件的語言：跟著使用者下指令的�
 out: workspace           # 每支影片一個子目錄 workspace/<video_id>/
 videos:
   - url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-    vision: true         # true | false | auto（預設 true）
-  - url: https://youtu.be/xxxxxxxxxxx
-    vision: false
+    shots: auto          # auto=只截看了才懂的畫面（預設）| none=完全不截圖、不下載影片 | many=每段至少一張
+    vision: true         # AI 要不要逐張讀截圖：true | false | auto（預設 true；shots: none 時無意義）
+  - url: https://youtu.be/xxxxxxxxxxx   # 畫面沒資訊、重點都在講話
+    shots: none

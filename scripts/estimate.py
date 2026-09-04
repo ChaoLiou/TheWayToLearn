@@ -47,20 +47,23 @@ def probe(url: str, max_height: int) -> dict:
     }
 
 
-def estimate_one(meta: dict, vision: str, cfg: dict) -> dict:
+def estimate_one(meta: dict, vision: str, cfg: dict, shots: str = "auto") -> dict:
     dur = meta["duration"]
     mins = dur / 60
     seg_cfg = cfg["segment"]
     n_seg = round(mins / seg_cfg["minutes_per_segment"])
     n_seg = max(seg_cfg["min_segments"], min(seg_cfg["max_segments"], n_seg))
-    n_frames = n_seg * cfg["shot"]["frames_per_segment"]
+    per_seg = {"none": 0, "auto": cfg["shot"]["frames_per_segment"], "many": cfg["shot"]["frames_per_segment"] + 1}[shots]
+    n_frames = n_seg * per_seg
     # 沒有 transcript 時，字數用語速估：中文約 200 字/分
     words = mins * 200
     transcript_tokens = int(words * cfg["tokens_per_transcript_word"])
 
-    vision_on = vision == "true" or (vision == "auto" and False)  # auto 先以 false 估，另列上限
+    # 沒有截圖就沒有 vision 可言
+    vision_on = n_frames > 0 and vision == "true"  # auto 先以 false 估，另列上限
     mb_per_s = cfg["download"]["mbps"] / 8
-    dl_sec = cfg["download"]["overhead_sec"] + (meta["filesize"] / 1e6) / mb_per_s if meta["filesize"] else 0
+    dl_mb = meta["filesize"] / 1e6 if n_frames else 0.0  # 不截圖就不下載影片
+    dl_sec = cfg["download"]["overhead_sec"] + dl_mb / mb_per_s if dl_mb else 0
 
     a = cfg["analyze"]
     stages = {
@@ -92,10 +95,11 @@ def estimate_one(meta: dict, vision: str, cfg: dict) -> dict:
         "title": meta["title"],
         "duration": dur,
         "vision": vision,
-        "assumed": {"segments": n_seg, "frames": n_frames, "download_mb": round(meta["filesize"] / 1e6, 1)},
+        "shots": shots,
+        "assumed": {"segments": n_seg, "frames": n_frames, "download_mb": round(dl_mb, 1)},
         "has_any_subs": meta["has_any_subs"],
         "stages": {k: {"sec": round(v["sec"]), "tokens": v["tokens"]} for k, v in stages.items()},
-        "vision_extra_if_true": vision_extra if not vision_on else None,
+        "vision_extra_if_true": vision_extra if (not vision_on and n_frames) else None,
         "total": {"sec": round(total["sec"]), "tokens": total["tokens"]},
     }
 
@@ -103,11 +107,12 @@ def estimate_one(meta: dict, vision: str, cfg: dict) -> dict:
 def print_report(items: list[dict], cfg: dict) -> None:
     grand = {"sec": 0, "tokens": 0, "mb": 0.0}
     for e in items:
-        print(f"\n## {e['title']}  ({e['video_id']}, {fmt_dur(e['duration'])}, vision={e['vision']})")
+        print(f"\n## {e['title']}  ({e['video_id']}, {fmt_dur(e['duration'])}, shots={e.get('shots', 'auto')}, vision={e['vision']})")
         if not e["has_any_subs"]:
             print("   !! 沒有任何字幕，fetch 會失敗；需要改走語音轉文字（尚未實作）")
         a = e["assumed"]
-        print(f"   假設：{a['segments']} 段、{a['frames']} 張截圖、下載 {a['download_mb']} MB")
+        shot_note = "不截圖、不下載影片" if not a["frames"] else f"{a['frames']} 張截圖、下載 {a['download_mb']} MB"
+        print(f"   假設：{a['segments']} 段、{shot_note}")
         print(f"   {'階段':<10}{'時間':>10}{'tokens':>12}")
         for k, v in e["stages"].items():
             print(f"   {k:<10}{fmt_dur(v['sec']):>10}{v['tokens']:>12,}")
@@ -134,6 +139,8 @@ def main(argv=None):
     ap.add_argument("urls", nargs="*")
     ap.add_argument("--input", type=Path)
     ap.add_argument("--vision", default="true", choices=["true", "false", "auto"])
+    ap.add_argument("--shots", default="auto", choices=["auto", "none", "many"],
+                    help="auto=只截看了才懂的畫面（預設）｜none=完全不截圖，也不下載影片｜many=每段至少一張")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--json", action="store_true", help="只輸出 JSON")
     args = ap.parse_args(argv)
@@ -141,18 +148,18 @@ def main(argv=None):
     cfg = load_yaml(config_file("estimate.yaml"))
     if args.input:
         inp = load_input(args.input)
-        videos = [(v["url"], str(v["vision"]).lower()) for v in inp["videos"]]
+        videos = [(v["url"], str(v["vision"]).lower(), str(v.get("shots", "auto"))) for v in inp["videos"]]
         workspace = Path(inp["out"])
     else:
-        videos = [(u, args.vision) for u in args.urls]
+        videos = [(u, args.vision, args.shots) for u in args.urls]
         workspace = args.workspace
     if not videos:
         ap.error("要給 URL 或 --input")
 
     items = []
-    for url, vision in videos:
+    for url, vision, shots in videos:
         meta = probe(url, cfg["download"]["max_height"])
-        est = estimate_one(meta, vision, cfg)
+        est = estimate_one(meta, vision, cfg, shots)
         save_json(video_dir(meta["id"], workspace, title=meta["title"]) / "estimate.json", est)
         items.append(est)
 

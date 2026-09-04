@@ -64,7 +64,9 @@ def main(argv=None):
     segs = load_json(seg_path)
     shots = [(s["id"], sh) for s in segs["segments"] for sh in s.get("shots", [])]
     if not shots:
-        print("segments.json 沒有任何 shots，不需截圖")
+        print("segments.json 沒有任何 shots，不需截圖（shots_mode="
+              f"{segs.get('shots_mode', 'auto')}）")
+        print_step("shot", "跳過：這支影片不截圖")
         return
 
     frames = vdir / "frames"
@@ -73,6 +75,7 @@ def main(argv=None):
             if args.force or not (frames / f"s{sid:02d}_{int(sh['t'])}.jpg").exists()]
     if not todo:
         print(f"跳過：{len(shots)} 張都已存在（--force 重截）")
+        print_step("shot", f"{len(shots)} 張已存在")
         return
 
     cfg = load_yaml(config_file("estimate.yaml"))

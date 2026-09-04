@@ -71,6 +71,12 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 - `analysis.json` 每段必填 `builds_on` / `reasoning` / `leads_to`；第 N 段的 `builds_on` 必須回應第 N-1 段的 `leads_to`
 - validator 檢查 `builds_on` 只指向更早的 segment；render 把承接句以「承上：…」顯示
 
+## 截圖與 vision（每支影片各自設定）
+
+`input.yaml` 每支影片有兩個獨立開關：
+- `shots: auto | none | many`（預設 `auto`）——要不要截圖。`none` 完全不截、也不下載影片，步驟 4 跳過；`auto` 由 agent 依 `rules/segment.md` 只挑「看了才懂」的畫面，整支都沒有就自動降成 `none`。寫進 `segments.json` 的 `shots_mode`。
+- `vision: true | false | auto`（預設 `true`）——AI 要不要逐張讀截圖；`shots: none` 時無意義。
+
 ## vision 模式（每支影片各自設定）
 
 `input.yaml` 每個 URL 有 `vision: true | false | auto`（**預設 true**），決定 analyze 階段 agent 是否逐張讀截圖。`auto` 由 agent 在 segment 階段判斷並寫回 `segments.json`。

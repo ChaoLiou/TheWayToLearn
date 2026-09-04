@@ -124,6 +124,7 @@ def load_input(p: Path) -> dict:
     for v in data["videos"]:
         v["id"] = video_id(v["url"])
         v.setdefault("vision", True)
+        v.setdefault("shots", "auto")
     return data
 
 
