@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "atlas-of-knowledge",
+      "name": "atlas",
       "source": "./",
       "description": "Atlas of Knowledge：把 YouTube 影片變成可導覽的學習規劃與知識地圖。"
     }

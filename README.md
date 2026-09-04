@@ -15,10 +15,10 @@
 在 Claude Code 裡：
 ```
 /plugin marketplace add <本 repo 的 GitHub 位址或本機路徑>
-/plugin install atlas-of-knowledge@thewaytolearn
+/plugin install atlas@thewaytolearn
 ```
-或在終端機：`claude plugin marketplace add <位址>` 然後 `claude plugin install atlas-of-knowledge@thewaytolearn`。
-之後在任何目錄：`/atlas-of-knowledge:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
+或在終端機：`claude plugin marketplace add <位址>` 然後 `claude plugin install atlas@thewaytolearn`。
+之後在任何目錄：`/atlas:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
 
 **方式 B：clone 下來在裡面用**
 ```
