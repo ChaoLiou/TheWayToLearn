@@ -6,7 +6,7 @@
   },
   "plugins": [
     {
-      "name": "thewaytolearn",
+      "name": "wayfinder",
       "source": "./",
       "description": "YouTube 連結 → 抓字幕與關鍵截圖 → 線性推進的學習規劃（HTML + Mermaid）→ 學習地圖。"
     }

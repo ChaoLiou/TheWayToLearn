@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 兩種使用模式
 
-同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（`.claude-plugin/plugin.json`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
+同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（plugin 名 `wayfinder`，marketplace 名 `thewaytolearn`；指令前綴 `/wayfinder:`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
 - workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
 - 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
 - 改 skill 就改 `skills/<name>/SKILL.md`
@@ -109,7 +109,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 ## 兩種使用模式
 
-同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（`.claude-plugin/plugin.json`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
+同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（plugin 名 `wayfinder`，marketplace 名 `thewaytolearn`；指令前綴 `/wayfinder:`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
 - workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
 - 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
 - 改 skill 就改 `skills/<name>/SKILL.md`

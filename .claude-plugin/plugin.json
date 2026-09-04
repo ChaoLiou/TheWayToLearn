@@ -1,7 +1,15 @@
 {
-  "name": "thewaytolearn",
+  "name": "wayfinder",
   "version": "0.1.0",
   "description": "YouTube 連結 → 抓字幕與關鍵截圖 → 線性推進的學習規劃（HTML + Mermaid）→ 學習地圖。/learn 一鍵跑完；rules/ 可覆寫。",
-  "author": {"name": "chaol"},
-  "keywords": ["youtube", "learning", "transcript", "mermaid", "study-plan"]
+  "author": {
+    "name": "chaol"
+  },
+  "keywords": [
+    "youtube",
+    "learning",
+    "transcript",
+    "mermaid",
+    "study-plan"
+  ]
 }
