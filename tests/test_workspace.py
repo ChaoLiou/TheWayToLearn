@@ -37,3 +37,21 @@ def test_workspace_and_override_resolution(tmp_path, monkeypatch):
     assert len(common.template_dirs()) == 2
     monkeypatch.delenv("LEARN_WORKSPACE"); monkeypatch.delenv("LEARN_RULES")
     importlib.reload(common)
+
+
+def test_publish_collects_only_shippable_files(tmp_path):
+    import publish
+    ws = tmp_path / "ws"
+    (ws / "A vid" / "frames").mkdir(parents=True)
+    (ws / "atlas.html").write_text("atlas")
+    for name in ("plan.html", "lesson.mp3", "audio.mp3", "analysis.json"):
+        (ws / "A vid" / name).write_text("x")
+    (ws / "A vid" / "lesson_parts").mkdir()
+    (ws / "A vid" / "lesson_parts" / "001.mp3").write_text("x")
+    (ws / "A vid" / "frames" / "s01_1.jpg").write_text("x")
+    (ws / "_overview.json").write_text("{}")
+    dist = tmp_path / "dist"
+    rels = {str(rel) for _, rel in publish.build(ws, dist)}
+    assert rels == {"atlas.html", "index.html", "A vid/plan.html", "A vid/lesson.mp3", "A vid/frames/s01_1.jpg"}
+    assert not (dist / "A vid" / "audio.mp3").exists()
+    assert not (dist / "A vid" / "lesson_parts").exists()

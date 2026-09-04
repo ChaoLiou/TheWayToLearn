@@ -56,6 +56,10 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "rate": ("--rate", "+0%", "聽力版語速", [
         ("+0%", "原速（預設）"), ("+15%", "快一點，通勤聽適合"), ("-10%", "慢一點"),
     ]),
+    "project_name": ("--project-name", "atlas-of-knowledge", "Cloudflare Pages 的專案名（決定網址）", []),
+    "deploy": ("--deploy", "false", "整理完要不要直接部署", [
+        ("false", "只整理 dist/，先看看內容（預設）"), ("true", "整理後用 wrangler 部署到 Cloudflare Pages"),
+    ]),
     "max_height": ("config: download.max_height", "720", "下載影片的畫質上限（影響截圖清晰度與下載量）", []),
 }
 
@@ -69,6 +73,7 @@ SKILL_PARAMS: dict[str, list[str]] = {
     "learn-render": ["combined"],
     "learn-atlas": [],
     "learn-narrate": ["clips", "voice", "rate", "force"],
+    "learn-publish": ["project_name", "deploy"],
 }
 
 

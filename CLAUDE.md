@@ -24,6 +24,7 @@ uv run scripts/render.py                  # 每支影片各自產 plan.html
 uv run scripts/atlas.py --status          # 學習地圖：列新站與共同術語
 uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html
 uv run scripts/paths.py                   # 印出 workspace / 規則檔實際路徑
+uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudflare Pages
 ```
 測試不碰網路：`tests/fixtures/ws/` 是一組完整的 workspace 樣本，改 schema / template / validator 後跑 pytest 就能驗。
 
@@ -119,7 +120,8 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 ## Skill 拆分
 
-`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 八個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`、`/learn-narrate`。
+`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 八個階段 skill + 工具 skill `/learn-publish`（發佈到 Cloudflare Pages）
+八個階段：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`、`/learn-narrate`。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
 共用慣例：`/learn-<stage> <video_id> [--force] [--vision ...]`；預設不覆蓋既有輸出。`/learn` 另有 `--from <stage>`、`--dry-run`。
 
