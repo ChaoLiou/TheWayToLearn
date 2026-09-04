@@ -26,6 +26,19 @@ description: [步驟 5/7·逐段分析] 由 agent 逐段寫「承上／推理／
 
 已存在且沒有 `--force` 就跳過。`--vision true|false` 可覆蓋 segments.json 的設定。
 
+## 開始前：確認參數
+
+```
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-analyze [--set k=v ...]
+```
+1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
+2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。
+3. 用 AskUserQuestion 問一次「要用預設嗎？」：
+   - 第一個選項固定是「用預設，直接開始（推薦）」。
+   - 其餘選項是**這支 skill 實際可調且尚未指定**的參數，每個選項寫清楚改成什麼值、會有什麼差別（例如「不截圖 `--shots none`：快很多、省 token，適合畫面沒資訊的影片」）。
+   - 使用者選了就照他的選擇跑；選「用預設」就直接進行。
+4. 使用者這次已經在對話裡表達過偏好（例如「這支不用截圖」），視同已指定，不要重複問。
+
 ## 跑完印進度
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/progress.py analyze "<一句話結果，例如 9 段>"

@@ -89,6 +89,10 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 跟著使用者下指令的語言：`/learn` 判定後寫進 `input.yaml` 的 `output_lang` 與各站 `meta.json`；agent 產的所有內文用它，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（新語言只需加一組字串）。
 
+## 參數確認
+
+每支 skill 開始前先跑 `scripts/options.py <skill> [--set k=v]`：印出該階段用得到的參數、目前值、意義與可選值；使用者已指定的標成「你已指定」。agent 把表原樣顯示，再用 AskUserQuestion 問一次要不要調整（第一個選項固定「用預設」）。`/learn` 只在開頭問一次。參數清單集中在 `options.py` 的 `PARAMS` / `SKILL_PARAMS`，新增參數只改這裡。
+
 ## 步驟進度
 
 流程固定 7 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas。每個 script 跑完呼叫 `print_step()` 印 `[N/7] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。

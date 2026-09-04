@@ -50,3 +50,14 @@ def test_step_line_format():
     last = step_line("atlas")
     assert last.startswith("[7/7]") and "全部完成" in last and "下一步" not in last
     assert "≥ 2 站" in step_line("render")
+
+
+def test_options_lists_params_per_skill(capsys, tmp_path):
+    import options
+    options.main(["learn", "--set", "shots=none", "--workspace", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert "--shots  = none （你已指定）" in out
+    assert "--vision" in out and "要調整哪一個" in out
+    assert "--shots" not in out.split("可調：")[1]
+    options.main(["learn-atlas", "--workspace", str(tmp_path)])
+    assert "沒有可調參數" in capsys.readouterr().out

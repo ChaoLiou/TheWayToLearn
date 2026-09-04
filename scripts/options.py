@@ -1,0 +1,108 @@
+"""列出某個 skill 會用到的參數：預設值、意義、可選值。skill 開始前先跑這支，把表原樣給使用者看，
+再問要不要調整。使用者已在指令中指定的參數會標成「已指定」。
+
+  uv run scripts/options.py learn                       # /learn 會用到的全部參數
+  uv run scripts/options.py learn-shot                  # 單一階段
+  uv run scripts/options.py learn --set shots=none      # 標記已指定，其餘顯示預設
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import DEFAULT_WORKSPACE, config_file, load_yaml
+
+# name -> (flag, 預設, 一句話意義, [(值, 說明)])
+PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
+    "shots": ("--shots", "auto", "要不要擷取影片畫面", [
+        ("auto", "只截「看了才懂」的畫面（圖表、程式碼、白板）；整支都沒有就自動不截"),
+        ("none", "完全不截圖，也不下載影片 —— 畫面沒資訊、重點都在講話時用，明顯更快更省"),
+        ("many", "每段至少一張 —— 投影片型、逐頁講解的影片"),
+    ]),
+    "vision": ("--vision", "true", "AI 要不要逐張看截圖再寫說明", [
+        ("true", "看圖，說明能對照畫面內容（較慢、較多 token）"),
+        ("false", "只讀字幕，截圖仍會放進文件但 AI 不看"),
+        ("auto", "由 AI 依字幕裡的視覺指示語（「看這張圖」）自行判斷"),
+    ]),
+    "lang": ("--lang", "zh-TW,zh,en", "字幕語言優先序（抓得到哪個就用哪個）", []),
+    "output_lang": ("--output-lang", "跟著你的對話語言", "產出文件與介面的語言", [
+        ("zh-TW", "繁體中文"), ("en", "English"),
+    ]),
+    "force": ("--force", "false", "已有結果時是否重跑覆蓋", [
+        ("false", "已存在就跳過（預設）"), ("true", "重新產生，覆蓋舊檔"),
+    ]),
+    "keep_video": ("--keep-video", "false", "抽完影格後是否保留影片檔", [
+        ("false", "刪掉，省磁碟（預設）"), ("true", "保留，之後補截圖不必重載"),
+    ]),
+    "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
+        ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
+    ]),
+    "max_height": ("config: download.max_height", "720", "下載影片的畫質上限（影響截圖清晰度與下載量）", []),
+}
+
+SKILL_PARAMS: dict[str, list[str]] = {
+    "learn": ["shots", "vision", "output_lang", "lang"],
+    "learn-estimate": ["shots", "vision"],
+    "learn-fetch": ["lang", "output_lang", "force"],
+    "learn-segment": ["shots", "vision"],
+    "learn-shot": ["force", "keep_video", "max_height"],
+    "learn-analyze": ["vision", "force"],
+    "learn-render": ["combined"],
+    "learn-atlas": [],
+}
+
+
+def _norm(v) -> str:
+    return {True: "true", False: "false"}.get(v, str(v))
+
+
+def effective(name: str, workspace: Path) -> str | None:
+    """從 workspace/input.yaml 或 config 讀出目前生效的值（沒有就回 None）。"""
+    if name == "max_height":
+        return str(load_yaml(config_file("estimate.yaml"))["download"]["max_height"])
+    p = workspace / "input.yaml"
+    if not p.exists():
+        return None
+    data = load_yaml(p) or {}
+    if name in ("lang", "output_lang"):
+        v = data.get(name)
+        return ",".join(v) if isinstance(v, list) else (_norm(v) if v is not None else None)
+    vids = data.get("videos") or []
+    vals = {_norm(v.get(name)) for v in vids if v.get(name) is not None}
+    return vals.pop() if len(vals) == 1 else (" / ".join(sorted(vals)) if vals else None)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("skill", choices=list(SKILL_PARAMS))
+    ap.add_argument("--set", action="append", default=[], metavar="k=v", help="使用者已指定的參數")
+    ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    args = ap.parse_args(argv)
+
+    given = dict(kv.split("=", 1) for kv in args.set if "=" in kv)
+    names = SKILL_PARAMS[args.skill]
+    if not names:
+        print(f"/{args.skill} 沒有可調參數，直接執行。")
+        return
+    print(f"/{args.skill} 會用到的參數：")
+    ask = []
+    for n in names:
+        flag, default, meaning, choices = PARAMS[n]
+        cur = given.get(n) or effective(n, args.workspace)
+        mark = "（你已指定）" if n in given else ("（沿用 input.yaml）" if cur else "（預設）")
+        print(f"\n  {flag}  = {cur or default} {mark}")
+        print(f"      {meaning}")
+        for val, desc in choices:
+            star = "→ " if (cur or default) == val else "  "
+            print(f"      {star}{val:<6} {desc}")
+        if n not in given:
+            ask.append(n)
+    if ask:
+        print("\n以上是預設值。要調整哪一個？（不用調就說「用預設」）")
+        print("可調：" + "、".join(PARAMS[n][0] for n in ask))
+
+
+if __name__ == "__main__":
+    main()

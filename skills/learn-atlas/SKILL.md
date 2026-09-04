@@ -7,6 +7,10 @@ description: [步驟 7/7·更新知識地圖] 學習地圖（Atlas）：把 work
 
 名詞：**waypoint** = 一支影片的資料夾、**route** = 兩站之間的關聯（有型態）、**region** = 主題區。規則在 `rules/atlas.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）。
 
+## 開始前
+
+這支沒有可調參數，直接執行（`options.py learn-atlas` 會這樣說）。
+
 ## 步驟
 1. `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/atlas.py --status`
    - 列出所有 waypoint、哪些是「★ 新站」、新站與每個既有站的**共同術語**與 prerequisites 覆蓋情況。
