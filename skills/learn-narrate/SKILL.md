@@ -15,9 +15,9 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 把表原樣顯示，再用 AskUserQuestion 問一次要不要調整（第一個選項固定「用預設」）。使用者已指定的不要再問。
 
 ## 1. 挑原聲片段（agent，若 segments.json 還沒有 clips）
-- 讀 `transcript.json`，為值得原音重現的段落加 `clips`：`{start, end, why}`，每段 0–1 個、長度 10–40 秒。
-- 只挑「原話比轉述更有價值」的：作者的比喻、關鍵定義、語氣強調、實際數字。
-- 寫回 `segments.json` 後跑 `validate.py segments`。
+- 依 `rules/narration.md` 的「原聲片段」表：**預設整段**（≤150 秒直接用段落起訖；更長就取其中核心 60–120 秒）。
+- 起訖秒數不必精算，`narrate.py` 會自動對齊 transcript 的句子邊界。
+- 純過場、純清單的段落可以不放 clip。寫回 `segments.json` 後跑 `validate.py segments`。
 
 ## 2. 寫講稿（agent）
 - 先整份讀 `rules/narration.md`（實際路徑看 `paths.py`）。
@@ -30,8 +30,9 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> [--voice ...] [--rate +15%] [--force]
 ```
 - 需要網路（edge-tts）與 ffmpeg；會自動只下載音訊（`-f ba`，比影片小很多）。
-- 產出 `lesson.mp3` 與 `lesson.json`（章節與時間軸）。
-- 之後重跑 `/learn-render`，`plan.html` 頂端就會出現播放器與可點的章節。
+- 產出 `lesson.mp3` 與 `lesson.json`（章節、時間軸、逐句字幕）。
+- 片段快取在 `lesson_parts/`：只改字幕合併或章節時會重用，不必重跑 TTS（`--no-cache` 可強制重做）。
+- 之後重跑 `/learn-render`，`plan.html` 頂端會出現播放器、章節，以及「🎤 開啟講稿」的 karaoke 視窗。
 
 ## 進度
 script 執行完會自己印 `[8/8] ✔ … ●●●●●●●●` 兩行，把它原樣回報給使用者，不要改寫。

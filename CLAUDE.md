@@ -104,7 +104,14 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 - 線性推進與 AI 說明風格 → `rules/narrative.md`（硬規則由 `scripts/validate.py check_analysis` 執行，新增硬規則要同步加檢查 + 測試）
 - 彙整、takeaways、三個下一步 → `rules/overview.md`
 - 學習地圖的 route / region 判斷 → `rules/atlas.md`
-- 聽力版講稿 → `rules/narration.md`
+- 聽力版講稿與原聲片段長度 → `rules/narration.md`
+
+## 聽力版（lesson.mp3）
+
+`narrate.py` 把 `narration.json` 的 `say`（edge-tts）與 `clip`（yt-dlp 音訊 + ffmpeg）串成 `lesson.mp3`：
+- clip 的起訖自動對齊 transcript 句子邊界（`snap`），逐句字幕併成順口長度（`clip_lines`）寫進 `lesson.json`
+- 片段以內容雜湊命名快取在 `lesson_parts/`，改字幕合併或章節不必重跑 TTS
+- `plan.html` 有播放器、章節，以及 karaoke 講稿視窗（已唸過=一般色、目前=強調、未唸=灰、原聲=斜體，點任一句從那裡播）
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
 - agent 輸出格式 → `schemas/*.json`

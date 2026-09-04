@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -104,7 +106,45 @@ def chapters_of(timeline: list[dict]) -> list[dict]:
     return out
 
 
-def build(vdir: Path, vid: str, voice: str | None, rate: str | None, keep_parts: bool) -> dict:
+def snap(events: list[dict], start: float, end: float) -> tuple[float, float]:
+    """把 clip 的起訖對齊到 transcript 的句子邊界，避免從半句開始或斷在半句。"""
+    starts = [e["start"] for e in events]
+    ends = [e["start"] + e["duration"] for e in events]
+    lo = max((x for x in starts if x <= start + 0.6), default=starts[0] if starts else start)
+    hi = min((x for x in ends if x >= end - 0.6), default=ends[-1] if ends else end)
+    return (lo, max(hi, lo + 1))
+
+
+MERGE_SEC, MERGE_LEN = 6.0, 70  # 自動字幕一行常只有兩三個字，併成看得下去的長度
+
+
+def clip_lines(events: list[dict], start: float, end: float, offset: float) -> list[dict]:
+    """clip 範圍內的字幕，併成順口的長度並換算成 lesson.mp3 的絕對時間，給 karaoke 用。"""
+    out: list[dict] = []
+    for e in events:
+        a, b = e["start"], e["start"] + e["duration"]
+        if b <= start or a >= end:
+            continue
+        a, b = max(a, start), min(b, end)
+        at, dur, text = round(offset + a - start, 2), round(b - a, 2), e["text"].strip()
+        last = out[-1] if out else None
+        if last and last["dur"] < MERGE_SEC and len(last["text"]) + len(text) <= MERGE_LEN:
+            last["text"] = f"{last['text']} {text}".strip()
+            last["dur"] = round(at + dur - last["at"], 2)
+        else:
+            out.append({"at": at, "dur": dur, "text": text})
+    return out
+
+
+def part_name(i: int, b: dict, voice: str, rate: str) -> str:
+    """檔名帶內容雜湊：內容沒變就重用，調整字幕合併或章節時不必重跑 TTS。"""
+    key = ({"kind": "say", "text": b["text"], "voice": voice, "rate": rate}
+           if b["kind"] == "say" else {"kind": "clip", "start": b["start"], "end": b["end"]})
+    h = hashlib.sha1(json.dumps(key, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:8]
+    return f"{i:03d}_{b['kind']}_{h}.mp3"
+
+
+def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: bool) -> dict:
     nar = load_json(vdir / "narration.json")
     meta = load_json(vdir / "meta.json")
     titles = {s["id"]: s["title"] for s in load_json(vdir / "analysis.json")["segments"]}
@@ -112,36 +152,54 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, keep_parts:
     rate = rate or nar.get("rate", "+0%")
 
     blocks = nar["blocks"]
-    audio = ensure_audio(vid, vdir) if any(b["kind"] == "clip" for b in blocks) else None
+    has_clip = any(b["kind"] == "clip" for b in blocks)
+    audio = ensure_audio(vid, vdir) if has_clip else None
+    events = load_json(vdir / "transcript.json")["events"] if has_clip else []
     parts_dir = vdir / "lesson_parts"
     parts_dir.mkdir(exist_ok=True)
 
-    parts, timeline, t = [], [], 0.0
+    parts, timeline, t, reused = [], [], 0.0, 0
+    wanted = set()
     for i, b in enumerate(blocks, 1):
-        p = parts_dir / f"{i:03d}_{b['kind']}.mp3"
+        p = parts_dir / part_name(i, b, voice, rate)
+        wanted.add(p.name)
+        cached = p.exists() and not no_cache
         if b["kind"] == "say":
-            synth(b["text"], voice, rate, p)
+            if not cached:
+                synth(b["text"], voice, rate, p)
+            else:
+                reused += 1
+            d = duration(p)
+            lines = [{"at": round(t, 2), "dur": round(d, 2), "text": b["text"]}]
+            src = (None, None)
         else:
-            cut(audio, b["start"], b["end"], p)
-        d = duration(p)
+            src = snap(events, b["start"], b["end"])
+            if not cached:
+                cut(audio, src[0], src[1], p)
+            else:
+                reused += 1
+            d = duration(p)
+            lines = clip_lines(events, src[0], src[1], t)
         timeline.append({
             "at": round(t, 2), "dur": round(d, 2), "kind": b["kind"], "seg_id": b["seg_id"],
             "seg_title": titles.get(b["seg_id"], ""),
             "text": b.get("text", ""), "label": b.get("label", ""),
-            "source_start": b.get("start"), "source_end": b.get("end"),
+            "source_start": src[0], "source_end": src[1], "lines": lines,
         })
         parts.append(p)
         t += d
 
+    for f in parts_dir.iterdir():  # 清掉已經用不到的舊片段
+        if f.name not in wanted:
+            f.unlink()
     out = vdir / "lesson.mp3"
     concat(parts, out)
-    if not keep_parts:
-        shutil.rmtree(parts_dir)
 
     lesson = {
         "video_id": vid, "voice": voice, "rate": rate,
         "duration": round(t, 2), "file": out.name,
         "chapters": chapters_of(timeline), "timeline": timeline,
+        "reused_parts": reused, "total_parts": len(parts),
     }
     save_json(vdir / "lesson.json", lesson)
     return lesson
@@ -154,7 +212,7 @@ def main(argv=None):
     ap.add_argument("--rate", help="語速，例如 +15%%")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--keep-parts", action="store_true", help="保留每段音檔，方便重做單段")
+    ap.add_argument("--no-cache", action="store_true", help="不重用 lesson_parts/ 裡的舊片段，全部重做")
     args = ap.parse_args(argv)
 
     if not shutil.which("ffmpeg"):
@@ -168,9 +226,10 @@ def main(argv=None):
         print_step("narrate", "已存在")
         return
     with Timer(vdir, "narrate"):
-        lesson = build(vdir, vid, args.voice, args.rate, args.keep_parts)
+        lesson = build(vdir, vid, args.voice, args.rate, args.no_cache)
     n_clip = sum(1 for e in lesson["timeline"] if e["kind"] == "clip")
-    print(f"OK {fmt_dur(lesson['duration'])}（{len(lesson['chapters'])} 章、{n_clip} 段原聲）→ {vdir / 'lesson.mp3'}")
+    cache = f"，重用 {lesson['reused_parts']}/{lesson['total_parts']} 段" if lesson["reused_parts"] else ""
+    print(f"OK {fmt_dur(lesson['duration'])}（{len(lesson['chapters'])} 章、{n_clip} 段原聲{cache}）→ {vdir / 'lesson.mp3'}")
     print_step("narrate", f"{fmt_dur(lesson['duration'])} 聽力版")
 
 

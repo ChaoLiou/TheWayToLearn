@@ -39,6 +39,11 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
         ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
     ]),
+    "clips": ("clips（在 segments.json）", "整段", "聽力版要播多長的作者原聲", [
+        ("整段", "段落完整播出（預設）；超過 150 秒的段落取其中核心 60–120 秒"),
+        ("精華", "只播 20–40 秒的關鍵句，聽力版較短但脈絡較少"),
+        ("不放", "全部用 TTS 講解，不播原聲"),
+    ]),
     "voice": ("--voice", "依語言自動選", "聽力版的 TTS 語音", [
         ("zh-TW-HsiaoChenNeural", "中文女聲，語氣友善（中文預設）"),
         ("zh-TW-YunJheNeural", "中文男聲"),
@@ -59,7 +64,7 @@ SKILL_PARAMS: dict[str, list[str]] = {
     "learn-analyze": ["vision", "force"],
     "learn-render": ["combined"],
     "learn-atlas": [],
-    "learn-narrate": ["voice", "rate", "force"],
+    "learn-narrate": ["clips", "voice", "rate", "force"],
 }
 
 

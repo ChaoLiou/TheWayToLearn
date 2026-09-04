@@ -38,7 +38,7 @@ claude
 | `/learn-estimate <url>` | 只估時間／token／磁碟 |
 | `/learn-render` | 已有資料，只重產 `plan.html` |
 | `/learn-atlas` | 重整學習地圖 `workspace/atlas.html` |
-| `/learn-narrate` | 產出聽力版 `lesson.mp3`：TTS 講解與作者原聲交錯（選配） |
+| `/learn-narrate` | 產出聽力版 `lesson.mp3`：TTS 講解與作者原聲交錯，plan.html 內建播放器與 karaoke 講稿（選配） |
 
 ## 客製規則（不用改程式）
 

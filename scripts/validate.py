@@ -89,8 +89,8 @@ def check_narration(data) -> list[str]:
                 errs.append(f"blocks[{i}]: kind=clip 必須有 start 與 end")
             elif b["end"] <= b["start"]:
                 errs.append(f"blocks[{i}]: clip 的 end 必須大於 start")
-            elif b["end"] - b["start"] > 60:
-                errs.append(f"blocks[{i}]: clip {b['end'] - b['start']:.0f} 秒太長（上限 60 秒）")
+            elif b["end"] - b["start"] > 180:
+                errs.append(f"blocks[{i}]: clip {b['end'] - b['start']:.0f} 秒太長（上限 180 秒）")
     return errs
 
 

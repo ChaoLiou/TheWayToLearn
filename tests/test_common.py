@@ -71,3 +71,17 @@ def test_narrate_helpers(tmp_path):
           {"seg_id": 2, "seg_title": "B", "at": 9.0}]
     assert narrate.chapters_of(tl) == [{"seg_id": 1, "title": "A", "at": 0.0}, {"seg_id": 2, "title": "B", "at": 9.0}]
     assert narrate.voice_for("zh-TW").startswith("zh-TW") and narrate.voice_for("en").startswith("en-")
+
+
+def test_clip_lines_merge_and_snap():
+    import narrate
+    ev = [{"start": 10.0, "duration": 2.0, "text": "hello"},
+          {"start": 12.0, "duration": 1.5, "text": "there"},
+          {"start": 13.5, "duration": 3.0, "text": "this is a much longer caption line here"},
+          {"start": 30.0, "duration": 2.0, "text": "outside"}]
+    lines = narrate.clip_lines(ev, 10.0, 17.0, 100.0)
+    assert len(lines) == 1 and lines[0]["at"] == 100.0          # 短句併成一行，範圍外的不收
+    assert lines[0]["text"].startswith("hello there this is")
+    long_ev = [{"start": i, "duration": 1.0, "text": "x" * 30} for i in range(6)]
+    assert len(narrate.clip_lines(long_ev, 0.0, 6.0, 0.0)) == 6  # 太長就不併
+    assert narrate.snap(ev, 10.4, 16.0) == (10.0, 16.5)
