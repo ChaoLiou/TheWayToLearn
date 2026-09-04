@@ -14,6 +14,7 @@ import json
 import shutil
 import subprocess
 import sys
+from itertools import pairwise
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -115,7 +116,8 @@ def snap(events: list[dict], start: float, end: float) -> tuple[float, float]:
     return (lo, max(hi, lo + 1))
 
 
-MERGE_SEC, MERGE_LEN = 6.0, 70  # 自動字幕一行常只有兩三個字，併成看得下去的長度
+MERGE_SEC, MERGE_LEN = 6.0, 70
+PRE_ROLL = 0.8  # 原聲往前多切一點，避免第一個字被切掉；這段不顯示文字  # 自動字幕一行常只有兩三個字，併成看得下去的長度
 
 
 def clip_lines(events: list[dict], start: float, end: float, offset: float) -> list[dict]:
@@ -133,13 +135,15 @@ def clip_lines(events: list[dict], start: float, end: float, offset: float) -> l
             last["dur"] = round(at + dur - last["at"], 2)
         else:
             out.append({"at": at, "dur": dur, "text": text})
+    for a, b in pairwise(out):  # 自動字幕的 duration 常蓋到下一句，會讓高亮慢一行
+        a["dur"] = round(min(a["dur"], b["at"] - a["at"]), 2)
     return out
 
 
 def part_name(i: int, b: dict, voice: str, rate: str) -> str:
     """檔名帶內容雜湊：內容沒變就重用，調整字幕合併或章節時不必重跑 TTS。"""
     key = ({"kind": "say", "text": b["text"], "voice": voice, "rate": rate}
-           if b["kind"] == "say" else {"kind": "clip", "start": b["start"], "end": b["end"]})
+           if b["kind"] == "say" else {"kind": "clip", "start": b["start"], "end": b["end"], "pre": PRE_ROLL})
     h = hashlib.sha1(json.dumps(key, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:8]
     return f"{i:03d}_{b['kind']}_{h}.mp3"
 
@@ -148,6 +152,7 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: b
     nar = load_json(vdir / "narration.json")
     meta = load_json(vdir / "meta.json")
     titles = {s["id"]: s["title"] for s in load_json(vdir / "analysis.json")["segments"]}
+    seg_clips = {s["id"]: s.get("clips", []) for s in load_json(vdir / "segments.json")["segments"]}
     voice = voice or nar.get("voice") or voice_for(meta.get("output_lang", "zh-TW"))
     rate = rate or nar.get("rate", "+0%")
 
@@ -174,17 +179,20 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: b
             src = (None, None)
         else:
             src = snap(events, b["start"], b["end"])
+            pre = min(PRE_ROLL, src[0])
             if not cached:
-                cut(audio, src[0], src[1], p)
+                cut(audio, src[0] - pre, src[1], p)
             else:
                 reused += 1
             d = duration(p)
-            lines = clip_lines(events, src[0], src[1], t)
+            lines = clip_lines(events, src[0], src[1], t + pre)
         timeline.append({
             "at": round(t, 2), "dur": round(d, 2), "kind": b["kind"], "seg_id": b["seg_id"],
             "seg_title": titles.get(b["seg_id"], ""),
             "text": b.get("text", ""), "label": b.get("label", ""),
             "source_start": src[0], "source_end": src[1], "lines": lines,
+            "translation": next((c.get("translation", "") for c in seg_clips.get(b["seg_id"], [])
+                                 if b["kind"] == "clip" and abs(c["start"] - b["start"]) < 1), ""),
         })
         parts.append(p)
         t += d

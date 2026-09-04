@@ -87,6 +87,10 @@
                 "why": {
                   "type": "string",
                   "description": "為什麼這段值得聽原音"
+                },
+                "translation": {
+                  "type": "string",
+                  "description": "這段原聲的中文翻譯（整段一段文字，術語保留英文原文）；輸出語言非中文時可省略"
                 }
               }
             }
