@@ -1,5 +1,6 @@
 workspace/
 dist/
+.wrangler/
 .venv/
 __pycache__/
 *.pyc
