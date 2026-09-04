@@ -1,9 +1,9 @@
 ---
 name: learn-analyze
-description: [步驟 5/7·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
+description: [步驟 5/8·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
 ---
 
-# /learn-analyze（agent 自己做，沒有 script）　—　步驟 5/7 逐段分析
+# /learn-analyze（agent 自己做，沒有 script）　—　步驟 5/8 逐段分析
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
 

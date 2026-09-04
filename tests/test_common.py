@@ -43,13 +43,13 @@ def test_title_dirname_cuts_at_word_boundary():
 
 def test_step_line_format():
     from common import STEPS, step_line, step_no
-    assert step_no("segment") == 3 and len(STEPS) == 7
+    assert step_no("segment") == 3 and len(STEPS) == 8
     first = step_line("segment", "9 段")
-    assert first.startswith("[3/7] ✔ segment 切段 完成  ●●●○○○○") and "9 段" in first
-    assert "下一步 [4/7] shot" in first
-    last = step_line("atlas")
-    assert last.startswith("[7/7]") and "全部完成" in last and "下一步" not in last
-    assert "≥ 2 站" in step_line("render")
+    assert first.startswith("[3/8] ✔ segment 切段 完成  ●●●○○○○○") and "9 段" in first
+    assert "下一步 [4/8] shot" in first
+    last = step_line("narrate")
+    assert last.startswith("[8/8]") and "全部完成" in last and "下一步" not in last
+    assert "≥ 2 站" in step_line("render") and "選配" in step_line("atlas")
 
 
 def test_options_lists_params_per_skill(capsys, tmp_path):
@@ -61,3 +61,13 @@ def test_options_lists_params_per_skill(capsys, tmp_path):
     assert "--shots" not in out.split("可調：")[1]
     options.main(["learn-atlas", "--workspace", str(tmp_path)])
     assert "沒有可調參數" in capsys.readouterr().out
+
+
+def test_narrate_helpers(tmp_path):
+    import narrate
+    a, b = tmp_path / "a.mp3", tmp_path / "it's.mp3"
+    assert narrate.concat_file([a, b]).splitlines()[1].endswith("it'\\''s.mp3'")
+    tl = [{"seg_id": 1, "seg_title": "A", "at": 0.0}, {"seg_id": 1, "seg_title": "A", "at": 3.0},
+          {"seg_id": 2, "seg_title": "B", "at": 9.0}]
+    assert narrate.chapters_of(tl) == [{"seg_id": 1, "title": "A", "at": 0.0}, {"seg_id": 2, "title": "B", "at": 9.0}]
+    assert narrate.voice_for("zh-TW").startswith("zh-TW") and narrate.voice_for("en").startswith("en-")

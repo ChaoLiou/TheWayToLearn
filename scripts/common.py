@@ -157,6 +157,7 @@ STEPS: list[tuple[str, str]] = [
     ("analyze", "逐段分析"),
     ("render", "產出 plan.html"),
     ("atlas", "更新知識地圖"),
+    ("narrate", "產出聽力版"),
 ]
 STEP_CMD = {k: f"/atlas:learn-{k}" for k, _ in STEPS}
 
@@ -179,6 +180,8 @@ def step_line(key: str, note: str = "") -> str:
     tail = f"        下一步 [{n + 1}/{total}] {nk} {nzh} → {STEP_CMD[nk]}"
     if nk == "atlas":
         tail += "（workspace 有 ≥ 2 站時才需要）"
+    if nk == "narrate":
+        tail += "（選配：想用聽的再跑）"
     return f"{head}\n{tail}"
 
 

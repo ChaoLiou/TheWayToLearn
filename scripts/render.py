@@ -170,6 +170,9 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
     v["id"] = v["meta"]["video_id"]
     v["dir"] = vdir.name
     v["estimate"] = load_json(vdir / "estimate.json") if (vdir / "estimate.json").exists() else None
+    v["lesson"] = load_json(vdir / "lesson.json") if (vdir / "lesson.json").exists() else None
+    if v["lesson"]:
+        v["lesson"]["href"] = href_prefix + quote(v["lesson"]["file"])
     v["timings"] = load_json(vdir / "timings.json") if (vdir / "timings.json").exists() else {}
     seg_by_id = {s["id"]: s for s in v["segments"]["segments"]}
     for s in v["analysis"]["segments"]:

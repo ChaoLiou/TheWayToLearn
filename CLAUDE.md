@@ -95,7 +95,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 ## 步驟進度
 
-流程固定 7 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas。每個 script 跑完呼叫 `print_step()` 印 `[N/7] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
+流程固定 8 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas → narrate（最後兩步條件／選配）。每個 script 跑完呼叫 `print_step()` 印 `[N/8] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
 
 ## 改規則不改程式
 
@@ -104,13 +104,14 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 - 線性推進與 AI 說明風格 → `rules/narrative.md`（硬規則由 `scripts/validate.py check_analysis` 執行，新增硬規則要同步加檢查 + 測試）
 - 彙整、takeaways、三個下一步 → `rules/overview.md`
 - 學習地圖的 route / region 判斷 → `rules/atlas.md`
+- 聽力版講稿 → `rules/narration.md`
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
 - agent 輸出格式 → `schemas/*.json`
 
 ## Skill 拆分
 
-`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 七個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`。
+`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 八個階段 skill：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`、`/learn-narrate`。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
 共用慣例：`/learn-<stage> <video_id> [--force] [--vision ...]`；預設不覆蓋既有輸出。`/learn` 另有 `--from <stage>`、`--dry-run`。
 

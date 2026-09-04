@@ -39,6 +39,14 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
         ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
     ]),
+    "voice": ("--voice", "依語言自動選", "聽力版的 TTS 語音", [
+        ("zh-TW-HsiaoChenNeural", "中文女聲，語氣友善（中文預設）"),
+        ("zh-TW-YunJheNeural", "中文男聲"),
+        ("en-US-AriaNeural", "英文女聲（英文預設）"),
+    ]),
+    "rate": ("--rate", "+0%", "聽力版語速", [
+        ("+0%", "原速（預設）"), ("+15%", "快一點，通勤聽適合"), ("-10%", "慢一點"),
+    ]),
     "max_height": ("config: download.max_height", "720", "下載影片的畫質上限（影響截圖清晰度與下載量）", []),
 }
 
@@ -51,6 +59,7 @@ SKILL_PARAMS: dict[str, list[str]] = {
     "learn-analyze": ["vision", "force"],
     "learn-render": ["combined"],
     "learn-atlas": [],
+    "learn-narrate": ["voice", "rate", "force"],
 }
 
 

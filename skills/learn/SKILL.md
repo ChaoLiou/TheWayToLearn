@@ -6,12 +6,12 @@ description: 使用者貼 YouTube 連結並要求學習、整理、做筆記、�
 # /learn — 總指揮（7 個步驟）
 
 ```
-[1/7] estimate  估成本        [5/7] analyze  逐段分析
-[2/7] fetch     抓字幕        [6/7] render   產出 plan.html
-[3/7] segment   切段          [7/7] atlas    更新知識地圖（≥ 2 站才需要）
-[4/7] shot      截圖
+[1/8] estimate  估成本       [5/8] analyze  逐段分析
+[2/8] fetch     抓字幕       [6/8] render   產出 plan.html
+[3/8] segment   切段         [7/8] atlas    更新知識地圖（≥ 2 站才需要）
+[4/8] shot      截圖         [8/8] narrate  產出聽力版（選配）
 ```
-每個階段跑完都會印一行 `[N/7] ✔ … ●●●○○○○` 與下一步，**原樣轉給使用者**，讓他隨時知道走到哪。跳過的步驟也要說明（例如「[2/7] fetch 跳過：transcript.json 已存在」）。
+每個階段跑完都會印一行 `[N/8] ✔ … ●●●○○○○` 與下一步，**原樣轉給使用者**，讓他隨時知道走到哪。跳過的步驟也要說明（例如「[2/8] fetch 跳過：transcript.json 已存在」）。
 
 用法：
 ```
@@ -53,15 +53,17 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - `--vision`：AI 要不要逐張讀截圖，預設 `true`；`--shots none` 時自動失效。
 - 兩者都寫進 `workspace/input.yaml` 該支影片底下，並由 `/learn-segment` 寫進 `segments.json` 的 `shots_mode` / `vision`。
 
-**[1/7] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
+**[1/8] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
 
-**[2/7]–[5/7]**：每支影片依序 `/learn-fetch` → `/learn-segment` → `/learn-shot` → `/learn-analyze`。
+**[2/8]–[5/8]**：每支影片依序 `/learn-fetch` → `/learn-segment` → `/learn-shot` → `/learn-analyze`。
 - 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）；跳過也要說「[N/7] X 跳過：<檔案> 已存在」。
 - agent 產的 JSON 一定要過 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py <kind> <file>`，不過就修到過。
 
-**[6/7] render**：每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
+**[6/8] render**：每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
 
-**[7/7] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站連進知識地圖。只有一站就說「[7/7] atlas 跳過：只有一站」。
+**[7/8] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站連進知識地圖。只有一站就說「[7/8] atlas 跳過：只有一站」。
+
+**[8/8] narrate（選配）**：只有使用者要求「用聽的」「通勤聽」「做成 podcast」時才跑 `/learn-narrate`；否則收尾時提一句「想用聽的可以跑 /atlas:learn-narrate」。
 
 **收尾回報**：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route。
 

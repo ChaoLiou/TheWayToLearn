@@ -1,9 +1,9 @@
 ---
 name: learn-estimate
-description: [步驟 1/7·估成本] 只給 YouTube 連結就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
+description: [步驟 1/8·估成本] 只給 YouTube 連結就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
 ---
 
-# /learn-estimate　—　步驟 1/7 估成本
+# /learn-estimate　—　步驟 1/8 估成本
 
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <url> [<url> ...] [--shots auto|none|many] [--vision true|false|auto]
@@ -31,4 +31,4 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 4. 使用者這次已經在對話裡表達過偏好（例如「這支不用截圖」），視同已指定，不要重複問。
 
 ## 進度
-script 執行完會自己印 `[N/7] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[N/8] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。

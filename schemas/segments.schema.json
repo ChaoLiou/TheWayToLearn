@@ -66,6 +66,30 @@
                 }
               }
             }
+          },
+          "clips": {
+            "type": "array",
+            "description": "這段值得原音重現的精華片段（聽力版用）；沒有就省略",
+            "items": {
+              "type": "object",
+              "required": [
+                "start",
+                "end",
+                "why"
+              ],
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                },
+                "why": {
+                  "type": "string",
+                  "description": "為什麼這段值得聽原音"
+                }
+              }
+            }
           }
         }
       }

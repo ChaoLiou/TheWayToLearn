@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "narration.json — 聽力版講稿，由 agent 依 rules/narration.md 產生",
+  "type": "object",
+  "required": [
+    "video_id",
+    "voice",
+    "blocks"
+  ],
+  "properties": {
+    "video_id": {
+      "type": "string"
+    },
+    "voice": {
+      "type": "string",
+      "description": "edge-tts 語音，例如 zh-TW-HsiaoChenNeural / en-US-AriaNeural"
+    },
+    "rate": {
+      "type": "string",
+      "description": "語速，例如 +10%",
+      "default": "+0%"
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "seg_id"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "say",
+              "clip"
+            ],
+            "description": "say=TTS 唸講稿｜clip=播原聲片段"
+          },
+          "seg_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "屬於哪一段（章節用）"
+          },
+          "text": {
+            "type": "string",
+            "description": "kind=say 必填：口語化講稿"
+          },
+          "start": {
+            "type": "number",
+            "description": "kind=clip 必填"
+          },
+          "end": {
+            "type": "number",
+            "description": "kind=clip 必填"
+          },
+          "label": {
+            "type": "string",
+            "description": "kind=clip：這段原聲在講什麼"
+          }
+        }
+      }
+    }
+  }
+}

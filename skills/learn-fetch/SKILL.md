@@ -1,9 +1,9 @@
 ---
 name: learn-fetch
-description: [步驟 2/7·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片。重抓資源、換字幕語言時用。
+description: [步驟 2/8·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片。重抓資源、換字幕語言時用。
 ---
 
-# /learn-fetch　—　步驟 2/7 抓字幕
+# /learn-fetch　—　步驟 2/8 抓字幕
 
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch.py <url|id> [--lang zh-TW,zh,en] [--output-lang zh-TW|en] [--force]
@@ -28,4 +28,4 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 4. 使用者這次已經在對話裡表達過偏好（例如「這支不用截圖」），視同已指定，不要重複問。
 
 ## 進度
-script 執行完會自己印 `[N/7] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[N/8] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。

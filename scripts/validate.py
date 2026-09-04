@@ -76,7 +76,26 @@ def check_overview(data) -> list[str]:
     return []
 
 
-CHECKS = {"segments": check_segments, "analysis": check_analysis, "overview": check_overview}
+def check_narration(data) -> list[str]:
+    errs = []
+    for i, b in enumerate(data["blocks"], 1):
+        if b["kind"] == "say":
+            if not b.get("text", "").strip():
+                errs.append(f"blocks[{i}]: kind=say 必須有 text")
+            elif len(b["text"]) > 90:
+                errs.append(f"blocks[{i}]: say 太長（{len(b['text'])} 字），拆成多個 block")
+        else:
+            if b.get("start") is None or b.get("end") is None:
+                errs.append(f"blocks[{i}]: kind=clip 必須有 start 與 end")
+            elif b["end"] <= b["start"]:
+                errs.append(f"blocks[{i}]: clip 的 end 必須大於 start")
+            elif b["end"] - b["start"] > 60:
+                errs.append(f"blocks[{i}]: clip {b['end'] - b['start']:.0f} 秒太長（上限 60 秒）")
+    return errs
+
+
+CHECKS = {"segments": check_segments, "analysis": check_analysis, "overview": check_overview,
+          "narration": check_narration}
 
 
 def validate(kind: str, path: Path) -> list[str]:

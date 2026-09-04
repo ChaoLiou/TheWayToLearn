@@ -1,9 +1,9 @@
 ---
 name: learn-segment
-description: [步驟 3/7·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。
+description: [步驟 3/8·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。
 ---
 
-# /learn-segment（agent 自己做，沒有 script）　—　步驟 3/7 切段
+# /learn-segment（agent 自己做，沒有 script）　—　步驟 3/8 切段
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
 

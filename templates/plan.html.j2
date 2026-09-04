@@ -9,6 +9,11 @@
   .tag.r { background:var(--accent); color:#fff; }
   .tag.ai { background:var(--card); color:var(--accent); border:1px solid var(--accent); }
   .atlas-nav ul { margin:.3rem 0 0; padding-left:1.2rem; }
+  .lesson audio { width:100%; margin:.5rem 0 .3rem; }
+  .lesson ol { margin:.2rem 0 0; padding-left:1.4rem; display:grid; gap:.1rem .9rem;
+               grid-template-columns:repeat(auto-fill, minmax(18rem, 1fr)); }
+  .lesson button { background:none; border:none; color:var(--accent); cursor:pointer; padding:0; font:inherit; text-align:left; }
+  .lesson .t { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:.4rem; }
   .atlas-nav .rt { display:inline-block; font-size:.72rem; font-weight:700; padding:0 .45rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.4rem; }
   /* 勘誤／過時 */
   .issues { margin:.8rem 0; }
@@ -56,6 +61,16 @@
   {% if atlas.links %}
   <ul>{% for l in atlas.links %}<li><span class="rt">{{ l.type }} {{ l.dir }}</span><a href="{{ l.href }}">{{ l.title }}</a> <span class="muted">· {{ l.via }}</span></li>{% endfor %}</ul>
   {% else %}<div class="muted">{{ S.no_links }}</div>{% endif %}
+</div>
+{% endif %}
+
+{% if videos|length == 1 and videos[0].lesson %}
+{% set L = videos[0].lesson %}
+<div class="card lesson">
+  <b>{{ S.listen }}</b> <span class="muted">{{ L.duration|dur }} · {{ S.listen_hint }}</span>
+  <audio id="lesson" controls preload="none" src="{{ L.href }}"></audio>
+  <div class="muted">{{ S.chapters }}</div>
+  <ol>{% for c in L.chapters %}<li><button data-at="{{ c.at }}"><span class="t">{{ c.at|ts }}</span>{{ c.title }}</button></li>{% endfor %}</ol>
 </div>
 {% endif %}
 
@@ -209,6 +224,12 @@
 <script id="shots-ids" type="application/json">{{ videos | map(attribute='id') | list | tojson }}</script>
 {% endblock %}
 {% block js %}
+  /* 聽力版：點章節跳到該時間 */
+  const lesson = document.getElementById("lesson");
+  if (lesson) document.querySelectorAll(".lesson button[data-at]").forEach((b) => {
+    b.addEventListener("click", () => { lesson.currentTime = +b.dataset.at; lesson.play(); });
+  });
+
   /* 截圖 → lightbox：輪流同一支影片的所有截圖 */
   const shotsByVideo = JSON.parse(document.getElementById("shots-data").textContent);
   const videoIds = JSON.parse(document.getElementById("shots-ids").textContent);

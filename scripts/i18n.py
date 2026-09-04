@@ -28,6 +28,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "term_graph": "術語關聯圖", "term_graph_desc_summary": "術語關聯圖的文字說明",
         "term_graph_desc": "節點顏色 = 首次定義的段落（見上方圖例）；箭頭 A → B 表示 A 的定義牽涉 B，線上文字是關係；雙箭頭且標籤前有 ⇄ = 兩者定義互相引用。hover 節點看定義、hover 線上文字看完整關係。",
         "h_next": "5. 推薦三個下一步", "yt_search": "YouTube 搜尋：",
+        "listen": "🎧 聽力版", "listen_hint": "TTS 講解與作者原聲交錯；點章節可跳。",
+        "chapters": "章節", "clip_mark": "原聲",
         "leads_to_tip": "留給下一段：", "term_undefined": "（本片未單獨定義）", "sep": "、",
         # atlas
         "atlas_title": "學習地圖 · Atlas", "atlas_h1": "🗺 學習地圖", "n_wp": "{n} 站", "n_region": "{n} 個主題區",
@@ -57,6 +59,8 @@ STRINGS: dict[str, dict[str, str]] = {
         "term_graph": "Term graph", "term_graph_desc_summary": "Term graph as text",
         "term_graph_desc": "Node colour = segment where the term is first defined (see legend). An arrow A → B means A's definition involves B; the label is the relation. A double arrow with ⇄ means both definitions reference each other. Hover a node for its definition, hover a label for the full relation.",
         "h_next": "5. Three recommended next steps", "yt_search": "Search YouTube: ",
+        "listen": "🎧 Audio lesson", "listen_hint": "Narration interleaved with the author's own words; click a chapter to jump.",
+        "chapters": "Chapters", "clip_mark": "original audio",
         "leads_to_tip": "Leads to: ", "term_undefined": "(not defined separately in this video)", "sep": ", ",
         "atlas_title": "Learning Atlas", "atlas_h1": "🗺 Learning Atlas", "n_wp": "{n} station(s)", "n_region": "{n} region(s)",
         "n_route": "{n} route(s)", "updated": "updated {t}", "h_map": "Map",

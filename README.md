@@ -7,6 +7,7 @@
 - [Claude Code](https://claude.com/claude-code)
 - [uv](https://docs.astral.sh/uv/)（會自動裝 Python 依賴，含 yt-dlp）
 - ffmpeg：`sudo apt install ffmpeg` / `brew install ffmpeg`
+- 聽力版另需網路（edge-tts，免費免金鑰）
 
 ## 安裝
 
@@ -37,6 +38,7 @@ claude
 | `/learn-estimate <url>` | 只估時間／token／磁碟 |
 | `/learn-render` | 已有資料，只重產 `plan.html` |
 | `/learn-atlas` | 重整學習地圖 `workspace/atlas.html` |
+| `/learn-narrate` | 產出聽力版 `lesson.mp3`：TTS 講解與作者原聲交錯（選配） |
 
 ## 客製規則（不用改程式）
 
