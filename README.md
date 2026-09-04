@@ -1,4 +1,4 @@
-# TheWayToLearn
+# Atlas of Knowledge
 
 給 YouTube 連結，產出一份**線性推進**的學習規劃（HTML + Mermaid），再把每支影片連成一張學習地圖。全部由你自己的 Claude Code 驅動：skill 負責判斷，Python script 負責抓取、截圖、驗證、排版。
 
@@ -15,10 +15,10 @@
 在 Claude Code 裡：
 ```
 /plugin marketplace add <本 repo 的 GitHub 位址或本機路徑>
-/plugin install wayfinder@thewaytolearn
+/plugin install atlas-of-knowledge@thewaytolearn
 ```
-或在終端機：`claude plugin marketplace add <位址>` 然後 `claude plugin install wayfinder@thewaytolearn`。
-之後在任何目錄：`/wayfinder:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
+或在終端機：`claude plugin marketplace add <位址>` 然後 `claude plugin install atlas-of-knowledge@thewaytolearn`。
+之後在任何目錄：`/atlas-of-knowledge:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
 
 **方式 B：clone 下來在裡面用**
 ```
