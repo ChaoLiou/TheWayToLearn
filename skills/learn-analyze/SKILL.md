@@ -1,9 +1,9 @@
 ---
 name: learn-analyze
-description: 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
+description: [步驟 5/7·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
 ---
 
-# /learn-analyze（agent 自己做，沒有 script）
+# /learn-analyze（agent 自己做，沒有 script）　—　步驟 5/7 逐段分析
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
 
@@ -25,3 +25,9 @@ description: 由 agent 逐段寫「承上／推理／AI 補充／術語／留給
 6. 把耗時寫進 `timings.json` 的 `analyze`。
 
 已存在且沒有 `--force` 就跳過。`--vision true|false` 可覆蓋 segments.json 的設定。
+
+## 跑完印進度
+```
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/progress.py analyze "<一句話結果，例如 9 段>"
+```
+把它印出的兩行原樣回報給使用者。

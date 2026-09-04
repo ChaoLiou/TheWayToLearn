@@ -18,6 +18,7 @@ from common import (
     config_file,
     load_json,
     load_yaml,
+    print_step,
     save_json,
     video_dir,
     video_id,
@@ -87,6 +88,7 @@ def main(argv=None):
         sh.setdefault("file", f"frames/s{sid:02d}_{int(sh['t'])}.jpg")
     save_json(seg_path, segs)
     print(f"OK {len(todo)} 張 → {frames}")
+    print_step("shot", f"{len(shots)} 張截圖")
 
 
 if __name__ == "__main__":

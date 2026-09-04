@@ -20,6 +20,7 @@ from common import (
     fmt_dur,
     load_input,
     load_yaml,
+    print_step,
     save_json,
     video_dir,
 )
@@ -159,6 +160,8 @@ def main(argv=None):
         print(json.dumps(items, ensure_ascii=False, indent=2))
     else:
         print_report(items, cfg)
+        print()
+        print_step("estimate", f"{len(items)} 支影片")
 
 
 if __name__ == "__main__":

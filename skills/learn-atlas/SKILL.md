@@ -1,9 +1,9 @@
 ---
 name: learn-atlas
-description: 學習地圖（Atlas）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html 可綜觀、可點進各站。有 ≥ 2 支影片時，每新增一支就跑一次。
+description: [步驟 7/7·更新知識地圖] 學習地圖（Atlas）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html 可綜觀、可點進各站。有 ≥ 2 支影片時，每新增一支就跑一次。
 ---
 
-# /learn-atlas
+# /learn-atlas　—　步驟 7/7 更新知識地圖
 
 名詞：**waypoint** = 一支影片的資料夾、**route** = 兩站之間的關聯（有型態）、**region** = 主題區。規則在 `rules/atlas.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）。
 
@@ -20,3 +20,9 @@ description: 學習地圖（Atlas）：把 workspace 下所有影片（waypoint�
 
 ## 只有一站時
 不需要 atlas.json；`atlas.py` 仍可 render 出只有一張卡片的 atlas.html。
+
+## 跑完印進度
+```
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/progress.py atlas "<一句話結果，例如 9 段>"
+```
+把它印出的兩行原樣回報給使用者。

@@ -20,6 +20,7 @@ from common import (
     SCHEMAS,
     fmt_dur,
     load_json,
+    print_step,
     template_dirs,
 )
 from i18n import Strings, norm_lang
@@ -195,7 +196,9 @@ def main(argv=None):
     if args.status:
         status(args.workspace)
         return
-    print(f"OK → {render(args.workspace)}")
+    out = render(args.workspace)
+    print(f"OK → {out}")
+    print_step("atlas", str(out))
 
 
 if __name__ == "__main__":

@@ -147,6 +147,44 @@ class Timer:
         record_timing(self.vdir, self.stage, time.monotonic() - self.t0)
 
 
+# ---- 流程步驟：每個階段跑完都印同一種進度行，讓使用者知道走到哪 ----
+STEPS: list[tuple[str, str]] = [
+    ("estimate", "估成本"),
+    ("fetch", "抓字幕"),
+    ("segment", "切段"),
+    ("shot", "截圖"),
+    ("analyze", "逐段分析"),
+    ("render", "產出 plan.html"),
+    ("atlas", "更新知識地圖"),
+]
+STEP_CMD = {k: f"/atlas:learn-{k}" for k, _ in STEPS}
+
+
+def step_no(key: str) -> int:
+    return next(i for i, (k, _) in enumerate(STEPS, 1) if k == key)
+
+
+def step_line(key: str, note: str = "") -> str:
+    """`[3/7] ✔ segment 切段 完成  ●●●○○○○` + 下一步。"""
+    n, total = step_no(key), len(STEPS)
+    _, zh = STEPS[n - 1]
+    bar = "●" * n + "○" * (total - n)
+    head = f"[{n}/{total}] ✔ {key} {zh} 完成  {bar}"
+    if note:
+        head += f"  · {note}"
+    if n == total:
+        return f"{head}\n        全部完成 → 開 workspace/atlas.html"
+    nk, nzh = STEPS[n]
+    tail = f"        下一步 [{n + 1}/{total}] {nk} {nzh} → {STEP_CMD[nk]}"
+    if nk == "atlas":
+        tail += "（workspace 有 ≥ 2 站時才需要）"
+    return f"{head}\n{tail}"
+
+
+def print_step(key: str, note: str = "") -> None:
+    print(step_line(key, note))
+
+
 def fmt_ts(sec: float) -> str:
     sec = int(sec)
     h, m, s = sec // 3600, (sec % 3600) // 60, sec % 60

@@ -83,6 +83,10 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 
 跟著使用者下指令的語言：`/learn` 判定後寫進 `input.yaml` 的 `output_lang` 與各站 `meta.json`；agent 產的所有內文用它，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（新語言只需加一組字串）。
 
+## 步驟進度
+
+流程固定 7 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → render → atlas。每個 script 跑完呼叫 `print_step()` 印 `[N/7] ✔ … ●●●○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
+
 ## 改規則不改程式
 
 行為都外置，改對應檔案即可：

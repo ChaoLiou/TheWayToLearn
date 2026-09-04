@@ -13,7 +13,15 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DEFAULT_WORKSPACE, find_video_dir, record_timing, save_json, video_dir, video_id
+from common import (
+    DEFAULT_WORKSPACE,
+    find_video_dir,
+    print_step,
+    record_timing,
+    save_json,
+    video_dir,
+    video_id,
+)
 
 
 def parse_json3(p: Path) -> list[dict]:
@@ -101,6 +109,7 @@ def main(argv=None):
     tmp.rmdir()
     record_timing(vdir, "fetch", time.monotonic() - t0)
     print(f"OK {meta['title']} ({meta['duration']}s, 字幕 {meta['transcript_lang']}) → {vdir}")
+    print_step("fetch", meta["title"])
 
 
 if __name__ == "__main__":

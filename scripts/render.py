@@ -22,6 +22,7 @@ from common import (
     fmt_dur,
     fmt_ts,
     load_json,
+    print_step,
     template_dirs,
     video_id,
 )
@@ -261,6 +262,7 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     )
     out.write_text(html, encoding="utf-8")
     print(f"OK → {out}")
+    print_step("render", str(out))
 
 
 def main(argv=None):
