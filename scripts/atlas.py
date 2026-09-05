@@ -29,6 +29,17 @@ from render import PALETTE, Tips, mm_label
 ROUTE_ARROW = {"prerequisite": "-->", "deepens": "-->", "contrasts": "<-->", "applies": "-->", "related": "---"}
 
 
+def fmt_ymd(s: str | None) -> str:
+    """yt-dlp 的 upload_date（20210315）→ 2021-03-15。"""
+    return f"{s[:4]}-{s[4:6]}-{s[6:8]}" if s and len(s) == 8 and s.isdigit() else (s or "")
+
+
+def thumb(d: Path) -> str | None:
+    """縮圖用該站第一張截圖（離線也看得到）；沒截圖就回 None，前端退回 YouTube 縮圖。"""
+    frames = sorted((d / "frames").glob("*.jpg")) if (d / "frames").is_dir() else []
+    return f"{quote(d.name)}/frames/{quote(frames[0].name)}" if frames else None
+
+
 def load_waypoints(ws: Path) -> list[dict]:
     wps = []
     for d in sorted(p for p in ws.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))):
@@ -44,6 +55,9 @@ def load_waypoints(ws: Path) -> list[dict]:
             "n_segments": len(an["segments"]), "has_plan": (d / "plan.html").exists(),
             "output_lang": norm_lang(meta.get("output_lang")),
             "href": f"{quote(d.name)}/plan.html",
+            "upload_date": fmt_ymd(meta.get("upload_date")),
+            "thumb": thumb(d),
+            "yt_thumb": f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
         })
     return wps
 

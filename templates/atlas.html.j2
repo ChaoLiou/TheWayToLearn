@@ -1,27 +1,73 @@
 {% extends "_base.html.j2" %}
 {% block title %}{{ S.atlas_title }}{% endblock %}
 {% block css %}
-  main { max-width: 1100px; }
+  main { max-width: 1180px; }
   .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
+  .route-legend { font-size:.85rem; color:var(--muted); margin:.3rem 0 .8rem; }
+  .route-legend span { margin-right:1rem; }
+  .mm-wrap .node { cursor:pointer; }
+  /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
+  .search { position:relative; margin:.6rem 0 .3rem; }
+  .sbox { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.45rem .6rem;
+          background:var(--card); border:1px solid var(--line); border-radius:10px; cursor:text; }
+  .sbox:focus-within { border-color:var(--accent); }
+  .sbox .ico { color:var(--muted); }
+  .sbox input { flex:1; min-width:11rem; border:none; outline:none; background:none; color:var(--fg); font:inherit; padding:.15rem 0; }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--accent); color:#fff;
+          border-radius:999px; padding:.1rem .3rem .1rem .55rem; font-size:.83rem; white-space:nowrap; }
+  .chip .k { opacity:.75; font-size:.75rem; }
+  .chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:.95rem; line-height:1; padding:0 .2rem; }
+  .ac { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; margin:0; padding:.25rem 0; list-style:none;
+        background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+        max-height:17rem; overflow:auto; }
+  .ac[hidden] { display:none; }
+  .ac li { display:flex; align-items:center; gap:.5rem; padding:.35rem .7rem; cursor:pointer; font-size:.92rem; }
+  .ac li.on { background:var(--card); }
+  .ac .k { font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3rem; }
+  .ac .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .shint { font-size:.8rem; color:var(--muted); display:flex; gap:1rem; flex-wrap:wrap; margin:.35rem .2rem 1.4rem; }
+  .shint button { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+  #no-match { color:var(--muted); }
+  /* ---- 各站：YouTube 式縮圖卡 ---- */
   .region { margin:2rem 0; padding:1rem 1.2rem; border:2px dashed var(--line); border-radius:12px; }
   .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
   .region h3 i { display:inline-block; width:.9rem; height:.9rem; border-radius:3px; }
   .region .blurb { color:var(--muted); margin:0 0 .8rem; }
-  .wps { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1rem; }
-  .wp { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--accent); border-radius:8px; padding:.9rem 1.1rem; display:flex; flex-direction:column; gap:.4rem; }
-  .wp h4 { margin:0; font-size:1.05rem; } .wp h4 a { text-decoration:none; }
-  .wp .meta { color:var(--muted); font-size:.85rem; }
-  .wp ul { margin:.2rem 0; padding-left:1.2rem; font-size:.93rem; }
-  .wp .terms { font-size:.8rem; color:var(--muted); }
-  .wp .terms code { font-size:.78rem; }
-  .routes { font-size:.88rem; margin-top:.2rem; }
-  .routes .rt { display:inline-block; font-size:.72rem; font-weight:700; padding:0 .45rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
+  .wps { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.4rem 1rem; }
+  .wp { display:flex; flex-direction:column; gap:.45rem; min-width:0; }
+  .wp[hidden] { display:none; }
+  .wp .thumb { position:relative; display:block; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
+               background:var(--card); border:1px solid var(--line); }
+  .wp .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .wp .thumb .ph { display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:1.6rem; }
+  .wp .dur { position:absolute; right:.35rem; bottom:.35rem; background:rgba(0,0,0,.8); color:#fff;
+             font-size:.75rem; font-weight:600; padding:.05rem .3rem; border-radius:4px; }
+  .wp h4 { margin:0; font-size:.98rem; line-height:1.35; color:var(--fg);
+           display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .wp h4 a { color:inherit; text-decoration:none; }
+  .wp h4 a:hover { color:var(--accent); }
+  .wp .by { font-size:.88rem; color:var(--muted); }
+  .wp .sub { font-size:.82rem; color:var(--muted); }
+  .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted); }
+  .wp .cat i { display:inline-block; width:.55rem; height:.55rem; border-radius:2px; }
+  .wp .more-btn { align-self:flex-start; background:none; border:1px solid var(--line); border-radius:999px;
+                  color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
+  .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .wp .wp-info { display:none; }
+  .wp .terms { font-size:.78rem; color:var(--muted); }
+  /* 詳細：置中視窗 */
+  #wpinfo { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
+            width:min(560px, 92vw); max-height:82vh; padding:0; overflow:hidden; }
+  #wpinfo::backdrop { background:var(--overlay); }
+  #wpinfo .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
+  #wpinfo .head h3 { margin:0; font-size:1.05rem; line-height:1.4; flex:1; }
+  #wpinfo .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
+  #wpinfo .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
+  #wpinfo .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(82vh - 5rem); font-size:.93rem; }
+  #wpinfo .body ul { margin:.3rem 0; padding-left:1.2rem; }
+  .routes { font-size:.85rem; margin-top:.3rem; }
+  .routes .rt { display:inline-block; font-size:.7rem; font-weight:700; padding:0 .4rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
   .routes .via { color:var(--muted); }
-  .wp .open { margin-top:auto; padding-top:.4rem; }
-  .wp .open a { font-weight:600; }
-  .mm-wrap .node { cursor:pointer; }
-  .route-legend { font-size:.85rem; color:var(--muted); margin:.3rem 0 .8rem; }
-  .route-legend span { margin-right:1rem; }
 {% endblock %}
 {% block body %}
 <main>
@@ -37,40 +83,66 @@
 {% endif %}
 
 <h2>{{ S.h_stations }}</h2>
-{% macro card(w, color) %}
-<div class="wp" style="border-left-color:{{ color }}">
-  <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
-  <div class="meta">{{ w.channel }} · {{ w.duration|dur }} · {{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
-  <div><b>{{ w.topic }}</b></div>
-  <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
-  {% if w.terms %}<div class="terms">{{ S.terms }}{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}{{ S.f("terms_total", n=w.terms|length) }}{% endif %}</div>{% endif %}
-  {% if w.routes_in or w.routes_out %}
-  <div class="routes">
-    {% for e in w.routes_in %}<div><span class="rt">{{ S.route(e.type) }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
-    {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+<div class="search">
+  <div class="sbox" id="sbox">
+    <span class="ico">🔍</span>
+    <input id="sinput" type="text" placeholder="{{ S.search_ph }}" autocomplete="off"
+           aria-label="{{ S.search_ph }}" aria-expanded="false" role="combobox" aria-controls="ac">
   </div>
-  {% endif %}
-  <div class="open"><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
+  <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
+<p class="shint"><span id="count">{{ S.f("showing", n=waypoints|length, total=waypoints|length) }}</span><span>{{ S.search_hint }}</span><button id="clear" type="button" hidden>{{ S.clear_all }}</button></p>
+<p id="no-match" hidden>{{ S.no_match }}</p>
+
+{% macro card(w, color, cat) %}
+<article class="wp" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}">
+  <a class="thumb" href="{{ w.href }}">
+    {% if w.thumb or w.yt_thumb %}<img loading="lazy" src="{{ w.thumb or w.yt_thumb }}" data-fallback="{{ w.yt_thumb if w.thumb else '' }}" alt="{{ w.title }}">
+    {% else %}<span class="ph">▶</span>{% endif %}
+    <span class="dur">{{ w.duration|dur }}</span>
+  </a>
+  <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
+  <div class="by">{{ w.channel }}</div>
+  <div class="sub">{{ w.upload_date }}{% if w.upload_date %} · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
+  <div class="cat"><i style="background:{{ color }}"></i>{{ cat }}</div>
+  <button class="more-btn" type="button">{{ S.more_info }}</button>
+  <div class="wp-info">
+    <div><b>{{ w.topic }}</b></div>
+    <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
+    {% if w.terms %}<div class="terms">{{ S.terms }}{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}{{ S.f("terms_total", n=w.terms|length) }}{% endif %}</div>{% endif %}
+    {% if w.routes_in or w.routes_out %}
+    <div class="routes">
+      {% for e in w.routes_in %}<div><span class="rt">{{ S.route(e.type) }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+      {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+    </div>
+    {% endif %}
+    <div><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
+  </div>
+</article>
 {% endmacro %}
 {% for r in regions %}
 <section class="region" style="border-color:{{ r.color }}">
   <h3><i style="background:{{ r.color }}"></i>{{ r.name }}</h3>
   <p class="blurb">{{ r.blurb }}</p>
-  <div class="wps">{% for w in r.members %}{{ card(w, r.color) }}{% endfor %}</div>
+  <div class="wps">{% for w in r.members %}{{ card(w, r.color, r.name) }}{% endfor %}</div>
 </section>
 {% endfor %}
 {% if unplaced %}
 <section class="region">
   <h3><i style="background:var(--muted)"></i>{{ S.unplaced }}</h3>
   <p class="blurb">{{ S.unplaced_desc }}{% if waypoints|length >= 2 %} {{ S.unplaced_hint | safe }}{% endif %}</p>
-  <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)') }}{% endfor %}</div>
+  <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)', S.unplaced) }}{% endfor %}</div>
 </section>
 {% endif %}
+<dialog id="wpinfo">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
+  <div class="body"></div>
+</dialog>
 </main>
 {% endblock %}
 {% block json %}
 <script id="links-data" type="application/json">{{ links | tojson }}</script>
+<script id="ui-data" type="application/json">{{ {"author": S.f_author, "category": S.f_category, "title": S.f_title, "any": S.f_any, "showing": S.showing} | tojson }}</script>
 {% endblock %}
 {% block js %}
   /* 地圖節點 → 該站 plan.html */
@@ -82,4 +154,135 @@
     g.style.cursor = "pointer";
     g.addEventListener("click", (e) => { e.stopPropagation(); location.href = href; });
   });
+
+  /* 縮圖抓不到（沒截圖或離線）就換另一個來源 */
+  document.querySelectorAll(".wp .thumb img").forEach((img) => {
+    img.addEventListener("error", () => {
+      const fb = img.dataset.fallback;
+      if (fb) { img.dataset.fallback = ""; img.src = fb; }
+      else { img.replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "▶" })); }
+    });
+  });
+
+  /* 詳細 → 置中視窗 */
+  const DLG = document.getElementById("wpinfo");
+  document.querySelectorAll(".wp .more-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const wp = btn.closest(".wp");
+      DLG.querySelector(".head h3").innerHTML = "";
+      DLG.querySelector(".head h3").append(wp.dataset.title,
+        Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
+      DLG.querySelector(".body").replaceChildren(...[...wp.querySelector(".wp-info").children].map((n) => n.cloneNode(true)));
+      DLG.showModal();
+    });
+  });
+  DLG.addEventListener("click", (e) => { if (e.target === DLG || e.target.closest("[data-close]")) DLG.close(); });
+
+  /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND ---------- */
+  const UI = JSON.parse(document.getElementById("ui-data").textContent);
+  const CARDS = [...document.querySelectorAll(".wp")].map((el) => ({
+    el, title: el.dataset.title || "", channel: el.dataset.channel || "", category: el.dataset.category || "",
+  }));
+  const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
+        acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
+        clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
+  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any };
+  const chips = [];
+  let acItems = [], acIdx = -1;
+
+  const uniq = (key) => {
+    const m = new Map();
+    CARDS.forEach((c) => { const v = c[key]; if (v) m.set(v, (m.get(v) || 0) + 1); });
+    return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  };
+  const AUTHORS = uniq("channel"), CATS = uniq("category");
+  const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
+  const match = (c, ch) => ch.kind === "author" ? has(c.channel, ch.value)
+    : ch.kind === "category" ? has(c.category, ch.value)
+    : ch.kind === "title" ? has(c.title, ch.value)
+    : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value);
+
+  const refilter = () => {
+    let shown = 0;
+    CARDS.forEach((c) => {
+      const ok = chips.every((ch) => match(c, ch));
+      c.el.hidden = !ok;
+      if (ok) shown++;
+    });
+    document.querySelectorAll("section.region").forEach((sec) => {
+      sec.hidden = ![...sec.querySelectorAll(".wp")].some((w) => !w.hidden);
+    });
+    countEl.textContent = UI.showing.replace("{n}", shown).replace("{total}", CARDS.length);
+    clearEl.hidden = chips.length === 0;
+    noMatch.hidden = shown > 0;
+  };
+
+  const drawChips = () => {
+    box.querySelectorAll(".chip").forEach((e) => e.remove());
+    chips.forEach((ch, i) => {
+      const el = document.createElement("span");
+      el.className = "chip";
+      el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
+      el.querySelector(".k").textContent = KIND[ch.kind] + "：";
+      el.querySelector(".v").textContent = ch.value;
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
+      box.insertBefore(el, input);
+    });
+  };
+  const addChip = (kind, value) => {
+    value = value.trim();
+    if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
+    chips.push({ kind, value });
+    input.value = "";
+    drawChips(); refilter(); hideAc();
+  };
+
+  const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
+  const drawAc = () => {
+    const q = input.value.trim();
+    acItems = [];
+    if (q) acItems.push({ kind: "any", value: q, n: null });
+    AUTHORS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "author", value: v, n }));
+    CATS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "category", value: v, n }));
+    if (!acItems.length) return hideAc();
+    acEl.replaceChildren(...acItems.map((it, i) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.innerHTML = `<span class="k"></span><span class="v"></span>`;
+      li.querySelector(".k").textContent = KIND[it.kind];
+      li.querySelector(".v").textContent = it.value;
+      if (it.n !== null) { const n = document.createElement("span"); n.className = "n"; n.textContent = it.n; li.appendChild(n); }
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); addChip(it.kind, it.value); });
+      li.addEventListener("mouseenter", () => { acIdx = i; paintAc(); });
+      return li;
+    }));
+    acIdx = q ? 0 : -1;
+    paintAc();
+    acEl.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  };
+  const paintAc = () => [...acEl.children].forEach((li, i) => li.classList.toggle("on", i === acIdx));
+  const commit = () => {
+    if (acIdx >= 0 && acItems[acIdx]) addChip(acItems[acIdx].kind, acItems[acIdx].value);
+    else if (input.value.trim()) addChip("any", input.value);
+  };
+
+  box.addEventListener("click", (e) => { if (!e.target.closest(".chip")) input.focus(); });
+  input.addEventListener("input", drawAc);
+  input.addEventListener("focus", drawAc);
+  input.addEventListener("blur", () => setTimeout(hideAc, 120));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (acEl.hidden) return drawAc();
+      acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acItems.length) % acItems.length;
+      paintAc();
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (e.key === " " && !input.value.trim() && acIdx < 0) return;
+      e.preventDefault(); commit();
+    } else if (e.key === "Escape") { hideAc(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
+  });
+  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+  refilter();
 {% endblock %}

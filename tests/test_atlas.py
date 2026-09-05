@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -64,3 +65,37 @@ def test_overview_requires_takeaways():
     assert check_schema("overview", ov) == []
     del ov["takeaways"]
     assert check_schema("overview", ov)
+
+
+def test_atlas_cards_are_searchable(tmp_path):
+    """各站是 YouTube 式卡片：縮圖 / 標題 / 作者 / 時間，且帶上搜尋用的 data-*。"""
+    ws = _ws(tmp_path)
+    (ws / "測試影片 C" / "frames").mkdir(exist_ok=True)
+    (ws / "測試影片 C" / "frames" / "s01_1.jpg").write_bytes(b"")
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert 'id="sinput"' in html and 'data-channel="Ch"' in html
+    assert 'data-category="A 與 B"' in html          # 分類 = region 名，autocomplete 用
+    assert "%E6%B8%AC%E8%A9%A6%E5%BD%B1%E7%89%87%20C/frames/s01_1.jpg" in html  # 有截圖就用截圖
+    assert "https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg" in html           # 沒截圖退回 YouTube 縮圖
+
+
+def _top_level_decls(html: str) -> list[str]:
+    """module script 裡最外層（縮排 2 格）的 const/let 名稱。"""
+    body = re.search(r'<script type="module">(.*?)</script>', html, re.DOTALL).group(1)
+    return re.findall(r"^  (?:const|let) (\w+)", body, re.MULTILINE)
+
+
+def test_module_script_has_no_duplicate_decls(tmp_path):
+    """block js 與 _base.html.j2 撞名（例如 apply）會讓整個 module 掛掉，連 mermaid 都不 render。"""
+    ws = _ws(tmp_path)
+    atlas.render(ws)
+    render.main(["--workspace", str(ws)])
+    for f in (ws / "atlas.html", ws / "測試影片 A: B" / "plan.html"):
+        names = _top_level_decls(f.read_text(encoding="utf-8"))
+        dup = {n for n in names if names.count(n) > 1}
+        assert not dup, f"{f.name} 重複宣告：{dup}"
+
+
+def test_fmt_ymd():
+    assert atlas.fmt_ymd("20210315") == "2021-03-15"
+    assert atlas.fmt_ymd(None) == "" and atlas.fmt_ymd("bad") == "bad"

@@ -84,7 +84,7 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 ## 學習地圖（Atlas）
 
-workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 更新 atlas.json。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
+workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。atlas.html 的「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列把條件做成 chip（作者／分類／標題／任意），作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 更新 atlas.json。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
 
 ## 輸出語言
 
