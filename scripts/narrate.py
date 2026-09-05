@@ -31,6 +31,7 @@ from common import (
 )
 
 AR, AC = "24000", "1"  # edge-tts 的輸出規格；原聲片段轉成一樣才能直接 concat
+CBR = "48k"  # lesson.mp3 用固定位元率，瀏覽器跳轉才精準（見 concat）
 DEFAULT_VOICE = {"zh-TW": "zh-TW-HsiaoChenNeural", "zh": "zh-CN-XiaoxiaoNeural", "en": "en-US-AriaNeural"}
 
 
@@ -91,10 +92,12 @@ def concat_file(parts: list[Path]) -> str:
 def concat(parts: list[Path], out: Path) -> None:
     listing = out.parent / "_concat.txt"
     listing.write_text(concat_file(parts), encoding="utf-8")
-    # 重新編碼而非 -c copy：串接後的 mp3 才有正確的時間戳與 Xing 標頭，章節跳轉才準
+    # 重新編碼而非 -c copy：串接後的 mp3 才有正確的時間戳，章節跳轉才準。
+    # 固定位元率（不是 -q:a 的 VBR）：VBR 的話瀏覽器只能靠 Xing TOC（全檔 100 格）內插著跳，
+    # 落點會差一兩秒，karaoke 高亮就跟原聲對不上；CBR 的時間↔位元組是線性的，跳轉才準。
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
-         "-i", str(listing), "-c:a", "libmp3lame", "-q:a", "6", "-ar", AR, "-ac", AC, str(out)],
+         "-i", str(listing), "-c:a", "libmp3lame", "-b:a", CBR, "-ar", AR, "-ac", AC, str(out)],
         check=True,
     )
     listing.unlink()

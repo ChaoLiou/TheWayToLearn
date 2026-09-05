@@ -130,7 +130,7 @@
 {% set L = videos[0].lesson %}
 <div class="card lesson">
   <b>{{ S.listen }}</b> <span class="muted">{{ L.duration|dur }} · {{ S.listen_hint }}</span>
-  <audio id="lesson" controls preload="none" src="{{ L.href }}"></audio>
+  <audio id="lesson" controls preload="metadata" src="{{ L.href }}"></audio>
   <div class="acts"><button id="kara-open">{{ S.open_script }}</button>
     <span class="muted">{{ S.kara_hint }}</span></div>
   <div class="muted">{{ S.chapters }}</div>
@@ -303,8 +303,15 @@
   const KSTR = { play: {{ S.play | tojson }}, pause: {{ S.pause | tojson }} };
   /* 聽力版：點章節跳到該時間 */
   const lesson = document.getElementById("lesson");
+  /* metadata 還沒載入時直接設 currentTime 會被瀏覽器丟掉、變成從頭播，所以先等 loadedmetadata */
+  const seekTo = (t) => {
+    if (!lesson) return;
+    const go = () => { lesson.currentTime = t; lesson.play(); };
+    if (lesson.readyState >= 1) go();
+    else { lesson.addEventListener("loadedmetadata", go, { once: true }); lesson.load(); }
+  };
   if (lesson) document.querySelectorAll(".lesson button[data-at]").forEach((b) => {
-    b.addEventListener("click", () => { lesson.currentTime = +b.dataset.at; lesson.play(); });
+    b.addEventListener("click", () => seekTo(+b.dataset.at));
   });
 
   /* 截圖 → lightbox：輪流同一支影片的所有截圖 */
@@ -372,7 +379,7 @@
         const p = document.createElement("p");
         p.textContent = l.text;
         if (e.kind === "clip") p.classList.add("clip");
-        p.addEventListener("click", () => { lesson.currentTime = l.at + 0.01; lesson.play(); K.auto = true; K.back.hidden = true; });
+        p.addEventListener("click", () => { seekTo(l.at + 0.01); K.auto = true; K.back.hidden = true; });
         box.appendChild(p);
         K.nodes.push(p); K.lines.push(l);
       });
@@ -426,7 +433,7 @@
     K.el.addEventListener("click", (e) => {
       const a = e.target.closest("[data-k]")?.dataset.k;
       if (a === "close") closeK();
-      else if (a === "restart") { lesson.currentTime = 0; lesson.play(); K.auto = true; K.back.hidden = true; }
+      else if (a === "restart") { seekTo(0); K.auto = true; K.back.hidden = true; }
       else if (a === "toggle") lesson.paused ? lesson.play() : lesson.pause();
     });
     addEventListener("keydown", (e) => {
@@ -436,7 +443,7 @@
         e.preventDefault();
         lesson.paused ? lesson.play() : lesson.pause();
       } else if (!K.el.hidden && e.key === "Escape") { e.preventDefault(); closeK(); }
-      else if (!K.el.hidden && e.key === "Home") { e.preventDefault(); lesson.currentTime = 0; }
+      else if (!K.el.hidden && e.key === "Home") { e.preventDefault(); seekTo(0); }
     });
   }
 
