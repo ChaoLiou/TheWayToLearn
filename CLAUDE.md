@@ -23,6 +23,7 @@ uv run scripts/validate.py <segments|analysis|overview> <file.json>
 uv run scripts/render.py                  # 每支影片各自產 plan.html
 uv run scripts/atlas.py --status          # 學習地圖：列新站與共同術語
 uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html
+uv run scripts/atlas.py --merge p.json    # 併入新站的 route/region（不整份覆寫）再 render
 uv run scripts/paths.py                   # 印出 workspace / 規則檔實際路徑
 uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudflare Pages
 ```
@@ -84,7 +85,7 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 ## 學習地圖（Atlas）
 
-workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。atlas.html 的「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列把條件做成 chip（作者／分類／標題／任意），作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 更新 atlas.json。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
+workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。atlas.html 的「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列把條件做成 chip（作者／分類／標題／任意），作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 寫 patch，跑 `atlas.py --merge <patch.json>` 併進 atlas.json（有檔案鎖、驗證沒過不寫入，多支同時跑不會互蓋）。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
 
 ## 輸出語言
 
@@ -128,6 +129,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 誰做什麼：estimate / fetch / shot / render 是 `scripts/*.py`（確定性）；segment / analyze / overview 由 agent 依 `rules/*.md` 產 JSON，再過 `scripts/validate.py`。
 
 設計原則：
+- 多支影片可以同時跑：所有中間檔都在各自的影片資料夾裡（`fetch` 用 `.tmp-<id>` 暫存、標題撞名自動加 `(2)`）；workspace 層級的共用檔 `atlas.json`、`dist/` 靠 `common.locked()` 的檔案鎖，`atlas.json` 一律用 `--merge` patch 而不是整份覆寫；`input.yaml` 由 agent 合併寫入。
 - 每個階段的輸入/輸出落地成檔案（transcript JSON、segments JSON、截圖目錄），讓中間結果可重用、失敗可從中斷點重跑，不必重抓影片。
 - 每支影片獨立資料夾、獨立 `plan.html` 與 `_overview.json`（預設不合併）；使用者明確要求時才用 `render.py --combined` 合併多支。
 - skill 定義（給 agent 的指令）與程式碼分開放：skill 負責「何時、如何呼叫」，程式負責確定性的抓取/切段/截圖；LLM 判斷（分段語意、術語、說明）留在 analyze 階段。

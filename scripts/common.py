@@ -5,6 +5,7 @@ import json
 import os
 import re
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -92,13 +93,18 @@ def find_video_dir(vid: str, workspace: Path = DEFAULT_WORKSPACE) -> Path | None
 
 
 def video_dir(vid: str, workspace: Path = DEFAULT_WORKSPACE, title: str | None = None) -> Path:
-    """回傳（必要時建立）影片的工作目錄。已存在就沿用；不存在需要 title 才能建。"""
+    """回傳（必要時建立）影片的工作目錄。已存在就沿用；不存在需要 title 才能建。
+    標題撞名（不同影片同名、或標題被截成同一個字串）就加 (2)、(3)，不會蓋到別支。"""
     found = find_video_dir(vid, workspace)
     if found:
         return found
     if title is None:
         raise FileNotFoundError(f"workspace 裡沒有 {vid} 的資料夾，先跑 estimate 或 fetch")
-    d = workspace / title_dirname(title)
+    base = title_dirname(title)
+    d, n = workspace / base, 2
+    while d.exists() and any(d.iterdir()):  # 已經有人用了（find_video_dir 找不到 = 不是這支）
+        d = workspace / f"{base} ({n})"
+        n += 1
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -107,8 +113,37 @@ def load_json(p: Path):
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def write_text(p: Path, text: str) -> None:
+    """先寫暫存檔再 os.replace：多支影片同時跑時，讀的人不會讀到寫到一半的檔案。"""
+    tmp = p.with_name(f".{p.name}.{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, p)
+
+
 def save_json(p: Path, data) -> None:
-    p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_text(p, json.dumps(data, ensure_ascii=False, indent=2))
+
+
+@contextmanager
+def locked(path: Path, what: str = ""):
+    """workspace 層級的共用檔（atlas.json、dist/）一次只給一個 process 寫。
+    advisory lock，只擋同樣走這個函式的人；沒有 fcntl 的平台就不鎖。"""
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            print(f"等另一個流程放開 {what or path.name} …")
+            fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 def load_yaml(p: Path):

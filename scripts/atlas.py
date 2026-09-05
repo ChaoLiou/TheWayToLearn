@@ -2,10 +2,12 @@
 
   uv run scripts/atlas.py --status      # 列出所有 waypoint、哪些還沒進 atlas.json、新站與既有站的共同術語
   uv run scripts/atlas.py               # 驗證 atlas.json 並 render workspace/atlas.html
+  uv run scripts/atlas.py --merge p.json   # 把新站的 route/region 併進 atlas.json（-  = 讀 stdin）再 render
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,8 +22,11 @@ from common import (
     SCHEMAS,
     fmt_dur,
     load_json,
+    locked,
     print_step,
+    save_json,
     template_dirs,
+    write_text,
 )
 from i18n import Strings, norm_lang
 from render import PALETTE, Tips, mm_label
@@ -65,6 +70,28 @@ def load_waypoints(ws: Path) -> list[dict]:
 def load_atlas(ws: Path) -> dict:
     p = ws / "atlas.json"
     return load_json(p) if p.exists() else {"regions": [], "routes": []}
+
+
+def merge_atlas(atlas: dict, patch: dict) -> dict:
+    """把 patch 併進 atlas：同一對站的 route 以 patch 為準，region 依 id 合併 waypoints。
+    用 patch 而不是整份覆寫，兩支影片同時跑 atlas 才不會互相蓋掉對方的 route。"""
+    routes = {frozenset((e["from"], e["to"])): e for e in atlas["routes"]}
+    for e in patch.get("routes", []):
+        routes[frozenset((e["from"], e["to"]))] = e
+    regions = {r["id"]: dict(r) for r in atlas["regions"]}
+    for r in patch.get("regions", []):
+        old = regions.get(r["id"])
+        wps = list(dict.fromkeys((old["waypoints"] if old else []) + r.get("waypoints", [])))
+        regions[r["id"]] = {**(old or {}), **r, "waypoints": wps}
+    for r in patch.get("regions", []):  # 一個 waypoint 只能屬於一個 region：從別區移掉
+        moved = set(r.get("waypoints", []))
+        for other in regions.values():
+            if other["id"] != r["id"]:
+                other["waypoints"] = [w for w in other["waypoints"] if w not in moved]
+    out = {**atlas, "regions": [r for r in regions.values() if r["waypoints"]], "routes": list(routes.values())}
+    if patch.get("lang"):
+        out["lang"] = patch["lang"]
+    return out
 
 
 def check_atlas(atlas: dict, wps: list[dict]) -> list[str]:
@@ -198,7 +225,7 @@ def render(ws: Path) -> Path:
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
     out = ws / "atlas.html"
-    out.write_text(html, encoding="utf-8")
+    write_text(out, html)
     return out
 
 
@@ -206,11 +233,23 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--merge", metavar="PATCH.JSON",
+                    help="把新站的 route/region 併進 atlas.json（- = 讀 stdin），再驗證並 render")
     args = ap.parse_args(argv)
     if args.status:
         status(args.workspace)
         return
-    out = render(args.workspace)
+    ws = args.workspace
+    with locked(ws / ".atlas.lock", "atlas.json"):  # 共用檔，一次只給一個流程寫
+        if args.merge:
+            patch = json.loads(sys.stdin.read()) if args.merge == "-" else load_json(Path(args.merge))
+            atlas = merge_atlas(load_atlas(ws), patch)
+            errs = check_atlas(atlas, load_waypoints(ws))
+            if errs:
+                raise SystemExit("併進去之後 atlas.json 會有問題，沒有寫入：\n  - " + "\n  - ".join(errs))
+            save_json(ws / "atlas.json", atlas)
+            print(f"併入 {len(patch.get('routes', []))} 條 route、{len(patch.get('regions', []))} 個 region → {ws / 'atlas.json'}")
+        out = render(ws)
     print(f"OK → {out}")
     print_step("atlas", str(out))
 

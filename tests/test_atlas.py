@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import atlas
+import pytest
 import render
 
 FX = Path(__file__).parent / "fixtures/ws"
@@ -99,3 +100,45 @@ def test_module_script_has_no_duplicate_decls(tmp_path):
 def test_fmt_ymd():
     assert atlas.fmt_ymd("20210315") == "2021-03-15"
     assert atlas.fmt_ymd(None) == "" and atlas.fmt_ymd("bad") == "bad"
+
+
+def test_merge_keeps_other_routes(tmp_path):
+    """兩支影片先後併入：後者不會蓋掉前者的 route（平行跑 atlas 的主要衝突點）。"""
+    base = {"regions": [], "routes": []}
+    a = atlas.merge_atlas(base, {"routes": [{"from": "a", "to": "b", "type": "related", "via": "x"}],
+                                 "regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["a"]}]})
+    b = atlas.merge_atlas(a, {"routes": [{"from": "c", "to": "b", "type": "deepens", "via": "y"}],
+                              "regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["c"]}]})
+    assert {(e["from"], e["to"]) for e in b["routes"]} == {("a", "b"), ("c", "b")}
+    assert b["regions"][0]["waypoints"] == ["a", "c"]
+
+
+def test_merge_replaces_same_pair_and_moves_region(tmp_path):
+    a = {"regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["a", "b"]}],
+         "routes": [{"from": "a", "to": "b", "type": "related", "via": "舊"}]}
+    b = atlas.merge_atlas(a, {"routes": [{"from": "b", "to": "a", "type": "prerequisite", "via": "新"}],
+                              "regions": [{"id": "r2", "name": "R2", "blurb": "", "waypoints": ["b"]}]})
+    assert len(b["routes"]) == 1 and b["routes"][0]["via"] == "新"        # 同一對站只留一條
+    assert [r["waypoints"] for r in b["regions"]] == [["a"], ["b"]]        # b 換區，不會兩區都有
+
+
+def test_merge_cli_writes_and_renders(tmp_path):
+    ws = _ws(tmp_path)
+    (ws / "atlas.json").write_text(json.dumps({"regions": [], "routes": []}), encoding="utf-8")
+    patch = tmp_path / "patch.json"
+    patch.write_text(json.dumps({"routes": [{"from": "abcdefghijk", "to": "zzzzzzzzzzz",
+                                             "type": "deepens", "via": "共同術語"}]}), encoding="utf-8")
+    atlas.main(["--workspace", str(ws), "--merge", str(patch)])
+    assert json.loads((ws / "atlas.json").read_text())["routes"][0]["via"] == "共同術語"
+    assert (ws / "atlas.html").exists()
+
+
+def test_merge_cli_rejects_broken_patch(tmp_path):
+    ws = _ws(tmp_path)
+    before = (ws / "atlas.json").read_text()
+    patch = tmp_path / "patch.json"
+    patch.write_text(json.dumps({"routes": [{"from": "abcdefghijk", "to": "nope",
+                                             "type": "deepens", "via": ""}]}), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        atlas.main(["--workspace", str(ws), "--merge", str(patch)])
+    assert (ws / "atlas.json").read_text() == before  # 驗證沒過就不寫入

@@ -1,9 +1,10 @@
+import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import pytest
-from common import fmt_dur, fmt_ts, video_id
+from common import fmt_dur, fmt_ts, locked, save_json, video_dir, video_id
 
 
 @pytest.mark.parametrize("u", [
@@ -85,3 +86,28 @@ def test_clip_lines_merge_and_snap():
     long_ev = [{"start": i, "duration": 1.0, "text": "x" * 40} for i in range(6)]
     assert len(narrate.clip_lines(long_ev, 0.0, 6.0, 0.0)) == 6  # 太長就不併
     assert narrate.snap(ev, 10.4, 16.0) == (10.0, 16.5)
+
+
+def test_video_dir_avoids_title_collision(tmp_path):
+    """不同影片、同一個標題 → 各自一個資料夾，不會互相覆寫。"""
+    a = video_dir("aaaaaaaaaaa", tmp_path, title="Same Title")
+    (a / "meta.json").write_text(json.dumps({"video_id": "aaaaaaaaaaa"}), encoding="utf-8")
+    b = video_dir("bbbbbbbbbbb", tmp_path, title="Same Title")
+    assert a.name == "Same Title" and b.name == "Same Title (2)"
+    # 再叫一次要回到原本那支的資料夾
+    assert video_dir("aaaaaaaaaaa", tmp_path, title="Same Title") == a
+
+
+def test_write_text_is_atomic(tmp_path):
+    p = tmp_path / "x.json"
+    save_json(p, {"a": 1})
+    assert json.loads(p.read_text()) == {"a": 1}
+    assert not list(tmp_path.glob(".*tmp"))  # 暫存檔要收乾淨
+
+
+def test_locked_is_reentrant_across_calls(tmp_path):
+    lock = tmp_path / ".x.lock"
+    with locked(lock, "x"):
+        pass
+    with locked(lock, "x"):  # 前一次要有放開
+        pass

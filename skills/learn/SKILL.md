@@ -46,7 +46,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 **準備**（不算步驟）：
 - 跑 `paths.py` 確認規則檔實際路徑。
 - **判定輸出語言**：看使用者這次下指令用的語言——中文 → `zh-TW`，英文 → `en`（其他語言用 BCP-47 碼）。寫進 `workspace/input.yaml` 的 `output_lang`，`/learn-fetch` 時帶 `--output-lang`（存進該站 `meta.json`，之後所有階段與 HTML 介面都跟著它）。使用者明說要哪種語言就照他說的。
-- 沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）。
+- 沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）；**已經有就先讀進來、依 `url` 去重後合併再寫回**，不要整份覆蓋（同一個 workspace 可能有另一個 /learn 正在跑）。
 
 **選項**
 - `--shots`：`auto`（預設，只截看了才懂的畫面）｜`none`（完全不截圖，也不下載影片，步驟 4 直接跳過）｜`many`（投影片型影片，每段至少一張）。使用者說「畫面沒什麼東西」「重點都在講的內容」「不用截圖」就用 `none`。

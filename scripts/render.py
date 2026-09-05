@@ -25,6 +25,7 @@ from common import (
     print_step,
     template_dirs,
     video_id,
+    write_text,
 )
 from i18n import Strings, norm_lang
 
@@ -266,7 +267,7 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
         S=S,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
-    out.write_text(html, encoding="utf-8")
+    write_text(out, html)
     print(f"OK → {out}")
     print_step("render", str(out))
 

@@ -15,10 +15,13 @@ description: [步驟 7/8·更新知識地圖] 學習地圖（Atlas）：把 work
 1. `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/atlas.py --status`
    - 列出所有 waypoint、哪些是「★ 新站」、新站與每個既有站的**共同術語**與 prerequisites 覆蓋情況。
    - 若某站沒有 takeaways，先補該站的 `_overview.json`（`rules/overview.md`）並重跑 `/learn-render`。
-2. 依 `rules/atlas.md` 更新 `workspace/atlas.json`（格式 `schemas/atlas.schema.json`）：
+2. 依 `rules/atlas.md` 寫一份**只含新東西的 patch**（不要整份重寫 `atlas.json`），格式同 `schemas/atlas.schema.json` 的 `regions` / `routes`：
    - 只處理新站：決定它與既有各站的 route（型態 + via），以及它屬於哪個 region（可新建 region）。
+   - region 只列新站的 id 就好，`--merge` 會併進既有成員；同一對站再給一次 route 會取代舊的。
    - 沒有關聯就不要硬連。
-3. `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/atlas.py` → 驗證並產出 `workspace/atlas.html`。
+3. `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/atlas.py --merge <patch.json>`
+   → 併進 `atlas.json`、驗證、產出 `workspace/atlas.html`（整段有檔案鎖，兩支影片同時跑也不會互相蓋掉 route；驗證沒過就不寫入）。
+   - 要重整整張地圖（改區、刪 route）才直接改 `atlas.json`，然後跑不帶參數的 `atlas.py` 驗證 + render。
 4. 重跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py`（不帶參數）讓每站的 `plan.html` 頂部「學習地圖」區塊更新為最新 route。
 5. 回報：atlas.html 路徑、新站連到了哪些站、進了哪個 region。
 

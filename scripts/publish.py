@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DEFAULT_WORKSPACE
+from common import DEFAULT_WORKSPACE, locked
 
 MAX_FILE = 25 * 1024 * 1024  # Cloudflare Pages 單檔上限
 KEEP = ("plan.html", "lesson.mp3")
@@ -93,13 +93,14 @@ def main(argv=None):
 
     ws = args.workspace
     dist = args.out or ws.parent / "dist"
-    items = build(ws, dist)
-    big = report(ws, dist, items)
-    if args.deploy:
-        if big:
-            raise SystemExit("有檔案超過 25 MB，先處理再部署（降位元率或改用 --set clips=精華）")
-        deploy(dist, args.project_name)
-    else:
+    with locked(ws / ".publish.lock", "dist/"):  # 兩個 publish 同時跑會互刪 dist/
+        items = build(ws, dist)
+        big = report(ws, dist, items)
+        if args.deploy:
+            if big:
+                raise SystemExit("有檔案超過 25 MB，先處理再部署（降位元率或改用 --set clips=精華）")
+            deploy(dist, args.project_name)
+    if not args.deploy:
         print(f"\n要部署：uv run scripts/publish.py --deploy --project-name {args.project_name}")
         print("首次使用先 npm i -g wrangler && wrangler login；部署後到 Cloudflare Zero Trust → Access 加上登入限制。")
 
