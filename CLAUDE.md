@@ -85,7 +85,8 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 ## 學習地圖（Atlas）
 
-workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。atlas.html 的「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列把條件做成 chip（作者／分類／標題／任意），作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 寫 patch，跑 `atlas.py --merge <patch.json>` 併進 atlas.json（有檔案鎖、驗證沒過不寫入，多支同時跑不會互蓋）。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
+workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯：prerequisite / deepens / contrasts / applies / related，含 via）與 **region**（主題區）；`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到地圖與相鄰站的連結。地圖節點用 mermaid 的 image shape（v11.3+，`@{ img: … }`）帶 YouTube 縮圖，點節點開跟卡片「詳細」同一個置中視窗（`showInfo()`；節點對站的 key 用 mermaid 節點 id，文字對照是備援）。atlas.html 的「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列把條件做成 chip（作者／分類／標題／任意），作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND。作者名旁邊有**勘誤件數**膠囊（紅八角 danger = 確定錯誤／已過時、橘三角 warning = 見仁見智，跨該作者所有站加總，0 就不顯示該顆；`author_stats()`），hover 看細節。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 寫 patch，跑 `atlas.py --merge <patch.json>` 併進 atlas.json（有檔案鎖、驗證沒過不寫入，多支同時跑不會互蓋）。模板共用 `templates/_base.html.j2`（viewer、mermaid、tooltip）。
+每張卡片下方有 **pipeline 進度**：八步各一格（`atlas.py` 的 `pipeline()` 直接看檔案判定 done / partial / todo / skip），加一行白話狀態（例如「還沒處理原音：沒有挑原聲片段」——聽力版做了但 `segments.json` 沒有 clips / clips 沒 translation / 還沒有 dub 軌都算 partial）。「▸ 繼續做」開視窗列出八步狀態，選「做到哪一步」後把對應的 prompt 複製到剪貼簿，使用者自己貼進 Claude Code 跑（`next_actions()` 產生；prompt 用 `common.STEP_CMD`，缺原聲／缺翻譯會自動附上該怎麼補的說明）。
 
 ## 輸出語言
 
@@ -115,6 +116,7 @@ workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json
 - 片段以內容雜湊命名快取在 `lesson_parts/`，改字幕合併或章節不必重跑 TTS
 - `lesson.status.json` 讓步驟 6 產出的 `plan.html` 顯示「聽力版產生中」，完成後頁面自己偵測並重新整理（`--mark-pending` 可提前標記）
 - `plan.html` 有播放器、章節，以及 karaoke 講稿視窗（已唸過=一般色、目前=強調、未唸=灰、原聲=斜體，點任一句從那裡播）
+- clip 有 `translation` 就多產一軌 `lesson.dub.mp3`：原聲換成另一個聲音（`--dub-voice`，預設同語言不同性別）唸翻譯，講解部分兩軌共用同一批 TTS 檔。翻譯逐句合成，長度即 KTV 高亮節奏。網頁上「🎙 原聲 / 🗣 翻譯」切換（快捷鍵 D），兩軌 block 一一對應所以切換後停在同一個位置，章節與講稿一起換；`--no-dub` 關掉
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
 - agent 輸出格式 → `schemas/*.json`

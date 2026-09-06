@@ -4,7 +4,7 @@
   uv run scripts/publish.py --deploy                 # 整理後用 wrangler 部署
   uv run scripts/publish.py --project-name my-atlas --deploy
 
-只複製：atlas.html、各站 plan.html、frames/、lesson.mp3（外加一份 index.html = atlas.html）。
+只複製：atlas.html、各站 plan.html、frames/、lesson.mp3、lesson.dub.mp3（外加一份 index.html = atlas.html）。
 不複製：原始音訊 audio.mp3、TTS 片段快取 lesson_parts/、transcript 與各種 json（內容已內嵌在 html）。
 """
 from __future__ import annotations
@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DEFAULT_WORKSPACE, locked
 
 MAX_FILE = 25 * 1024 * 1024  # Cloudflare Pages 單檔上限
-KEEP = ("plan.html", "lesson.mp3")
+KEEP = ("plan.html", "lesson.mp3", "lesson.dub.mp3")
 
 
 def human(n: int) -> str:

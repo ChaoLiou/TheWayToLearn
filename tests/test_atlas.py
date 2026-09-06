@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import atlas
 import pytest
 import render
+from i18n import Strings
 
 FX = Path(__file__).parent / "fixtures/ws"
 
@@ -142,3 +143,63 @@ def test_merge_cli_rejects_broken_patch(tmp_path):
     with pytest.raises(SystemExit):
         atlas.main(["--workspace", str(ws), "--merge", str(patch)])
     assert (ws / "atlas.json").read_text() == before  # 驗證沒過就不寫入
+
+
+def test_pipeline_and_next_actions(tmp_path):
+    from i18n import Strings
+
+    ws = _ws(tmp_path)
+    S = Strings("zh-TW")
+    d = ws / "測試影片 A: B"
+    st = {x["key"]: x for x in atlas.pipeline(d, True, True, S)}
+    assert st["fetch"]["state"] == "done" and st["segment"]["state"] == "done"
+    assert st["analyze"]["state"] == "done" and st["atlas"]["state"] == "done"
+    assert st["estimate"]["state"] == "todo"          # fixture 沒有 estimate.json
+    assert st["narrate"]["state"] == "todo"           # 也還沒做聽力版
+    assert atlas.pipeline(d, False, False, S)[6]["state"] == "skip"   # 只有一站時不需要上地圖
+
+    # 做了聽力版但沒挑原聲片段 → 沒做完，而且說得出缺什麼
+    (d / "lesson.json").write_text(json.dumps({"duration": 1, "dub": None}), encoding="utf-8")
+    nar = {x["key"]: x for x in atlas.pipeline(d, True, True, S)}["narrate"]
+    assert nar["state"] == "partial" and nar["note"] == S.n_no_clips
+
+    w = next(x for x in atlas.load_waypoints(ws) if x["dir"] == d.name)
+    acts = atlas.next_actions(w, atlas.pipeline(d, True, True, S), S)
+    assert [a["prompt"] for a in acts if a["prompt"].startswith("/atlas:learn-estimate")]  # 單一階段就給指令
+    # 沒做完的是 estimate / render / narrate，做到最後一步就把三步都寫進 prompt
+    assert acts[-1]["prompt"].count("/atlas:learn-") == 3
+    assert S.n_no_clips not in acts[-1]["prompt"] and "rules/narration.md" in acts[-1]["prompt"]
+
+
+def test_atlas_html_has_stage_ui(tmp_path):
+    ws = _ws(tmp_path)
+    atlas.render(ws)
+    html = (ws / "atlas.html").read_text(encoding="utf-8")
+    assert 'id="nextstep"' in html and html.count('class="prog"') == 2
+    data = json.loads(html.split('id="steps-data" type="application/json">')[1].split("</script>")[0])
+    assert set(data) == {"abcdefghijk", "zzzzzzzzzzz"}
+    assert len(data["abcdefghijk"]["stages"]) == 8 and data["abcdefghijk"]["actions"]
+
+
+def test_author_error_rate_badge(tmp_path):
+    ws = _ws(tmp_path)
+    a = json.loads((ws / "測試影片 C/analysis.json").read_text(encoding="utf-8"))
+    a["segments"][0]["issues"] = [{"level": "debatable", "t": 1, "quote": "看情況",
+                                   "note": "取決於版本", "evidence": "本片第 1 段"}]
+    (ws / "測試影片 C/analysis.json").write_text(json.dumps(a, ensure_ascii=False), encoding="utf-8")
+    wps = atlas.load_waypoints(ws)
+    st = atlas.author_stats(wps, Strings("zh-TW"))["Ch"]  # 兩支都是同一個頻道
+    assert (st["videos"], st["segments"], st["wrong"], st["debatable"]) == (2, 6, 2, 1)
+    assert st["clean"] is False
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert html.count('class="err w"') == 2 and html.count('class="err d"') == 2
+    assert "2 處確定錯誤" in html and "1 處見仁見智" in html
+    assert "%" not in html.split('class="by"')[1].split("</div>")[0]  # 顯示件數不是比例
+
+
+def test_map_nodes_use_image_shape(tmp_path):
+    ws = _ws(tmp_path)
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert html.count("@{ img: &#34;https://i.ytimg.com/vi/") == 2  # 兩站都帶縮圖
+    nodes = json.loads(re.search(r'id="nodes-data"[^>]*>(.*?)</script>', html, re.DOTALL).group(1))
+    assert nodes["w0"] == "abcdefghijk" and set(nodes.values()) == {"abcdefghijk", "zzzzzzzzzzz"}

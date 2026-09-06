@@ -53,6 +53,15 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
         ("zh-TW-YunJheNeural", "中文男聲"),
         ("en-US-AriaNeural", "英文女聲（英文預設）"),
     ]),
+    "dub": ("dub（--no-dub 關掉）", "true", "原聲片段要不要另外做一版「翻譯配音」（網頁上可切換）", [
+        ("true", "clip 有 translation 就多產 lesson.dub.mp3：原聲換成另一個聲音唸翻譯，講稿也換成翻譯（預設）"),
+        ("false", "只做原聲版，檔案小一半、TTS 也快一點"),
+    ]),
+    "dub_voice": ("--dub-voice", "跟講解不同性別的同語言聲音", "唸原聲翻譯的語音", [
+        ("zh-TW-YunJheNeural", "中文男聲（講解是女聲時的預設）"),
+        ("zh-TW-HsiaoChenNeural", "中文女聲"),
+        ("en-US-GuyNeural", "英文男聲"),
+    ]),
     "rate": ("--rate", "+0%", "聽力版語速", [
         ("+0%", "原速（預設）"), ("+15%", "快一點，通勤聽適合"), ("-10%", "慢一點"),
     ]),
@@ -72,7 +81,7 @@ SKILL_PARAMS: dict[str, list[str]] = {
     "learn-analyze": ["vision", "force"],
     "learn-render": ["combined"],
     "learn-atlas": [],
-    "learn-narrate": ["clips", "voice", "rate", "force"],
+    "learn-narrate": ["clips", "voice", "dub", "dub_voice", "rate", "force"],
     "learn-publish": ["project_name", "deploy"],
 }
 

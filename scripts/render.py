@@ -177,6 +177,8 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
     v["lesson_src"] = href_prefix + "lesson.mp3"
     if v["lesson"]:
         v["lesson"]["href"] = href_prefix + quote(v["lesson"]["file"])
+        if v["lesson"].get("dub"):
+            v["lesson"]["dub"]["href"] = href_prefix + quote(v["lesson"]["dub"]["file"])
     v["timings"] = load_json(vdir / "timings.json") if (vdir / "timings.json").exists() else {}
     seg_by_id = {s["id"]: s for s in v["segments"]["segments"]}
     for s in v["analysis"]["segments"]:

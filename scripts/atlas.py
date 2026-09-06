@@ -20,6 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
     DEFAULT_WORKSPACE,
     SCHEMAS,
+    STEP_CMD,
+    STEPS,
     fmt_dur,
     load_json,
     locked,
@@ -39,10 +41,87 @@ def fmt_ymd(s: str | None) -> str:
     return f"{s[:4]}-{s[4:6]}-{s[6:8]}" if s and len(s) == 8 and s.isdigit() else (s or "")
 
 
+def days_since(ymd: str | None) -> int | None:
+    """yt-dlp 的 upload_date（20210315）→ 距今幾天；格式不對回 None。"""
+    if not (ymd and len(ymd) == 8 and ymd.isdigit()):
+        return None
+    up = datetime.strptime(ymd, "%Y%m%d").replace(tzinfo=UTC).date()
+    return (datetime.now(UTC).astimezone().date() - up).days
+
+
 def thumb(d: Path) -> str | None:
-    """縮圖用該站第一張截圖（離線也看得到）；沒截圖就回 None，前端退回 YouTube 縮圖。"""
+    """離線用的備援縮圖：該站第一張截圖；沒截圖就回 None。前端主圖是 YouTube 縮圖。"""
     frames = sorted((d / "frames").glob("*.jpg")) if (d / "frames").is_dir() else []
     return f"{quote(d.name)}/frames/{quote(frames[0].name)}" if frames else None
+
+
+def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
+    """這一站在八步 pipeline 上走到哪。state：done｜partial｜todo｜skip｜running。
+    partial 是「做過但缺一塊」——例如聽力版做了卻沒挑原聲片段、原聲沒翻譯、還沒做翻譯配音。"""
+    seg = load_json(d / "segments.json") if (d / "segments.json").exists() else None
+    lesson = load_json(d / "lesson.json") if (d / "lesson.json").exists() else None
+    segs = seg["segments"] if seg else []
+    clips = [c for x in segs for c in x.get("clips", [])]
+    shots = [sh for x in segs for sh in x.get("shots", [])]
+
+    def shot_state():
+        if not seg:
+            return "todo", ""
+        if seg.get("shots_mode") == "none" or not shots:
+            return "skip", S.n_no_shots
+        if all(sh.get("file") for sh in shots):
+            return "done", ""
+        return "partial", ""
+
+    def narrate_state():
+        if (d / "lesson.status.json").exists() and not lesson:
+            return "running", S.n_building
+        if not lesson:
+            return "todo", ""
+        if not clips:
+            return "partial", S.n_no_clips
+        if any(not c.get("translation") for c in clips):
+            return "partial", S.n_no_trans
+        if not lesson.get("dub"):
+            return "partial", S.n_no_dub
+        return "done", ""
+
+    raw = {
+        "estimate": (("done", "") if (d / "estimate.json").exists() else ("todo", "")),
+        "fetch": (("done", "") if (d / "transcript.json").exists() else ("todo", "")),
+        "segment": (("done", "") if seg else ("todo", "")),
+        "shot": shot_state(),
+        "analyze": (("done", "") if (d / "analysis.json").exists() else ("todo", "")),
+        "render": (("done", "") if (d / "plan.html").exists() else ("todo", "")),
+        "atlas": (("done", "") if in_atlas else ("todo", "")) if multi else ("skip", ""),
+        "narrate": narrate_state(),
+    }
+    return [{"key": k, "n": i, "name": getattr(S, f"stg_{k}"), "state": raw[k][0], "note": raw[k][1]}
+            for i, (k, _) in enumerate(STEPS, 1)]
+
+
+def next_actions(w: dict, stages: list[dict], S: Strings) -> list[dict]:
+    """「繼續做」選單：每個未完成的階段各一個選項，prompt 讓使用者複製去貼給 Claude Code。"""
+    note_key = {S.n_no_clips: "np_note_clips", S.n_no_trans: "np_note_trans", S.n_no_dub: "np_note_dub"}
+    left = [x for x in stages if x["state"] in ("todo", "partial")]
+
+    def prompt(seq: list[dict]) -> str:
+        cmds = [f"{i}. {STEP_CMD[x['key']]} {w['id']}" for i, x in enumerate(seq, 1)]
+        notes = [getattr(S, note_key[x["note"]]) for x in seq if x["note"] in note_key]
+        if len(seq) == 1 and not notes:
+            return f"{STEP_CMD[seq[0]['key']]} {w['id']}"
+        body = [S.f("np_lead", title=w["title"], id=w["id"]), "", *cmds, ""]
+        return "\n".join([*body, *notes, S.np_tail])
+
+    acts = [{"label": S.f("np_only" if i == 0 else "np_to", stage=x["name"]),
+             "desc": S.f("np_steps", n=i + 1, list="、".join(y["name"] for y in left[:i + 1])),
+             "prompt": prompt(left[:i + 1])}
+            for i, x in enumerate(left)]
+    if not acts:  # 全部做完了，還是給重跑最後兩步的入口
+        acts = [{"label": S.f("np_redo", stage=x["name"]), "desc": S.np_redo_desc,
+                 "prompt": f"{STEP_CMD[x['key']]} {w['id']} --force"}
+                for x in stages if x["key"] in ("analyze", "render", "narrate")]
+    return acts
 
 
 def load_waypoints(ws: Path) -> list[dict]:
@@ -52,19 +131,40 @@ def load_waypoints(ws: Path) -> list[dict]:
             continue
         meta, ov, an = (load_json(d / f) for f in ("meta.json", "_overview.json", "analysis.json"))
         terms = [t["term"] for s in an["segments"] for t in s.get("terms", [])]
+        issues = [i for s in an["segments"] for i in s.get("issues", [])]
         wps.append({
             "id": meta["video_id"], "dir": d.name, "title": meta["title"], "channel": meta.get("channel"),
             "duration": meta.get("duration", 0), "url": meta.get("url"), "topic": ov["topic"],
             "takeaways": ov.get("takeaways", []), "summary": ov["summary"], "terms": terms,
             "prerequisites": [p["concept"] for p in ov.get("prerequisites", [])],
             "n_segments": len(an["segments"]), "has_plan": (d / "plan.html").exists(),
+            "n_wrong": sum(1 for i in issues if i["level"] == "wrong"),
+            "n_debatable": sum(1 for i in issues if i["level"] != "wrong"),
             "output_lang": norm_lang(meta.get("output_lang")),
             "href": f"{quote(d.name)}/plan.html",
             "upload_date": fmt_ymd(meta.get("upload_date")),
+            "upload_days": days_since(meta.get("upload_date")),
             "thumb": thumb(d),
             "yt_thumb": f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
         })
     return wps
+
+
+def author_stats(wps: list[dict], S: Strings) -> dict[str, dict]:
+    """每位作者的勘誤數：把同一頻道所有站的 issues 加總。
+    wrong = 確定錯誤／已過時（紅）；debatable = 見仁見智（橘）。卡片上只顯示件數，細節放 tooltip。"""
+    out: dict[str, dict] = {}
+    for w in wps:
+        a = out.setdefault(w["channel"] or "", {"videos": 0, "segments": 0, "wrong": 0, "debatable": 0})
+        a["videos"] += 1
+        a["segments"] += w["n_segments"]
+        a["wrong"] += w["n_wrong"]
+        a["debatable"] += w["n_debatable"]
+    for ch, a in out.items():
+        a["clean"] = not (a["wrong"] or a["debatable"])
+        a["tip"] = S.f("err_tip_ok" if a["clean"] else "err_tip", ch=ch, v=a["videos"],
+                       seg=a["segments"], w=a["wrong"], d=a["debatable"])
+    return out
 
 
 def load_atlas(ws: Path) -> dict:
@@ -161,17 +261,24 @@ def status(ws: Path) -> None:
 
 
 def map_mermaid(wps: list[dict], atlas: dict, tips: Tips, S: Strings) -> tuple[str, dict, list[dict]]:
+    """地圖節點用 mermaid 的 image shape（v11.3+）帶縮圖；回傳的 dict 是「節點文字 → waypoint id」，
+    前端靠它把點擊接到該站的詳細視窗。"""
     by_id = {w["id"]: w for w in wps}
     nid = {w["id"]: f"w{i}" for i, w in enumerate(wps)}
     lines = ["%%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 70}}}%%", "graph LR"]
-    links: dict[str, str] = {}
+    node_ids: dict[str, str] = {}
     placed = set()
     legend = []
 
     def node(w, indent="  "):
         lab = tips.add(mm_label(w["title"], 34), f"{w['title']}\n{w['topic']}\n\n" + "\n".join("• " + t for t in w["takeaways"]))
-        links[lab.replace(" ", "")] = w["href"]
-        lines.append(f'{indent}{nid[w["id"]]}["{lab}"]')
+        # 兩種 key 都對到同一站：mermaid 的節點 id（svg 上是 flowchart-w9-3）與節點文字（舊的對照方式）
+        node_ids[nid[w["id"]]] = node_ids[lab.replace(" ", "")] = w["id"]
+        img = w["yt_thumb"] or w["thumb"]
+        if img:
+            lines.append(f'{indent}{nid[w["id"]]}@{{ img: "{img}", label: "{lab}", pos: "b", w: 176, h: 99, constraint: "on" }}')
+        else:
+            lines.append(f'{indent}{nid[w["id"]]}["{lab}"]')
 
     for gi, r in enumerate(atlas["regions"]):
         color = PALETTE[gi % len(PALETTE)]
@@ -195,7 +302,7 @@ def map_mermaid(wps: list[dict], atlas: dict, tips: Tips, S: Strings) -> tuple[s
         lab = tips.add(S.route(e["type"]), f"{S.route(e['type'])}: {by_id[e['from']]['title']} → {by_id[e['to']]['title']}\n{e['via']}")
         lines.append(f'  {nid[e["from"]]} {ROUTE_ARROW[e["type"]]}|"{lab}"| {nid[e["to"]]}')
     lines.append("  linkStyle default stroke-width:2px,stroke-opacity:0.8")
-    return "\n".join(lines), links, legend
+    return "\n".join(lines), node_ids, legend
 
 
 def render(ws: Path) -> Path:
@@ -215,14 +322,32 @@ def render(ws: Path) -> Path:
     # 地圖語言：atlas.json 的 lang，否則取多數站的 output_lang
     lang = atlas.get("lang") or (max({w["output_lang"] for w in wps}, key=[w["output_lang"] for w in wps].count) if wps else None)
     S = Strings(norm_lang(lang))
+    # 每一站走到哪一步，以及「繼續做」要複製的 prompt
+    linked = {x for r in atlas["regions"] for x in r["waypoints"]} | {x for e in atlas["routes"] for x in (e["from"], e["to"])}
+    for w in wps:
+        w["stages"] = pipeline(ws / w["dir"], w["id"] in linked, len(wps) >= 2, S)
+        w["actions"] = next_actions(w, w["stages"], S)
+        live = [x for x in w["stages"] if x["state"] != "skip"]
+        w["n_done"] = sum(1 for x in live if x["state"] == "done")
+        w["n_total"] = len(live)
+        w["all_done"] = not [x for x in w["stages"] if x["state"] in ("todo", "partial")]
+        w["note"] = (S.n_all_done if w["all_done"]
+                     else next((x["note"] for x in live if x["note"]), ""))
+    authors = author_stats(wps, S)
+    for w in wps:
+        w["author"] = authors[w["channel"] or ""]
     tips = Tips()
-    mm, links, legend = map_mermaid(wps, atlas, tips, S)
+    mm, node_ids, legend = map_mermaid(wps, atlas, tips, S)
     env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["dur"] = fmt_dur
+    env.filters["ago"] = lambda d: S.ago_days(d) if d is not None else ""
+    now = datetime.now(UTC).astimezone()
+    steps_data = {w["id"]: {k: w[k] for k in ("title", "stages", "actions", "n_done", "n_total")} for w in wps}
     html = env.get_template("atlas.html.j2").render(
         waypoints=wps, regions=regions, unplaced=unplaced, routes=atlas["routes"], by_id=by_id,
-        map_mermaid=mm, links=links, legend=legend, tips=tips, S=S,
-        generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
+        steps_data=steps_data,
+        map_mermaid=mm, node_ids=node_ids, legend=legend, tips=tips, S=S,
+        generated=now.strftime("%Y-%m-%d %H:%M"), generated_iso=now.isoformat(timespec="seconds"),
     )
     out = ws / "atlas.html"
     write_text(out, html)

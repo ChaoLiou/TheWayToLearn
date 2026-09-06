@@ -111,3 +111,16 @@ def test_locked_is_reentrant_across_calls(tmp_path):
         pass
     with locked(lock, "x"):  # 前一次要有放開
         pass
+
+
+def test_dub_lines_and_voice():
+    import narrate
+
+    assert narrate.dub_voice_for("zh-TW", "zh-TW-HsiaoChenNeural") == "zh-TW-YunJheNeural"
+    # 講解已經用了配音的預設聲音，就換成講解的預設聲，兩個聲音不會撞在一起
+    assert narrate.dub_voice_for("zh-TW", "zh-TW-YunJheNeural") == "zh-TW-HsiaoChenNeural"
+    lines = narrate.dub_lines("他說 partition 是關鍵。" + "很長的一句話，" * 12 + "結束。")
+    assert lines[0] == "他說 partition 是關鍵。"
+    assert all(len(x) <= narrate.DUB_MAX for x in lines)      # 太長的句子會再斷
+    assert "".join(lines).replace("", "") .startswith("他說 partition")
+    assert narrate.dub_lines("好。這句話夠長了可以自己成一句話。") == ["好。這句話夠長了可以自己成一句話。"]  # 太短就併回前一句

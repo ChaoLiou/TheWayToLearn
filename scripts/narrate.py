@@ -1,8 +1,9 @@
 """/learn-narrate：把 narration.json（agent 寫的口語講稿）＋ 原聲片段，合成一份可以用聽的學習內容。
 
-  uv run scripts/narrate.py <id|url> [--voice ...] [--rate +10%] [--force] [--keep-parts]
+  uv run scripts/narrate.py <id|url> [--voice ...] [--rate +10%] [--dub-voice ...] [--no-dub] [--force]
 
 輸出：workspace/<影片標題>/lesson.mp3（TTS 與原聲交錯）與 lesson.json（章節時間軸）。
+clip 有 translation 時另外產 lesson.dub.mp3：原聲換成另一個聲音唸翻譯，網頁上可以切換。
 需要 ffmpeg；TTS 用 edge-tts（免費、需網路）。
 """
 from __future__ import annotations
@@ -11,6 +12,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -33,10 +35,18 @@ from common import (
 AR, AC = "24000", "1"  # edge-tts 的輸出規格；原聲片段轉成一樣才能直接 concat
 CBR = "48k"  # lesson.mp3 用固定位元率，瀏覽器跳轉才精準（見 concat）
 DEFAULT_VOICE = {"zh-TW": "zh-TW-HsiaoChenNeural", "zh": "zh-CN-XiaoxiaoNeural", "en": "en-US-AriaNeural"}
+# 配音（唸原聲翻譯）用另一個性別的聲音，聽得出來不是講解者本人
+DUB_VOICE = {"zh-TW": "zh-TW-YunJheNeural", "zh": "zh-CN-YunxiNeural", "en": "en-US-GuyNeural"}
 
 
 def voice_for(lang: str) -> str:
     return DEFAULT_VOICE.get(lang) or DEFAULT_VOICE.get(lang.split("-")[0], DEFAULT_VOICE["en"])
+
+
+def dub_voice_for(lang: str, main: str) -> str:
+    """配音聲音：預設同語言的另一個性別；剛好跟講解者撞聲就換成講解的預設聲。"""
+    v = DUB_VOICE.get(lang) or DUB_VOICE.get(lang.split("-")[0], DUB_VOICE["en"])
+    return voice_for(lang) if v == main else v
 
 
 def ensure_audio(vid: str, vdir: Path) -> Path:
@@ -160,13 +170,48 @@ def part_name(i: int, b: dict, voice: str, rate: str) -> str:
     return f"{i:03d}_{b['kind']}_{h}.mp3"
 
 
-def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: bool) -> dict:
+def dub_part_name(i: int, j: int, text: str, voice: str, rate: str) -> str:
+    key = {"kind": "dub", "text": text, "voice": voice, "rate": rate}
+    h = hashlib.sha1(json.dumps(key, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:8]
+    return f"{i:03d}_dub{j:02d}_{h}.mp3"
+
+
+DUB_MIN, DUB_MAX = 12, 60  # 一句配音的字數：太短就併回前一句，太長就再斷一次
+SENT_END = re.compile(r"(?<=[。！？!?；;])|\n+")
+
+
+def dub_lines(text: str) -> list[str]:
+    """把整段翻譯切成一句一句：每句各自 TTS，長度就是 karaoke 高亮的依據，不必猜時間。"""
+    out: list[str] = []
+    for chunk in SENT_END.split(text):
+        c = (chunk or "").strip()
+        while len(c) > DUB_MAX:
+            i = max((c.rfind(x, 0, DUB_MAX + 1) for x in "，、,：: "), default=-1)
+            if i <= 0:
+                i = DUB_MAX - 1
+            out.append(c[:i + 1].strip())
+            c = c[i + 1:].strip()
+        if c:
+            out.append(c)
+    merged: list[str] = []
+    for sline in out:
+        if merged and len(merged[-1]) < DUB_MIN and len(merged[-1]) + len(sline) <= DUB_MAX:
+            merged[-1] += sline
+        else:
+            merged.append(sline)
+    return merged
+
+
+def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
+          dub_voice: str | None, no_dub: bool, no_cache: bool) -> dict:
     nar = load_json(vdir / "narration.json")
     meta = load_json(vdir / "meta.json")
+    lang = meta.get("output_lang", "zh-TW")
     titles = {s["id"]: s["title"] for s in load_json(vdir / "analysis.json")["segments"]}
     seg_clips = {s["id"]: s.get("clips", []) for s in load_json(vdir / "segments.json")["segments"]}
-    voice = voice or nar.get("voice") or voice_for(meta.get("output_lang", "zh-TW"))
+    voice = voice or nar.get("voice") or voice_for(lang)
     rate = rate or nar.get("rate", "+0%")
+    dub_voice = dub_voice or nar.get("dub_voice") or dub_voice_for(lang, voice)
 
     blocks = nar["blocks"]
     has_clip = any(b["kind"] == "clip" for b in blocks)
@@ -176,11 +221,13 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: b
     parts_dir.mkdir(exist_ok=True)
 
     parts, timeline, t, reused = [], [], 0.0, 0
+    dparts, dtl, dt = [], [], 0.0  # 翻譯版：say 沿用同一個檔，clip 換成配音
     wanted = set()
     for i, b in enumerate(blocks, 1):
         p = parts_dir / part_name(i, b, voice, rate)
         wanted.add(p.name)
         cached = p.exists() and not no_cache
+        at = t
         if b["kind"] == "say":
             if not cached:
                 synth(b["text"], voice, rate, p)
@@ -198,16 +245,42 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: b
                 reused += 1
             d = duration(p)
             lines = clip_lines(events, src[0], src[1], t + pre)
-        timeline.append({
-            "at": round(t, 2), "dur": round(d, 2), "kind": b["kind"], "seg_id": b["seg_id"],
+        entry = {
+            "i": i, "at": round(t, 2), "dur": round(d, 2), "kind": b["kind"], "seg_id": b["seg_id"],
             "seg_title": titles.get(b["seg_id"], ""),
             "text": b.get("text", ""), "label": b.get("label", ""),
             "source_start": src[0], "source_end": src[1], "lines": lines,
             "translation": next((c.get("translation", "") for c in seg_clips.get(b["seg_id"], [])
                                  if b["kind"] == "clip" and abs(c["start"] - b["start"]) < 1), ""),
-        })
+        }
+        timeline.append(entry)
         parts.append(p)
         t += d
+
+        if no_dub:
+            continue
+        if b["kind"] == "clip" and entry["translation"]:
+            off, dl = 0.0, []
+            for j, text in enumerate(dub_lines(entry["translation"]), 1):
+                q = parts_dir / dub_part_name(i, j, text, dub_voice, rate)
+                wanted.add(q.name)
+                if q.exists() and not no_cache:
+                    reused += 1
+                else:
+                    synth(text, dub_voice, rate, q)
+                du = duration(q)
+                dl.append({"at": round(dt + off, 2), "dur": round(du, 2), "text": text})
+                dparts.append(q)
+                off += du
+            dtl.append(dict(entry, at=round(dt, 2), dur=round(off, 2), kind="dub", lines=dl,
+                            orig_text=" ".join(x["text"] for x in lines)))
+            dt += off
+        else:  # say（同一個檔，不必重做）或沒有翻譯的 clip：兩軌一樣，只是時間偏移不同
+            delta = dt - at
+            dtl.append(dict(entry, at=round(dt, 2),
+                            lines=[dict(x, at=round(x["at"] + delta, 2)) for x in lines]))
+            dparts.append(p)
+            dt += d
 
     for f in parts_dir.iterdir():  # 清掉已經用不到的舊片段
         if f.name not in wanted:
@@ -215,11 +288,21 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None, no_cache: b
     out = vdir / "lesson.mp3"
     concat(parts, out)
 
+    dub_out = vdir / "lesson.dub.mp3"
+    dub = None
+    if any(e["kind"] == "dub" for e in dtl):
+        concat(dparts, dub_out)
+        dub = {"file": dub_out.name, "voice": dub_voice, "duration": round(dt, 2),
+               "chapters": chapters_of(dtl), "timeline": dtl}
+    else:
+        dub_out.unlink(missing_ok=True)
+
     lesson = {
         "video_id": vid, "voice": voice, "rate": rate,
         "duration": round(t, 2), "file": out.name,
         "chapters": chapters_of(timeline), "timeline": timeline,
-        "reused_parts": reused, "total_parts": len(parts),
+        "dub": dub,
+        "reused_parts": reused, "total_parts": len(parts) + (len(dparts) if dub else 0),
     }
     save_json(vdir / "lesson.json", lesson)
     return lesson
@@ -230,6 +313,8 @@ def main(argv=None):
     ap.add_argument("id")
     ap.add_argument("--voice", help="edge-tts 語音；預設依 output_lang")
     ap.add_argument("--rate", help="語速，例如 +15%%")
+    ap.add_argument("--dub-voice", help="唸原聲翻譯的語音；預設是跟講解不同性別的同語言聲音")
+    ap.add_argument("--no-dub", action="store_true", help="不產 lesson.dub.mp3（原聲翻譯版）")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-cache", action="store_true", help="不重用 lesson_parts/ 裡的舊片段，全部重做")
@@ -247,14 +332,17 @@ def main(argv=None):
         return
     if not (vdir / "narration.json").exists():
         raise SystemExit(f"缺 {vdir / 'narration.json'}：先由 agent 依 rules/narration.md 產生")
-    if (vdir / "lesson.mp3").exists() and not args.force:
+    # 舊的 lesson.json 沒有 dub 這個 key：那是還沒做過翻譯配音的站，不必 --force 就補做
+    lp = vdir / "lesson.json"
+    done = (vdir / "lesson.mp3").exists() and (args.no_dub or (lp.exists() and "dub" in load_json(lp)))
+    if done and not args.force:
         print(f"跳過：{vdir / 'lesson.mp3'} 已存在（--force 重做）")
         print_step("narrate", "已存在")
         return
     mark(vdir, "building")
     try:
         with Timer(vdir, "narrate"):
-            lesson = build(vdir, vid, args.voice, args.rate, args.no_cache)
+            lesson = build(vdir, vid, args.voice, args.rate, args.dub_voice, args.no_dub, args.no_cache)
     except Exception:
         mark(vdir, "failed")
         raise
@@ -262,6 +350,9 @@ def main(argv=None):
     n_clip = sum(1 for e in lesson["timeline"] if e["kind"] == "clip")
     cache = f"，重用 {lesson['reused_parts']}/{lesson['total_parts']} 段" if lesson["reused_parts"] else ""
     print(f"OK {fmt_dur(lesson['duration'])}（{len(lesson['chapters'])} 章、{n_clip} 段原聲{cache}）→ {vdir / 'lesson.mp3'}")
+    if lesson["dub"]:
+        n_dub = sum(1 for e in lesson["dub"]["timeline"] if e["kind"] == "dub")
+        print(f"   翻譯版 {fmt_dur(lesson['dub']['duration'])}（{n_dub} 段配音，{lesson['dub']['voice']}）→ {vdir / 'lesson.dub.mp3'}")
     print_step("narrate", f"{fmt_dur(lesson['duration'])} 聽力版")
 
 

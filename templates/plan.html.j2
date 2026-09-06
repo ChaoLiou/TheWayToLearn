@@ -17,6 +17,13 @@
   .lesson .acts { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.2rem; }
   .lesson .acts button { background:var(--accent); color:#fff; border:none; border-radius:6px;
                          padding:.25rem .7rem; cursor:pointer; font:inherit; }
+  /* 原聲 / 翻譯配音的切換（分段按鈕，亮起來的是目前這軌）*/
+  .modes { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .modes[hidden] { display:none; }
+  .modes button, .lesson .acts .modes button { background:var(--card); color:var(--muted); border:none;
+                  border-radius:0; padding:.25rem .8rem; cursor:pointer; font:inherit; }
+  .modes button + button { border-left:1px solid var(--line); }
+  .modes button.on, .lesson .acts .modes button.on { background:var(--accent); color:#fff; }
   /* karaoke 講稿視窗 */
   #kara { position:fixed; inset:0; z-index:110; background:var(--bg); display:flex; flex-direction:column; }
   #kara[hidden] { display:none; }
@@ -46,6 +53,7 @@
   #kara p.clip { font-style:italic; }
   #kara .cliphead { color:var(--muted); font-size:.85rem; margin:1rem 0 .2rem; font-style:normal; }
   #kara p.clip { border-left:2px solid var(--line); }
+  #kara p.dub { font-style:normal; border-left:2px dashed var(--accent); }
   #kara .back { position:absolute; right:1.2rem; bottom:1.2rem; background:var(--accent); color:#fff;
                 border:none; border-radius:999px; padding:.5rem 1rem; cursor:pointer; font:inherit; box-shadow:0 2px 8px rgba(0,0,0,.3); }
   #kara .back[hidden] { display:none; }
@@ -95,6 +103,11 @@
       <select id="k-rate">
         {% for r in ['0.75', '1', '1.25', '1.5', '1.75', '2'] %}<option value="{{ r }}"{{ ' selected' if r == '1' }}>{{ r }}×</option>{% endfor %}
       </select></label>
+    {% if videos|length == 1 and videos[0].lesson and videos[0].lesson.dub %}
+    <span class="modes" title="{{ S.dub_hint }}">
+      <button data-mode="orig" class="on">{{ S.mode_orig }}</button><button data-mode="dub">{{ S.mode_dub }}</button>
+    </span>
+    {% endif %}
     <button data-k="restart">{{ S.restart }}</button>
     <button data-k="toggle">{{ S.pause }}</button>
     <button data-k="close">✕</button>
@@ -132,7 +145,11 @@
   <b>{{ S.listen }}</b> <span class="muted">{{ L.duration|dur }} · {{ S.listen_hint }}</span>
   <audio id="lesson" controls preload="metadata" src="{{ L.href }}"></audio>
   <div class="acts"><button id="kara-open">{{ S.open_script }}</button>
+    {% if L.dub %}<span class="modes" title="{{ S.dub_hint }}">
+      <button data-mode="orig" class="on">{{ S.mode_orig }}</button><button data-mode="dub">{{ S.mode_dub }}</button>
+    </span>{% endif %}
     <span class="muted">{{ S.kara_hint }}</span></div>
+  {% if L.dub %}<div class="muted">{{ S.dub_hint }}</div>{% endif %}
   <div class="muted">{{ S.chapters }}</div>
   <ol>{% for c in L.chapters %}<li><button data-at="{{ c.at }}"><span class="t">{{ c.at|ts }}</span>{{ c.title }}</button></li>{% endfor %}</ol>
 </div>
@@ -300,7 +317,7 @@
     document.getElementById("lesson-check").addEventListener("click", probe);
     setInterval(probe, 20000);
   }
-  const KSTR = { play: {{ S.play | tojson }}, pause: {{ S.pause | tojson }} };
+  const KSTR = { play: {{ S.play | tojson }}, pause: {{ S.pause | tojson }}, orig: {{ S.orig_text | tojson }} };
   /* 聽力版：點章節跳到該時間 */
   const lesson = document.getElementById("lesson");
   /* metadata 還沒載入時直接設 currentTime 會被瀏覽器丟掉、變成從頭播，所以先等 loadedmetadata */
@@ -350,45 +367,59 @@
     };
     const ts = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s / 60); return `${m}:${String(s % 60).padStart(2, "0")}`; };
 
-    let seg = null;
-    data.timeline.forEach((e) => {
-      if (e.seg_id !== seg) {
-        seg = e.seg_id;
-        const h = document.createElement("h4");
-        h.textContent = `${e.seg_id}. ${e.seg_title}`;
-        K.inner.appendChild(h);
-      }
-      // 每段原聲自成一個 clipbox：標題與翻譯只在這段範圍內 sticky
-      let box = K.inner;
-      if (e.kind === "clip") {
-        box = document.createElement("section");
-        box.className = "clipbox";
-        K.inner.appendChild(box);
-        const h = document.createElement("div");
-        h.className = "cliphead";
-        h.textContent = "🎙 " + (e.label || "");
-        box.appendChild(h);
-        if (e.translation) {
-          const tr = document.createElement("div");
-          tr.className = "trans";
-          tr.textContent = e.translation;
-          box.appendChild(tr);
+    // 兩軌：orig = 作者原聲，dub = 另一個聲音唸翻譯。say 的部分兩軌是同一份音檔，只有 clip 不同。
+    const tracks = { orig: { href: data.href, timeline: data.timeline, duration: data.duration, chapters: data.chapters } };
+    if (data.dub) tracks.dub = { href: data.dub.href, timeline: data.dub.timeline, duration: data.dub.duration, chapters: data.dub.chapters };
+    let mode = "orig";
+
+    const buildScript = (tl) => {
+      K.inner.textContent = ""; K.nodes = []; K.lines = []; K.idx = -1;
+      let seg = null;
+      tl.forEach((e) => {
+        if (e.seg_id !== seg) {
+          seg = e.seg_id;
+          const h = document.createElement("h4");
+          h.textContent = `${e.seg_id}. ${e.seg_title}`;
+          K.inner.appendChild(h);
         }
-      }
-      (e.lines || []).forEach((l) => {
-        const p = document.createElement("p");
-        p.textContent = l.text;
-        if (e.kind === "clip") p.classList.add("clip");
-        p.addEventListener("click", () => { seekTo(l.at + 0.01); K.auto = true; K.back.hidden = true; });
-        box.appendChild(p);
-        K.nodes.push(p); K.lines.push(l);
+        // 每段原聲自成一個 clipbox：標題與對照文字只在這段範圍內 sticky
+        let box = K.inner;
+        const isClip = e.kind === "clip" || e.kind === "dub";
+        if (isClip) {
+          box = document.createElement("section");
+          box.className = "clipbox";
+          K.inner.appendChild(box);
+          const h = document.createElement("div");
+          h.className = "cliphead";
+          h.textContent = (e.kind === "dub" ? "🗣 " : "🎙 ") + (e.label || "");
+          box.appendChild(h);
+          // 原聲軌上面放翻譯；翻譯軌上面放原文，兩邊都看得到對照
+          const other = e.kind === "dub" ? (e.orig_text ? `${KSTR.orig}：${e.orig_text}` : "") : e.translation;
+          if (other) {
+            const tr = document.createElement("div");
+            tr.className = "trans";
+            tr.textContent = other;
+            box.appendChild(tr);
+          }
+        }
+        (e.lines || []).forEach((l) => {
+          const p = document.createElement("p");
+          p.textContent = l.text;
+          if (isClip) p.classList.add(e.kind === "dub" ? "dub" : "clip");
+          p.addEventListener("click", () => { seekTo(l.at + 0.01); K.auto = true; K.back.hidden = true; });
+          box.appendChild(p);
+          K.nodes.push(p); K.lines.push(l);
+        });
       });
-    });
+    };
+    buildScript(tracks.orig.timeline);
     K.tot.textContent = ts(data.duration);
 
     // 語速：currentTime 走的是媒體時間，所以 KTV 高亮會自動跟著變速
     const rateSel = document.getElementById("k-rate");
+    let curRate = 1;
     const setRate = (v) => {
+      curRate = v;
       lesson.playbackRate = v;
       if ("preservesPitch" in lesson) lesson.preservesPitch = true;
       rateSel.value = String(v);
@@ -411,6 +442,50 @@
       });
       if (K.auto && K.nodes[i]) K.nodes[i].scrollIntoView({ block: "center", behavior: "smooth" });
     };
+    /* ---------- 原聲 ⇄ 翻譯配音 ---------- */
+    // 章節列是伺服器算好的（原聲軌），換軌時就地改時間
+    const chapBtns = [...document.querySelectorAll(".lesson ol button[data-at]")];
+    const syncChapters = () => {
+      const cs = tracks[mode].chapters || [];
+      chapBtns.forEach((b, i) => {
+        if (!cs[i]) return;
+        b.dataset.at = cs[i].at;
+        b.querySelector(".t").textContent = ts(cs[i].at);
+      });
+    };
+    // 兩軌的 block 一一對應（同一個 i），所以用「第幾個 block + 在裡面的比例」換算時間
+    const mapTime = (t, from, to) => {
+      const a = tracks[from].timeline, b = tracks[to].timeline;
+      let i = a.findIndex((e) => t < e.at + e.dur);
+      if (i < 0) i = a.length - 1;
+      const e = a[i], o = b[i] || b[b.length - 1];
+      const frac = e.dur > 0 ? Math.min(1, Math.max(0, (t - e.at) / e.dur)) : 0;
+      return o.at + frac * o.dur;
+    };
+    const setMode = (m) => {
+      if (!tracks[m] || m === mode) return;
+      const playing = !lesson.paused;
+      const t = mapTime(lesson.currentTime, mode, m);
+      mode = m;
+      try { localStorage.setItem("lesson-mode", m); } catch (_) {}
+      document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+      lesson.addEventListener("loadedmetadata", () => {
+        lesson.currentTime = t; setRate(curRate); paint();
+        if (playing) lesson.play();
+      }, { once: true });
+      lesson.src = tracks[m].href;
+      lesson.load();
+      buildScript(tracks[m].timeline);
+      syncChapters();
+      K.tot.textContent = ts(tracks[m].duration);
+    };
+    document.querySelectorAll("[data-mode]").forEach((b) => {
+      b.addEventListener("click", () => setMode(b.dataset.mode));
+    });
+    let savedMode = null;
+    try { savedMode = localStorage.getItem("lesson-mode"); } catch (_) {}
+    if (savedMode && tracks[savedMode]) setMode(savedMode);
+
     lesson.addEventListener("timeupdate", () => { K.cur.textContent = ts(lesson.currentTime); paint(); });
     lesson.addEventListener("play", () => { K.toggle.textContent = KSTR.pause; });
     lesson.addEventListener("pause", () => { K.toggle.textContent = KSTR.play; });
@@ -444,6 +519,7 @@
         lesson.paused ? lesson.play() : lesson.pause();
       } else if (!K.el.hidden && e.key === "Escape") { e.preventDefault(); closeK(); }
       else if (!K.el.hidden && e.key === "Home") { e.preventDefault(); seekTo(0); }
+      else if (tracks.dub && (e.key === "d" || e.key === "D")) { e.preventDefault(); setMode(mode === "dub" ? "orig" : "dub"); }
     });
   }
 

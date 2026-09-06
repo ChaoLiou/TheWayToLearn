@@ -47,6 +47,18 @@
   .wp h4 a { color:inherit; text-decoration:none; }
   .wp h4 a:hover { color:var(--accent); }
   .wp .by { font-size:.88rem; color:var(--muted); }
+  /* 作者錯誤率：紅 = 確定錯誤／已過時，橘 = 見仁見智 */
+  .err { display:inline-flex; align-items:center; gap:.2rem; margin-left:.35rem; font-size:.74rem; font-weight:600;
+         line-height:1.5; white-space:nowrap; padding:0 .35rem; border-radius:999px; border:1px solid var(--line); }
+  .err svg { width:.85em; height:.85em; }
+  .err.w { color:var(--wrong); border-color:var(--wrong); background:var(--wrong-bg); }
+  .err.d { color:var(--debat); border-color:var(--debat); background:var(--debat-bg); }
+  .err.ok { color:var(--muted); font-weight:400; }
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem 0; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
   .wp .sub { font-size:.82rem; color:var(--muted); }
   .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted); }
   .wp .cat i { display:inline-block; width:.55rem; height:.55rem; border-radius:2px; }
@@ -54,6 +66,49 @@
                   color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
   .wp .wp-info { display:none; }
+  /* 進度：八步各一格 */
+  .wp .prog { display:flex; gap:3px; margin:.1rem 0 0; }
+  .wp .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
+  .wp .prog span[data-s="done"] { background:var(--accent); }
+  .wp .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
+  .wp .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
+  .wp .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
+  @keyframes pulse { 50% { opacity:1; } }
+  .wp .stg { font-size:.78rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+  .wp .stg b { color:var(--fg); font-weight:600; }
+  .wp .stg .warn { color:var(--accent); }
+  .wp .acts { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .wp .go { background:var(--accent); color:#fff; border:none; border-radius:999px;
+            font:inherit; font-size:.78rem; padding:.1rem .7rem; cursor:pointer; }
+  .wp .go.done { background:none; border:1px solid var(--line); color:var(--muted); }
+  .wp .go:hover { filter:brightness(1.1); }
+  /* 繼續做：選一個目標 → 複製 prompt */
+  #nextstep { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
+              width:min(640px, 94vw); max-height:86vh; padding:0; overflow:hidden; }
+  #nextstep::backdrop { background:var(--overlay); }
+  #nextstep .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
+  #nextstep .head h3 { margin:0; font-size:1.02rem; line-height:1.4; flex:1; }
+  #nextstep .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; }
+  #nextstep .body { padding:.8rem 1.1rem 1.1rem; overflow:auto; max-height:calc(86vh - 4rem); }
+  #nextstep ol.steps { list-style:none; margin:.2rem 0 1rem; padding:0; display:grid; gap:.15rem; }
+  #nextstep ol.steps li { display:flex; align-items:center; gap:.5rem; font-size:.9rem; color:var(--muted); }
+  #nextstep ol.steps li .m { width:1.2rem; text-align:center; }
+  #nextstep ol.steps li.done { color:var(--fg); }
+  #nextstep ol.steps li.partial .m, #nextstep ol.steps li.running .m { color:var(--accent); }
+  #nextstep ol.steps li .note { font-size:.82rem; color:var(--accent); }
+  #nextstep h4 { margin:.6rem 0 .1rem; font-size:.95rem; }
+  #nextstep .hint { font-size:.82rem; color:var(--muted); margin:0 0 .5rem; }
+  #nextstep .opts { display:grid; gap:.4rem; }
+  #nextstep .opts button { text-align:left; background:var(--card); border:1px solid var(--line); border-radius:8px;
+                           padding:.45rem .7rem; cursor:pointer; font:inherit; color:var(--fg); }
+  #nextstep .opts button:hover, #nextstep .opts button.on { border-color:var(--accent); }
+  #nextstep .opts button span { display:block; font-size:.8rem; color:var(--muted); }
+  #nextstep .out[hidden] { display:none; }
+  #nextstep .out { margin-top:.8rem; }
+  #nextstep pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.6rem .7rem;
+                  white-space:pre-wrap; word-break:break-word; font-size:.82rem; max-height:32vh; overflow:auto; margin:.3rem 0; }
+  #nextstep .copy { background:var(--accent); color:#fff; border:none; border-radius:6px;
+                    padding:.3rem .8rem; cursor:pointer; font:inherit; }
   .wp .terms { font-size:.78rem; color:var(--muted); }
   /* 詳細：置中視窗 */
   #wpinfo { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
@@ -65,6 +120,10 @@
   #wpinfo .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
   #wpinfo .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(82vh - 5rem); font-size:.93rem; }
   #wpinfo .body ul { margin:.3rem 0; padding-left:1.2rem; }
+  #wpinfo .body .shot { display:block; margin:0 0 .7rem; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  #wpinfo .body .shot img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
+  /* 地圖上的縮圖節點 */
+  .mm-wrap .node image { border-radius:6px; }
   .routes { font-size:.85rem; margin-top:.3rem; }
   .routes .rt { display:inline-block; font-size:.7rem; font-weight:700; padding:0 .4rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
   .routes .via { color:var(--muted); }
@@ -72,7 +131,7 @@
 {% block body %}
 <main>
 <h1>{{ S.atlas_h1 }}</h1>
-<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span>{{ S.f("n_route", n=routes|length) }}</span><span>{{ S.f("updated", t=generated) }}</span></p>
+<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span>{{ S.f("n_route", n=routes|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span></p>
 
 {% if waypoints|length >= 2 %}
 <h2>{{ S.h_map }}</h2>
@@ -82,7 +141,12 @@
 </pre></div>
 {% endif %}
 
+{# 勘誤圖示：八角形（danger）= 確定錯誤／已過時；三角形（warning）= 見仁見智。用 currentColor 才能跟著深淺色主題 #}
+{% macro ic_danger() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
+{% macro ic_warn() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
+
 <h2>{{ S.h_stations }}</h2>
+<p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic_danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic_warn() }}{{ S.lvl_debatable }}</span></p>
 <div class="search">
   <div class="sbox" id="sbox">
     <span class="ico">🔍</span>
@@ -95,17 +159,24 @@
 <p id="no-match" hidden>{{ S.no_match }}</p>
 
 {% macro card(w, color, cat) %}
-<article class="wp" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}">
+<article class="wp" data-id="{{ w.id }}" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}">
   <a class="thumb" href="{{ w.href }}">
-    {% if w.thumb or w.yt_thumb %}<img loading="lazy" src="{{ w.thumb or w.yt_thumb }}" data-fallback="{{ w.yt_thumb if w.thumb else '' }}" alt="{{ w.title }}">
+    {% if w.yt_thumb or w.thumb %}<img loading="lazy" src="{{ w.yt_thumb or w.thumb }}" data-fallback="{{ w.thumb or '' }}" alt="{{ w.title }}">
     {% else %}<span class="ph">▶</span>{% endif %}
     <span class="dur">{{ w.duration|dur }}</span>
   </a>
   <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
-  <div class="by">{{ w.channel }}</div>
-  <div class="sub">{{ w.upload_date }}{% if w.upload_date %} · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
+  <div class="by">{{ w.channel }}{% if w.author %}{% if w.author.clean %}<span class="err ok" title="{{ w.author.tip }}">{{ S.err_ok }}</span>{% else %}{% if w.author.wrong %}<span class="err w" title="{{ w.author.tip }}">{{ ic_danger() }}{{ w.author.wrong }}</span>{% endif %}{% if w.author.debatable %}<span class="err d" title="{{ w.author.tip }}">{{ ic_warn() }}{{ w.author.debatable }}</span>{% endif %}{% endif %}{% endif %}</div>
+  <div class="sub">{% if w.upload_date %}<span title="{{ w.upload_date }}">{{ w.upload_days|ago }}</span> · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
   <div class="cat"><i style="background:{{ color }}"></i>{{ cat }}</div>
-  <button class="more-btn" type="button">{{ S.more_info }}</button>
+  <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
+    {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
+  </div>
+  <div class="stg"><b>{{ w.n_done }}/{{ w.n_total }}</b>{% if w.note %}<span class="{{ '' if w.all_done else 'warn' }}">{{ w.note }}</span>{% endif %}</div>
+  <div class="acts">
+    <button class="more-btn" type="button">{{ S.more_info }}</button>
+    <button class="go{{ ' done' if w.all_done }}" type="button">{{ S.next_step }}</button>
+  </div>
   <div class="wp-info">
     <div><b>{{ w.topic }}</b></div>
     <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
@@ -134,6 +205,19 @@
   <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)', S.unplaced) }}{% endfor %}</div>
 </section>
 {% endif %}
+<dialog id="nextstep">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
+  <div class="body">
+    <ol class="steps"></ol>
+    <h4>{{ S.next_q }}</h4>
+    <p class="hint">{{ S.next_hint }}</p>
+    <div class="opts"></div>
+    <div class="out" hidden>
+      <pre></pre>
+      <button class="copy" type="button">{{ S.copy_prompt }}</button>
+    </div>
+  </div>
+</dialog>
 <dialog id="wpinfo">
   <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
   <div class="body"></div>
@@ -141,19 +225,37 @@
 </main>
 {% endblock %}
 {% block json %}
-<script id="links-data" type="application/json">{{ links | tojson }}</script>
+<script id="nodes-data" type="application/json">{{ node_ids | tojson }}</script>
+<script id="steps-data" type="application/json">{{ steps_data | tojson }}</script>
 <script id="ui-data" type="application/json">{{ {"author": S.f_author, "category": S.f_category, "title": S.f_title, "any": S.f_any, "showing": S.showing} | tojson }}</script>
 {% endblock %}
 {% block js %}
-  /* 地圖節點 → 該站 plan.html */
-  const LINKS = JSON.parse(document.getElementById("links-data").textContent);
+  /* 地圖節點（帶縮圖）→ 點開該站的詳細視窗 */
+  const NODE_IDS = JSON.parse(document.getElementById("nodes-data").textContent);
   document.querySelectorAll(".mermaid svg .node").forEach((g) => {
-    const key = (g.textContent || "").replace(/\s+/g, "");
-    const href = LINKS[key];
-    if (!href) return;
+    const mid = (g.id || "").match(/^flowchart-(.+)-\d+$/);   // 帶縮圖的節點文字可能對不上，優先用節點 id
+    const id = (mid && NODE_IDS[mid[1]]) || NODE_IDS[(g.textContent || "").replace(/\s+/g, "")];
+    if (!id) return;
     g.style.cursor = "pointer";
-    g.addEventListener("click", (e) => { e.stopPropagation(); location.href = href; });
+    g.addEventListener("click", (e) => {
+      e.stopPropagation();                       // 不要順便打開整張圖的全視窗 viewer
+      const wp = document.querySelector(`.wp[data-id="${id}"]`);
+      if (wp) showInfo(wp);
+    });
   });
+
+  /* 「更新於」在瀏覽當下算相對時間，隔天再打開也不會停在產生時的那一刻 */
+  const AGO = {{ {"now": S.ago_now, "today": S.ago_today, "h": S.ago_h, "d": S.ago_d,
+                  "mo": S.ago_mo, "y": S.ago_y, "updated": S.updated} | tojson }};
+  (() => {
+    const el = document.getElementById("updated"), t = Date.parse(el.dataset.ts);
+    if (!t) return;
+    const h = Math.floor((Date.now() - t) / 36e5), d = Math.floor(h / 24);
+    const f = (k, n) => AGO[k].replace("{n}", n);
+    const rel = h < 1 ? AGO.now : h < 24 ? f("h", h)
+      : d < 30 ? f("d", d) : d < 365 ? f("mo", Math.max(1, Math.floor(d / 30))) : f("y", Math.floor(d / 365));
+    el.textContent = AGO.updated.replace("{t}", rel);
+  })();
 
   /* 縮圖抓不到（沒截圖或離線）就換另一個來源 */
   document.querySelectorAll(".wp .thumb img").forEach((img) => {
@@ -164,17 +266,83 @@
     });
   });
 
-  /* 詳細 → 置中視窗 */
-  const DLG = document.getElementById("wpinfo");
-  document.querySelectorAll(".wp .more-btn").forEach((btn) => {
+  /* 繼續做：看這一站走到哪，選一個目標，複製 prompt 貼到 Claude Code */
+  const STEPS = JSON.parse(document.getElementById("steps-data").textContent);
+  const NS = document.getElementById("nextstep");
+  const NSTR = {{ {"copy": S.copy_prompt, "copied": S.copied, "done": S.st_done, "todo": S.st_todo,
+                   "partial": S.st_partial, "skip": S.st_skip, "running": S.st_running} | tojson }};
+  const MARK = { done: "✔", partial: "◐", todo: "○", skip: "·", running: "◔" };
+  const copyText = async (text, btn) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {                                   // file:// 開啟時 clipboard API 會被擋，用舊招
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (__) {}
+      ta.remove();
+    }
+    btn.textContent = NSTR.copied;
+    setTimeout(() => { btn.textContent = NSTR.copy; }, 1600);
+  };
+  document.querySelectorAll(".wp .go").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const wp = btn.closest(".wp");
-      DLG.querySelector(".head h3").innerHTML = "";
-      DLG.querySelector(".head h3").append(wp.dataset.title,
-        Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
-      DLG.querySelector(".body").replaceChildren(...[...wp.querySelector(".wp-info").children].map((n) => n.cloneNode(true)));
-      DLG.showModal();
+      const d = STEPS[btn.closest(".wp").dataset.id];
+      if (!d) return;
+      NS.querySelector(".head h3").textContent = d.title;
+      NS.querySelector("ol.steps").replaceChildren(...d.stages.map((st) => {
+        const li = document.createElement("li");
+        li.className = st.state;
+        li.append(Object.assign(document.createElement("span"), { className: "m", textContent: MARK[st.state] }));
+        li.append(`${st.n}. ${st.name}`);
+        const tail = st.note || (st.state === "done" ? "" : NSTR[st.state]);
+        if (tail) li.append(Object.assign(document.createElement("span"), { className: "note", textContent: "— " + tail }));
+        return li;
+      }));
+      const out = NS.querySelector(".out"), pre = NS.querySelector(".out pre");
+      out.hidden = true;
+      NS.querySelector(".opts").replaceChildren(...d.actions.map((a) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.append(a.label, Object.assign(document.createElement("span"), { textContent: a.desc }));
+        b.addEventListener("click", () => {
+          NS.querySelectorAll(".opts button").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          pre.textContent = a.prompt;
+          out.hidden = false;
+          copyText(a.prompt, NS.querySelector(".copy"));
+          out.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+        return b;
+      }));
+      NS.showModal();
     });
+  });
+  NS.querySelector(".copy").addEventListener("click", (e) => copyText(NS.querySelector(".out pre").textContent, e.currentTarget));
+  NS.querySelector("[data-close]").addEventListener("click", () => NS.close());
+  NS.addEventListener("click", (e) => { if (e.target === NS) NS.close(); });
+
+  /* 詳細 → 置中視窗（卡片的「詳細」與地圖節點共用） */
+  const DLG = document.getElementById("wpinfo");
+  function showInfo(wp) {
+    const h3 = DLG.querySelector(".head h3");
+    h3.innerHTML = "";
+    h3.append(wp.dataset.title,
+      Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
+    const shot = wp.querySelector(".thumb img");
+    const body = [];
+    if (shot) {                                  // 節點上看到的縮圖，視窗裡放大一點
+      const fig = document.createElement("a");
+      fig.className = "shot";
+      fig.href = wp.querySelector("h4 a").getAttribute("href");
+      fig.append(Object.assign(document.createElement("img"), { src: shot.currentSrc || shot.src, alt: "" }));
+      body.push(fig);
+    }
+    body.push(...[...wp.querySelector(".wp-info").children].map((n) => n.cloneNode(true)));
+    DLG.querySelector(".body").replaceChildren(...body);
+    DLG.showModal();
+  }
+  document.querySelectorAll(".wp .more-btn").forEach((btn) => {
+    btn.addEventListener("click", () => showInfo(btn.closest(".wp")));
   });
   DLG.addEventListener("click", (e) => { if (e.target === DLG || e.target.closest("[data-close]")) DLG.close(); });
 

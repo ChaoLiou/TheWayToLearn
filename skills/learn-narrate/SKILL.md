@@ -29,10 +29,11 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 被 `/learn` 呼叫時，步驟 6 render 之前應該已經跑過 `--mark-pending`；單獨執行這支 skill 時不需要，`narrate.py` 自己會標記狀態。
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> [--voice ...] [--rate +15%] [--force]
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> [--voice ...] [--rate +15%] [--dub-voice ...] [--no-dub] [--force]
 ```
 - 需要網路（edge-tts）與 ffmpeg；會自動只下載音訊（`-f ba`，比影片小很多）。
 - 產出 `lesson.mp3` 與 `lesson.json`（章節、時間軸、逐句字幕）。
+- clip 有 `translation` 時另外產 `lesson.dub.mp3`：原聲片段換成另一個聲音唸翻譯（`--dub-voice`，預設是同語言不同性別），講解部分沿用同一份音檔。網頁上用「🎙 原聲 / 🗣 翻譯」切換，KTV 講稿跟著換，切換時停在同一個位置。不需要就加 `--no-dub`。舊站已經有 `lesson.mp3` 但還沒有翻譯版時，直接重跑就會補做（不必 `--force`，講解的 TTS 會重用快取）。
 - 片段快取在 `lesson_parts/`：只改字幕合併或章節時會重用，不必重跑 TTS（`--no-cache` 可強制重做）。
 - 之後重跑 `/learn-render`，`plan.html` 頂端會出現播放器、章節，以及「🎤 開啟講稿」的 karaoke 視窗。
 

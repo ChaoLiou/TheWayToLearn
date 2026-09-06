@@ -25,6 +25,9 @@ description: [步驟 7/8·更新知識地圖] 學習地圖（Atlas）：把 work
 4. 重跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py`（不帶參數）讓每站的 `plan.html` 頂部「學習地圖」區塊更新為最新 route。
 5. 回報：atlas.html 路徑、新站連到了哪些站、進了哪個 region。
 
+## 各站的 pipeline 進度（自動，不用做事）
+atlas.html 每張卡片會顯示這一站走到八步的哪一步，以及「▸ 繼續做」按鈕（選一個目標 → 複製 prompt → 使用者自己貼到 Claude Code）。這些是 `atlas.py` 讀檔案自己判定的，跑一次 `atlas.py` 就會更新；某一站補完東西（例如補了原聲片段與翻譯）之後，記得再跑一次 `atlas.py` 讓進度跟著更新。
+
 ## 只有一站時
 不需要 atlas.json；`atlas.py` 仍可 render 出只有一張卡片的 atlas.html。
 

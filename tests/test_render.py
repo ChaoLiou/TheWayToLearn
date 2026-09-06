@@ -78,3 +78,45 @@ def test_english_output_lang_switches_ui(tmp_path):
     html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
     assert "1. Prerequisites &amp; Outline" in html and "Builds on" in html and 'lang="en"' in html
     assert "承上" not in html and "留給下一段" not in html
+
+
+def _lesson_fixture():
+    """一份兩軌的 lesson.json：say 兩軌共用，clip 在翻譯軌換成配音。"""
+    say = {"i": 1, "at": 0.0, "dur": 4.0, "kind": "say", "seg_id": 1, "seg_title": "第一段",
+           "text": "先聽作者怎麼說", "label": "", "source_start": None, "source_end": None,
+           "lines": [{"at": 0.0, "dur": 4.0, "text": "先聽作者怎麼說"}], "translation": ""}
+    clip = {"i": 2, "at": 4.0, "dur": 6.0, "kind": "clip", "seg_id": 1, "seg_title": "第一段",
+            "text": "", "label": "作者的比喻", "source_start": 10.0, "source_end": 16.0,
+            "lines": [{"at": 4.0, "dur": 6.0, "text": "a partition is like a wall"}],
+            "translation": "partition 就像一道牆。"}
+    dub = dict(clip, kind="dub", dur=3.0, orig_text="a partition is like a wall",
+               lines=[{"at": 4.0, "dur": 3.0, "text": "partition 就像一道牆。"}])
+    return {
+        "video_id": "vid", "voice": "zh-TW-HsiaoChenNeural", "rate": "+0%", "duration": 10.0,
+        "file": "lesson.mp3", "chapters": [{"seg_id": 1, "title": "第一段", "at": 0.0}],
+        "timeline": [say, clip], "reused_parts": 0, "total_parts": 2,
+        "dub": {"file": "lesson.dub.mp3", "voice": "zh-TW-YunJheNeural", "duration": 7.0,
+                "chapters": [{"seg_id": 1, "title": "第一段", "at": 0.0}],
+                "timeline": [say, dub]},
+    }
+
+
+def test_lesson_dub_toggle_rendered(tmp_path):
+    import json
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    (ws / "測試影片 A: B" / "lesson.json").write_text(
+        json.dumps(_lesson_fixture(), ensure_ascii=False), encoding="utf-8")
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert 'data-mode="orig"' in html and 'data-mode="dub"' in html   # 切換鈕（卡片 + 講稿列）
+    assert html.count('data-mode="dub"') == 2
+    assert "lesson.dub.mp3" in html
+    data = json.loads(html.split('id="lesson-data" type="application/json">')[1].split("</script>")[0])
+    assert data["dub"]["href"].endswith("lesson.dub.mp3")
+    assert data["dub"]["timeline"][1]["lines"][0]["text"] == "partition 就像一道牆。"
+    # 沒有翻譯軌時不要出現切換鈕
+    (ws / "測試影片 C" / "lesson.json").write_text(
+        json.dumps(dict(_lesson_fixture(), dub=None), ensure_ascii=False), encoding="utf-8")
+    render.main(["--workspace", str(ws)])
+    assert 'data-mode=' not in (ws / "測試影片 C" / "plan.html").read_text(encoding="utf-8")
