@@ -16,7 +16,8 @@ description: [步驟 3/8·切段] 讀 transcript.json，由 agent 切成意義�
 3. `shots_mode` 欄位：照 input 的 `shots` 填（預設 `auto`）。`auto` 但整支影片都沒有值得截的畫面時，改寫成 `none` 並在 `vision_reason` 說明。
 4. `vision` 欄位：input 給 true/false 就照填；auto 就依規則判斷並寫 `vision_reason`。`shots_mode: none` 時一律 false。
 5. 寫檔後跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py segments workspace/<影片標題>/segments.json`，不過就修。
-6. 記錄耗時：把你這步大約花的秒數寫進 `timings.json` 的 `segment`（用 `python -c` 或直接編輯）。
+6. 記錄耗時：把你這步大約花的秒數寫進 `timings.json` 的 `segment`，格式和其他階段一致——**值是物件不是數字**：
+   `{"segment": {"sec": 420, "at": "2026-09-08T22:10:17+08:00"}}`（`at` 用當地時間 ISO 8601；用 `python -c` 讀進來改再寫回，不要覆蓋既有欄位）。
 
 已存在且沒有 `--force` 就跳過。
 

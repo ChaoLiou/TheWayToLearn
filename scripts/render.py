@@ -163,6 +163,11 @@ def term_graph(videos: list[dict], tips: Tips, S: Strings) -> tuple[str, list[di
     return "\n".join(lines), edges, legend
 
 
+def _norm_timings(t: dict) -> dict:
+    """容忍 agent 手寫的 timings.json：值寫成純秒數時補成 {"sec": …}。"""
+    return {k: (v if isinstance(v, dict) else {"sec": v}) for k, v in t.items()}
+
+
 def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | None:
     need = ["meta.json", "segments.json", "analysis.json"]
     if not all((vdir / n).exists() for n in need):
@@ -179,7 +184,7 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
         v["lesson"]["href"] = href_prefix + quote(v["lesson"]["file"])
         if v["lesson"].get("dub"):
             v["lesson"]["dub"]["href"] = href_prefix + quote(v["lesson"]["dub"]["file"])
-    v["timings"] = load_json(vdir / "timings.json") if (vdir / "timings.json").exists() else {}
+    v["timings"] = _norm_timings(load_json(vdir / "timings.json") if (vdir / "timings.json").exists() else {})
     seg_by_id = {s["id"]: s for s in v["segments"]["segments"]}
     for s in v["analysis"]["segments"]:
         src = seg_by_id.get(s["id"], {})

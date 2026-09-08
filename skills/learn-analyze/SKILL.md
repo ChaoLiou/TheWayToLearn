@@ -22,7 +22,8 @@ description: [步驟 5/8·逐段分析] 由 agent 逐段寫「承上／推理／
 3. 每段填 `builds_on`（若這段有明顯錯誤或過時內容，另填 `issues`：逐字引文 + level + note，見 rules/narrative.md 第 6 條）（回應上一段 leads_to）、`reasoning`、`explanation`、`terms`、`leads_to`。每個 term：`term` 原文、`zh` 中文、`definition` 一句話、`more` 更多說明、`related` 寫成 `[{"term": "B", "rel": "關係 ≤12 字"}]`（見 rules/narrative.md 第 5 條）。
 4. `vision_used` 填實際有沒有看圖；`frames` 填有看的圖路徑。
 5. 寫檔後跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py analysis workspace/<影片標題>/analysis.json`，不過就修。
-6. 把耗時寫進 `timings.json` 的 `analyze`。
+6. 把耗時寫進 `timings.json` 的 `analyze`，格式和其他階段一致——**值是物件不是數字**：
+   `{"analyze": {"sec": 780, "at": "2026-09-08T22:10:17+08:00"}}`（`at` 用當地時間 ISO 8601；用 `python -c` 讀進來改再寫回，不要覆蓋既有欄位）。
 
 已存在且沒有 `--force` 就跳過。`--vision true|false` 可覆蓋 segments.json 的設定。
 
