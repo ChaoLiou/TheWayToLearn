@@ -1,5 +1,5 @@
 {
-  "name": "atlas",
+  "name": "pacer",
   "version": "0.1.0",
   "description": "Atlas of Knowledge：YouTube 連結 → 抓字幕與關鍵截圖 → 線性推進的學習規劃（HTML + Mermaid）→ 把每支影片連成一張知識地圖。",
   "author": {

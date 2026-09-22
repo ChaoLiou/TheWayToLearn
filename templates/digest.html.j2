@@ -1,0 +1,425 @@
+{% extends "_lite.html.j2" %}
+{% import "_search.html.j2" as search %}
+{% block title %}{{ S.digest_title }}{% endblock %}
+{% block css %}
+  {{ search.css() }}
+  .search { margin-bottom:0; }
+  /* ---- 今天 ---- */
+  .today { display:flex; flex-wrap:wrap; gap:.6rem 1.2rem; align-items:center; }
+  .today .big { font-size:1.05rem; font-weight:700; }
+  .today button { font:inherit; padding:.3rem .9rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  .today button:disabled { opacity:.45; cursor:default; }
+  .filters { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.4rem 0 1.2rem; position:sticky; top:0;
+             background:var(--bg); padding:.5rem 0; z-index:5; border-bottom:1px solid var(--line); }
+  .filters button { font:inherit; font-size:.85rem; padding:.2rem .7rem; border-radius:999px; border:1px solid var(--line);
+                    background:var(--card); color:var(--fg); cursor:pointer; }
+  .filters button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .filters .sp { flex:1; } .filters .tool { border-style:dashed; font-size:.8rem; }
+  /* ---- 轉移到 Claude Code ---- */
+  .cc { margin:.8rem 0 1.2rem; }
+  .cc h2 { margin:0 0 .3rem; font-size:1rem; border:none; padding:0; }
+  .cc p { margin:.25rem 0; font-size:.88rem; }
+  .cc .steps { color:var(--muted); font-size:.82rem; }
+  .cc .row { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.5rem; }
+  .cp { font:inherit; font-size:.8rem; padding:.2rem .7rem; border-radius:999px; cursor:pointer;
+        border:1px solid var(--accent); background:transparent; color:var(--accent); white-space:nowrap; }
+  .cp:hover { background:var(--accent); color:#fff; }
+  .cc .row .cp { font-size:.85rem; }
+  .st .meta .cp, .grp h3 .cp { font-size:.75rem; padding:.1rem .55rem; }
+  .it .btns .cp { border-radius:999px; }
+  /* ---- 一站 ---- */
+  .st { margin:1.6rem 0; }
+  .st .hd { display:grid; grid-template-columns: 5.2rem 1fr; gap:.7rem; align-items:center; margin-bottom:.4rem; }
+  .st .hd img { width:5.2rem; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:var(--card); }
+  .st h2 { margin:0; border:none; padding:0; font-size:1.05rem; line-height:1.35; }
+  .st h2 a { color:var(--fg); text-decoration:none; } .st h2 a:hover { color:var(--accent); }
+  .st .meta { font-size:.8rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.2rem .7rem; }
+  .st .meta a { color:var(--muted); } .st .meta a:hover { color:var(--accent); }
+  .st .meta .cat { cursor:pointer; border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st .meta .cat:hover { border-color:var(--accent); color:var(--accent); }
+  .st[hidden], .grp[hidden], .it[hidden] { display:none; }
+  .st .prog { font-size:.8rem; color:var(--muted); }
+  /* ---- 未讀：工作單只是準備，讀完才進消化期 ---- */
+  .st .read { display:flex; flex-wrap:wrap; gap:.4rem .7rem; align-items:center; font-size:.8rem; color:var(--muted); margin-top:.25rem; }
+  .st .read button { font:inherit; font-size:.8rem; padding:.15rem .7rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  .st:not(.unread) .read button { background:transparent; color:var(--muted); border-color:var(--line); }
+  .st .read .badge { border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st.unread .read .badge { color:var(--warn, #b8860b); border-color:currentColor; }
+  .st.unread .hd img, .st.unread h2 { opacity:.6; }
+  /* ---- 一類 ---- */
+  .grp { margin:.9rem 0 .4rem; }
+  .grp h3 { margin:0 0 .3rem; font-size:.95rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:baseline; }
+  .grp h3 .why { font-weight:400; font-size:.8rem; color:var(--muted); }
+  .k { font-size:.72rem; font-weight:700; border-radius:4px; padding:.05rem .4rem; color:#fff; white-space:nowrap; }
+  [data-kind="P"] .k { background:#59a14f; } [data-kind="A"] .k { background:#b07aa1; } [data-kind="C"] .k { background:#4e79a7; }
+  [data-kind="E"] .k { background:#e49444; } [data-kind="R"] .k { background:#76b7b2; }
+  .act { font-size:.85rem; }
+  /* ---- 一筆 ---- */
+  .it { display:grid; grid-template-columns: 1fr auto; gap:.3rem .7rem; align-items:start;
+        padding:.55rem .7rem; border-left:3px solid var(--line); margin:.3rem 0; border-radius:0 8px 8px 0; background:var(--card); }
+  .it .tx { font-size:.98rem; line-height:1.55; }
+  .it .sub { font-size:.86rem; color:var(--muted); margin-top:.15rem; }
+  .it .sub b { color:var(--fg); font-weight:600; }
+  .it .src { font-size:.78rem; margin-top:.2rem; } .it .src a { text-decoration:none; }
+  .it .terms code { font-size:.75rem; }
+  .it ol { margin:.2rem 0 .2rem 1.2rem; padding:0; font-size:.88rem; }
+  .it .task { margin:.3rem 0; padding:.35rem .6rem; border-radius:6px; background:var(--bg); border:1px dashed var(--line); font-size:.92rem; }
+  .it .task b { color:var(--accent); }
+  .it textarea { width:100%; box-sizing:border-box; font:inherit; font-size:.88rem; min-height:2.4rem; margin:.25rem 0;
+                 background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:.3rem .5rem; resize:vertical; }
+  .it label { font-size:.8rem; color:var(--muted); display:block; margin-top:.3rem; }
+  .it .btns { display:flex; flex-direction:column; gap:.25rem; align-items:stretch; }
+  .it .btns button { font:inherit; font-size:.8rem; padding:.15rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--fg); cursor:pointer; white-space:nowrap; }
+  .it .btns button:hover { border-color:var(--accent); color:var(--accent); }
+  .it .btns .st-line { font-size:.75rem; color:var(--muted); text-align:center; }
+  .it .key { margin-top:.3rem; font-size:.86rem; border-top:1px dashed var(--line); padding-top:.3rem; }
+  .it .key[hidden] { display:none; }
+  .it .rel { display:inline-block; margin:.1rem .4rem .1rem 0; font-size:.85rem; }
+  .it .rel code { font-size:.82rem; }
+  .it.done { border-left-color:var(--ok); opacity:.6; }
+  .it.done .tx { text-decoration:line-through; text-decoration-color:var(--muted); }
+  .it.due { border-left-color:var(--debat); }
+  .it .a { display:none; }
+  @media (max-width:520px) { .it { grid-template-columns:1fr; } .it .btns { flex-direction:row; flex-wrap:wrap; } }
+  /* ---- 回想視窗 ---- */
+  dialog.recall { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg); max-width:34rem; width:calc(100vw - 2rem); padding:1.2rem 1.4rem; }
+  dialog.recall::backdrop { background:var(--overlay); }
+  dialog.recall .n { font-size:.8rem; color:var(--muted); }
+  dialog.recall .q { font-size:1.15rem; margin:.8rem 0; line-height:1.5; }
+  dialog.recall .ans { font-size:1.05rem; margin:.6rem 0; padding:.6rem .8rem; background:var(--card); border-radius:8px; min-height:2rem; }
+  dialog.recall .ans[hidden] { display:none; }
+  dialog.recall .row { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+  dialog.recall button { font:inherit; padding:.35rem .9rem; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  dialog.recall button.g0 { border-color:var(--wrong); color:var(--wrong); } dialog.recall button.g3 { border-color:var(--debat); color:var(--debat); } dialog.recall button.g5 { border-color:var(--ok); color:var(--ok); }
+  dialog.recall .close { float:right; border:none; background:none; font-size:1.1rem; }
+{% endblock %}
+
+{% block body %}
+<main>
+<p class="topnav">
+  {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
+  {% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}
+  <a class="on" href="digest.html">{{ S.nav_digest }}</a>
+  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
+</p>
+<h1>{{ S.digest_h1 }}</h1>
+<p class="muted">{{ S.digest_sub }}</p>
+<p class="stats"><span>{{ S.f("n_wp", n=stations|length) }}</span><span id="n-items"></span><span>{{ S.f("updated", t=generated) }}</span></p>
+
+{% if not stations %}
+<p class="card">{{ S.d_no_stations | safe }}</p>
+{% else %}
+<div class="card today" id="today">
+  <span class="big">{{ S.d_today }}</span>
+  <span id="t-cards"></span><span id="t-reh"></span><span id="t-back" class="muted"></span>
+  <button type="button" id="start-recall">{{ S.d_start_recall }}</button>
+</div>
+
+<section class="card cc">
+  <h2>{{ S.d_cc_title }}</h2>
+  <p>{{ S.d_cc_body }}</p>
+  <p class="steps">{{ S.d_cc_steps }}</p>
+  <div class="row">
+    <button type="button" class="cp" data-cp="{{ cmd }} today" title="{{ S.d_cc_hint }}">{{ S.d_cc_today }}</button>
+    <button type="button" class="cp" data-cp="{{ cmd }} do due" title="{{ S.d_cc_hint }}">{{ S.d_cc_due }}</button>
+  </div>
+</section>
+
+{{ search.bar(S, stations|length) }}
+<div class="filters" id="filters">
+  <button type="button" data-f="todo" class="on">{{ S.d_todo }}</button>
+  <button type="button" data-f="all">{{ S.d_all }}</button>
+  <button type="button" data-f="done">{{ S.d_done }}</button>
+  <span class="sp"></span>
+  <button type="button" class="tool" id="export" title="{{ S.d_export_hint }}">{{ S.d_export }}</button>
+  <button type="button" class="tool" id="export-anki">{{ S.d_export_anki }}</button>
+  <button type="button" class="tool" id="reset">{{ S.d_reset }}</button>
+</div>
+
+{% for s in stations %}
+<section class="st" id="{{ s.id }}" data-id="{{ s.id }}" data-title="{{ s.title }}" data-channel="{{ s.channel or '' }}"
+         data-category="{{ s.category or S.unplaced }}" data-rehearse-from="{{ s.rehearse_from }}" data-read="{{ s.read or '' }}"
+         data-text="{{ s['items'] | map(attribute='text') | join('\n') }}">
+  <div class="hd">
+    {% if s.yt_thumb %}<img src="{{ s.yt_thumb }}" alt="" loading="lazy">{% else %}<span></span>{% endif %}
+    <div>
+      <h2>{% if s.plan %}<a href="{{ s.plan }}">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}</h2>
+      <div class="meta">
+        {% if s.channel %}<span>{{ s.channel }}</span>{% endif %}
+        <span class="cat" data-cat="{{ s.category or S.unplaced }}" title="{{ S.f_category }}">{{ s.category or S.unplaced }}</span>
+        <span>{{ S.f("ep_produced", t=s.created_ymd) }}</span>
+        <span class="prog"></span>
+        {% if s.plan %}<a href="{{ s.plan }}">{{ S.d_open_plan }}</a>{% endif %}
+        {% if s.has_lesson and has_listen %}<a href="listen.html#{{ s.id }}">{{ S.notes_listen }}</a>{% endif %}
+        {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ "🔗 " ~ (S.blog_link if s.kind == "blog" else S.watch_yt) }}</a>{% endif %}
+        <button type="button" class="cp" data-cp="{{ cmd }} do {{ s.id }}" title="{{ S.d_cc_hint }}">{{ S.d_cc_station }}</button>
+      </div>
+      <div class="read"><span class="badge"></span><button type="button" data-do="read" title="{{ S.d_unread_hint }}"></button></div>
+    </div>
+  </div>
+  {% for k in kinds %}{% set items = s.by_kind[k] %}{% if items %}
+  <div class="grp" data-kind="{{ k }}">
+    <h3><span class="k">{{ S["d_kind_" ~ k] }}</span><span class="act">→ {{ S["d_act_" ~ k] }}</span><span class="why">{{ S["d_why_" ~ k] }}</span>
+      <button type="button" class="cp" data-cp="{{ cmd }} do {{ s.id }} {{ k }}" title="{{ S.d_cc_hint }}">{{ S.d_cc_kind }}</button></h3>
+    {% for n in items %}
+    <div class="it" id="{{ s.id }}-d{{ n.id }}" data-key="{{ n.key }}" data-kind="{{ k }}">
+      <div>
+        <div class="tx">{{ n.text }}</div>
+        {% if k == "P" %}
+          <ol>{% for step in n.procedure %}<li>{{ step }}</li>{% endfor %}</ol>
+          <div class="task"><b>{{ S.d_task }}</b> {{ n.practice_task }}</div>
+          <textarea data-field="note" placeholder="{{ S.d_note_ph }}"></textarea>
+        {% elif k == "A" %}
+          <div class="sub"><b>{{ S.d_new }}</b> {{ n.new }} &nbsp;⇄&nbsp; <b>{{ S.d_known }}</b> {{ n.known }}</div>
+          <label>{{ S.d_alike }}</label><textarea data-field="alike"></textarea>
+          <label>{{ S.d_unlike }}</label><textarea data-field="unlike"></textarea>
+          <label>{{ S.d_breaks }}</label><textarea data-field="breaks"></textarea>
+          {% if n.critique_key %}
+          <div class="key" hidden>
+            <div><b>{{ S.d_alike }}</b> {{ n.critique_key.alike }}</div>
+            <div><b>{{ S.d_unlike }}</b> {{ n.critique_key.unlike }}</div>
+            <div><b>{{ S.d_breaks }}</b> {{ n.critique_key.breaks }}</div>
+          </div>
+          {% endif %}
+        {% elif k == "C" %}
+          <div class="sub"><code>{{ n.concept }}</code></div>
+          <div class="key" hidden><div class="muted">{{ S.d_relations_hint }}</div>
+            {% for r in n.relations %}<span class="rel"><code>{{ n.concept }}</code> —{{ r.rel }}→ <code>{{ r.to }}</code></span>{% endfor %}
+          </div>
+        {% elif k == "E" %}
+          <div class="sub">{{ n.detail }}</div>
+          <div class="sub"><b>{{ S.d_supports }}</b> <code>{{ n.supports }}</code></div>
+          <div class="task"><b>{{ S.d_rehearse }}</b> {{ n.rehearse_q }}</div>
+          <textarea data-field="answer" placeholder="{{ S.d_answer_ph }}" hidden></textarea>
+        {% elif k == "R" %}
+          <div class="sub q">{{ n.q }}</div>
+          <div class="sub a">{{ n.a }}</div>
+        {% endif %}
+        <div class="src">{% if n.href %}<a href="{{ n.href }}">{{ S.f("d_seg", id=n.seg_id) }}</a>{% else %}{{ S.f("d_seg", id=n.seg_id) }}{% endif %}
+          {% if n.seg_title %}<span class="muted">{{ n.seg_title }}</span>{% endif %}
+          {% if n.terms %}<span class="terms"> · {% for t in n.terms %}<code>{{ t }}</code>{% if not loop.last %} {% endif %}{% endfor %}</span>{% endif %}
+        </div>
+      </div>
+      <div class="btns">
+        {% if k in ("P", "A") %}<button type="button" data-do="done">{{ S.d_done_btn }}</button>
+        {% elif k == "C" %}<button type="button" data-do="done">{{ S.d_mapped }}</button><button type="button" data-do="key">{{ S.d_show_relations }}</button>
+        {% elif k == "E" %}<button type="button" data-do="rehearse">{{ S.d_rehearse }}</button>
+        {% elif k == "R" %}<button type="button" data-do="recall">{{ S.d_recall_now }}</button>{% endif %}
+        {% if k == "A" and n.critique_key %}<button type="button" data-do="key">{{ S.d_show_key }}</button>{% endif %}
+        <button type="button" class="cp" data-cp="{{ cmd }} do {{ s.id }} {{ k }}
+先從第 {{ n.id }} 筆開始：{{ n.text }}" title="{{ S.d_cc_hint }}">{{ S.d_cc_item }}</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}{% endfor %}
+</section>
+{% endfor %}
+
+<dialog class="recall" id="recall">
+  <button type="button" class="close" data-close aria-label="{{ S.close }}">✕</button>
+  <div class="n"></div>
+  <div class="q"></div>
+  <div class="ans" hidden></div>
+  <div class="row">
+    <button type="button" class="flip">{{ S.d_flip }}</button>
+    <button type="button" class="g0" data-g="0" hidden>{{ S.d_forgot }}</button>
+    <button type="button" class="g3" data-g="3" hidden>{{ S.d_hard }}</button>
+    <button type="button" class="g5" data-g="5" hidden>{{ S.d_easy }}</button>
+  </div>
+</dialog>
+{% endif %}
+</main>
+{% endblock %}
+
+{% block json %}
+{% if stations %}{{ search.json(S) }}{% endif %}
+<script id="d-state" type="application/json">{{ state | tojson }}</script>
+<script id="ui-str" type="application/json">{{ {"n_items": S.n_notes, "due_cards": S.d_due_cards, "due_reh": S.d_due_rehearse, "backlog": S.d_backlog,
+  "next_due": S.d_next_due, "new_card": S.d_new_card, "rehearsed": S.d_rehearsed, "stored": S.d_stored, "done_btn": S.d_done_btn, "undo": S.d_undo,
+  "mapped": S.d_mapped, "rehearse": S.d_rehearse, "session_done": S.d_session_done, "card_n": S.d_card_n, "nothing": S.d_nothing_today,
+  "unread": S.d_unread, "read_on": S.d_read_on, "read_btn": S.d_read_btn, "unread_btn": S.d_unread_btn,
+  "copied": S.copied} | tojson }}</script>
+{% endblock %}
+
+{% block js %}
+(() => {
+  const T = JSON.parse(document.getElementById("ui-str").textContent);
+  const f = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+  // 「🤖 帶我做…」：把 prompt 複製到剪貼簿，使用者自己貼進 Claude Code
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".cp");
+    if (!btn) return;
+    const text = btn.dataset.cp, label = btn.textContent;
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (__) {}
+      ta.remove();
+    }
+    btn.textContent = T.copied;
+    setTimeout(() => { btn.textContent = label; }, 1600);
+  });
+  const LS_KEY = "digest-state";
+  const LS = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+               del: (k) => { try { localStorage.removeItem(k); } catch (_) {} } };
+  // 預設狀態來自 workspace/digest.state.json（已內嵌），瀏覽器裡的操作蓋在上面
+  let base = {}, local = {};
+  try { base = JSON.parse(document.getElementById("d-state").textContent) || {}; } catch (_) {}
+  try { local = JSON.parse(LS.get(LS_KEY) || "{}"); } catch (_) { local = {}; }
+  const items = [...document.querySelectorAll(".it")];
+  if (!items.length) return;
+  const stateOf = (el) => local[el.dataset.key] || base[el.dataset.key] || {};
+  const save = (el, st) => { local[el.dataset.key] = st; LS.set(LS_KEY, JSON.stringify(local)); };
+  const today = () => new Date().toISOString().slice(0, 10);
+  const plusDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const nowIso = () => new Date().toISOString().slice(0, 19);
+  let filter = "todo";
+
+  // 一筆的「做完了嗎」：P/A/C 看 done；E 看 rehearsed；R 看 due 是否還沒到
+  const isDone = (el, st) => {
+    const k = el.dataset.kind;
+    if (k === "E") return !!st.rehearsed;
+    if (k === "R") return !!st.due && st.due > today();
+    return !!st.done;
+  };
+  // 整站「讀完了」：key <vid>:read；沒讀的站不算「今天」、預設收起。E 的隔一天從讀完那天起算。
+  const readKey = (sec) => `${sec.dataset.id}:read`;
+  const readOf = (sec) => (local[readKey(sec)] || base[readKey(sec)] || {}).read || "";
+  const isRead = (sec) => !!readOf(sec);
+  const rehearseFrom = (sec) => { const r = readOf(sec); if (!r) return sec.dataset.rehearseFrom;
+    const d = new Date(r.slice(0, 10)); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
+  const canRehearse = (el) => rehearseFrom(el.closest(".st")) <= today();
+  const cardDue = (el) => { const st = stateOf(el); return !st.due || st.due <= today(); };
+
+  const paint = (el) => {
+    const st = stateOf(el), k = el.dataset.kind, done = isDone(el, st);
+    el.classList.toggle("done", done);
+    el.classList.toggle("due", (k === "E" && !done && canRehearse(el)) || (k === "R" && cardDue(el)));
+    el.querySelectorAll("textarea[data-field]").forEach((ta) => { if (st[ta.dataset.field] != null && document.activeElement !== ta) ta.value = st[ta.dataset.field]; });
+    const line = el.querySelector(".st-line"), btn = el.querySelector("[data-do=done],[data-do=rehearse]");
+    if (k === "R") line.textContent = st.due ? f(T.next_due, { t: st.due }) : T.new_card;
+    else if (k === "E") { line.textContent = done ? `${T.rehearsed} ${st.rehearsed.slice(0, 10)}` : T.stored; btn.textContent = done ? T.undo : T.rehearse; }
+    else { line.textContent = done ? st.done.slice(0, 10) : ""; btn.textContent = done ? T.undo : (k === "C" ? T.mapped : T.done_btn); }
+    el.hidden = !(filter === "all" || (filter === "done") === done) || (filter !== "all" && !isRead(el.closest(".st")));
+  };
+
+  const applyAll = () => {
+    const n = { P: 0, A: 0, C: 0, E: 0, R: 0 };
+    document.querySelectorAll(".st").forEach((sec) => {
+      const r = readOf(sec); sec.classList.toggle("unread", !r);
+      sec.querySelector(".read .badge").textContent = r ? f(T.read_on, { t: r.slice(0, 10) }) : T.unread;
+      sec.querySelector(".read button").textContent = r ? T.unread_btn : T.read_btn;
+    });
+    items.forEach((el) => {
+      paint(el);
+      const k = el.dataset.kind, st = stateOf(el);
+      if (!isRead(el.closest(".st"))) return;
+      if (k === "R") { if (cardDue(el)) n.R++; }
+      else if (k === "E") { if (!st.rehearsed && canRehearse(el)) n.E++; }
+      else if (!isDone(el, st)) n[k]++;
+    });
+    document.querySelectorAll(".grp").forEach((g) => { g.hidden = ![...g.querySelectorAll(".it")].some((x) => !x.hidden); });
+    document.querySelectorAll(".st").forEach((s) => {
+      const all = [...s.querySelectorAll(".it")], d = all.filter((x) => isDone(x, stateOf(x))).length;
+      s.querySelector(".prog").textContent = `${d} / ${all.length} ✓`;
+    });
+    document.getElementById("n-items").textContent = f(T.n_items, { n: items.length });
+    document.getElementById("t-cards").textContent = f(T.due_cards, { n: n.R });
+    document.getElementById("t-reh").textContent = f(T.due_reh, { n: n.E });
+    document.getElementById("t-back").textContent = f(T.backlog, { p: n.P, a: n.A, c: n.C });
+    document.getElementById("start-recall").disabled = n.R === 0;
+    refilter();
+  };
+  function extra_ok(sec) { return [...sec.querySelectorAll(".it")].some((n) => !n.hidden); }
+{{ search.js(".st", none) }}
+  document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+  applyAll();
+
+  // ---- SM-2：q = 0 忘了 / 3 難 / 5 會 ----
+  const sm2 = (st, q) => {
+    let { ef = 2.5, reps = 0, interval = 0 } = st;
+    if (q < 3) { reps = 0; interval = 1; }
+    else { reps += 1; interval = reps === 1 ? 1 : reps === 2 ? 6 : Math.round(interval * ef); }
+    ef = Math.max(1.3, ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+    return { ef: Math.round(ef * 100) / 100, reps, interval, due: plusDays(interval), last: today() };
+  };
+  const dlg = document.getElementById("recall");
+  let queue = [], cur = null;
+  const showCard = () => {
+    cur = queue.shift();
+    if (!cur) { dlg.querySelector(".q").textContent = T.session_done; dlg.querySelector(".n").textContent = ""; dlg.querySelector(".ans").hidden = true;
+      dlg.querySelector(".flip").hidden = true; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = true); return; }
+    dlg.querySelector(".n").textContent = f(T.card_n, { i: cur.i, n: cur.n });
+    dlg.querySelector(".q").textContent = cur.el.querySelector(".q").textContent;
+    const ans = dlg.querySelector(".ans"); ans.textContent = cur.el.querySelector(".a").textContent; ans.hidden = true;
+    dlg.querySelector(".flip").hidden = false; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = true);
+  };
+  const startSession = (els) => {
+    queue = els.map((el, i) => ({ el, i: i + 1, n: els.length }));
+    showCard(); dlg.showModal();
+  };
+  dlg.querySelector(".flip").addEventListener("click", () => { dlg.querySelector(".ans").hidden = false; dlg.querySelector(".flip").hidden = true; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = false); });
+  dlg.querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => { save(cur.el, sm2(stateOf(cur.el), +b.dataset.g)); applyAll(); showCard(); }));
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("keydown", (ev) => { if (ev.key === " " && !dlg.querySelector(".flip").hidden) { ev.preventDefault(); dlg.querySelector(".flip").click(); }
+    const G = { "1": 0, "2": 3, "3": 5 };
+    if (G[ev.key] != null) dlg.querySelector(`[data-g="${G[ev.key]}"]`)?.click(); });
+  document.getElementById("start-recall").addEventListener("click", () => startSession(items.filter((el) => el.dataset.kind === "R" && cardDue(el) && isRead(el.closest(".st")))));
+
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-do]");
+    if (b) {
+      const el = b.closest(".it"), st = { ...stateOf(el) }, k = el.dataset.kind, act = b.dataset.do;
+      if (act === "key") { const key = el.querySelector(".key"); key.hidden = !key.hidden; return; }
+      if (act === "recall") { startSession([el]); return; }
+      if (act === "rehearse") {
+        const ta = el.querySelector("textarea[data-field=answer]");
+        if (st.rehearsed) { delete st.rehearsed; ta.hidden = true; }
+        else if (ta.hidden) { ta.hidden = false; ta.focus(); return; }   // 第一下：展開作答；第二下：記錄
+        else { st.rehearsed = nowIso(); st.answer = ta.value; ta.hidden = true; }
+        save(el, st); applyAll(); return;
+      }
+      if (act === "done") {
+        if (st.done) delete st.done; else { st.done = nowIso(); el.querySelectorAll("textarea[data-field]").forEach((ta) => { st[ta.dataset.field] = ta.value; }); }
+        save(el, st); applyAll(); return;
+      }
+    }
+    const fb = ev.target.closest("[data-f]");
+    if (fb) { filter = fb.dataset.f; document.querySelectorAll("[data-f]").forEach((x) => x.classList.toggle("on", x === fb)); applyAll(); }
+  });
+  // 打字就存（不必按做完）
+  document.addEventListener("input", (ev) => {
+    const ta = ev.target.closest("textarea[data-field]"); if (!ta) return;
+    const el = ta.closest(".it"), st = { ...stateOf(el) }; st[ta.dataset.field] = ta.value; save(el, st);
+  });
+
+  const download = (name, text, type) => {
+    const blob = new Blob([text], { type }); const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  };
+  document.querySelectorAll('.st [data-do="read"]').forEach((b) => b.addEventListener("click", () => {
+    const sec = b.closest(".st");
+    local[readKey(sec)] = isRead(sec) ? {} : { read: nowIso() };
+    LS.set(LS_KEY, JSON.stringify(local)); applyAll();
+  }));
+  document.getElementById("export")?.addEventListener("click", () => {
+    const out = {}; items.forEach((el) => { const st = stateOf(el); if (Object.keys(st).length) out[el.dataset.key] = st; });
+    document.querySelectorAll(".st").forEach((sec) => { const r = readOf(sec); if (r) out[readKey(sec)] = { read: r }; });
+    download("digest.state.json", JSON.stringify(out, null, 2), "application/json");
+  });
+  document.getElementById("export-anki")?.addEventListener("click", () => {
+    const esc = (s) => s.replace(/\t/g, " ").replace(/\n/g, "<br>");
+    const rows = items.filter((el) => el.dataset.kind === "R").map((el) =>
+      [esc(el.querySelector(".q").textContent), esc(el.querySelector(".a").textContent), el.closest(".st").dataset.title.replace(/\s+/g, "_")].join("\t"));
+    download("digest.anki.tsv", rows.join("\n") + "\n", "text/tab-separated-values");
+  });
+  document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); applyAll(); });
+
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+})();
+{% endblock %}

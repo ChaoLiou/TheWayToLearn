@@ -1,6 +1,6 @@
 ---
 name: learn-shot
-description: [步驟 4/8·截圖] 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 workspace/<影片標題>/frames/。改了時間點後重截時用。
+description: [步驟 4/10·截圖] 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 workspace/<影片標題>/frames/；部落格站則下載挑到的文中圖片。改了時間點後重截時用。
 ---
 
 # /learn-shot　—　步驟 4/8 截圖
@@ -13,6 +13,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/s
 - 影片只下載一次（≤ `config/estimate.yaml` 的 max_height），抽完預設刪除。
 - 會把 `frames/sNN_<秒>.jpg` 路徑寫回 `segments.json` 的 `shots[].file`。
 - segments 沒有任何 shots（`shots_mode: none` 或 agent 判斷都不值得截）時直接結束、不下載影片，並印出「跳過」的進度行。
+- **部落格站**（`meta.json` 的 `source: blog`）：不下載影片、不需要 ffmpeg；每個 shot 依 `src`（或離 `t` 最近的 `transcript.images`）直接下載到 `frames/sNN_<秒>.<原副檔名>`。單張抓不到只會印警告，不會中斷。
 
 ## 開始前：確認參數
 
@@ -28,4 +29,4 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 4. 使用者這次已經在對話裡表達過偏好（例如「這支不用截圖」），視同已指定，不要重複問。
 
 ## 進度
-script 執行完會自己印 `[N/8] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[N/10] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。

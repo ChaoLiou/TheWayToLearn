@@ -1,9 +1,9 @@
 ---
 name: learn-publish
-description: [工具] 把 workspace 裡的 plan.html、atlas.html、截圖與聽力版整理成 dist/，可直接部署到 Cloudflare Pages，讓你在手機或其他電腦隨時看。
+description: [工具] 把 workspace 裡的 listen.html（podcast 頁，當首頁）、notes.html、atlas.html、各站 plan.html、截圖與聽力版整理成 dist/，可直接部署到 Cloudflare Pages，讓你在手機或其他電腦隨時看。
 ---
 
-# /learn-publish　—　發佈到雲端（工具，不在 8 步流程內）
+# /learn-publish　—　發佈到雲端（工具，不在 10 步流程內）
 
 ## 開始前：確認參數
 ```
@@ -15,7 +15,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/publish.py
 ```
-只複製 `atlas.html`（另存一份 `index.html` 當首頁）、各站 `plan.html`、`frames/`、`lesson.mp3`。
+只複製 `listen.html`（另存一份 `index.html` 當首頁；沒有 listen.html 就用 `atlas.html`）、`notes.html`、`atlas.html`、各站 `plan.html`、`frames/`、`lesson.mp3`、`lesson.dub.mp3`、`captions.js`。
 不複製原始音訊 `audio.mp3`、TTS 快取 `lesson_parts/` 與各種 json（內容已內嵌在 html）。
 把印出的檔案清單與大小原樣給使用者看。
 

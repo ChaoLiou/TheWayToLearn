@@ -1,26 +1,37 @@
 ---
 name: learn
-description: 使用者貼 YouTube 連結並要求學習、整理、做筆記、做學習規劃時使用。總指揮：先估時間成本，再依序跑 fetch → segment → shot → analyze → render 產出 plan.html。
+description: 使用者貼 YouTube 連結或部落格文章網址並要求學習、整理、做筆記、做學習規劃時使用。總指揮：先估時間成本與消化積欠，再依序跑 fetch → segment → shot → analyze → digest → render 產出 plan.html 與 PACER 消化工作單。
 ---
 
-# /learn — 總指揮（7 個步驟）
+# /learn — 總指揮（10 個步驟）
 
 ```
-[1/8] estimate  估成本       [5/8] analyze  逐段分析
-[2/8] fetch     抓字幕       [6/8] render   產出 plan.html
-[3/8] segment   切段         [7/8] atlas    更新知識地圖（≥ 2 站才需要）
-[4/8] shot      截圖         [8/8] narrate  產出聽力版（選配）
+[1/10] estimate  估成本＋消化積欠   [6/10] digest   消化工作單（--digest，預設開）
+[2/10] fetch     抓字幕             [7/10] render   產出 plan.html
+[3/10] segment   切段               [8/10] atlas    連結各站（≥ 2 站才需要）
+[4/10] shot      截圖               [9/10] narrate  產出聽力版（--narrate，預設開）
+[5/10] analyze   逐段分析          [10/10] listen   podcast 頁（--listen，預設開）
 ```
-每個階段跑完都會印一行 `[N/8] ✔ … ●●●○○○○` 與下一步，**原樣轉給使用者**，讓他隨時知道走到哪。跳過的步驟也要說明（例如「[2/8] fetch 跳過：transcript.json 已存在」）。
+依賴其實是一棵樹：fetch → segment → (shot) → analyze 是主幹；analyze 之後 digest / render / atlas / narrate 只依賴 analyze（digest 排在 render 前是為了讓 plan.html 第一次就有 PACER 標籤；listen 依賴 narrate）。順序固定是為了進度條好讀，多支影片時 atlas / narrate 可以跟 render 平行派 subagent。
+每個階段跑完都會印一行 `[N/10] ✔ … ●●●○○○○○○○` 與下一步，**原樣轉給使用者**，讓他隨時知道走到哪。跳過的步驟也要說明（例如「[2/10] fetch 跳過：transcript.json 已存在」）。
 
 用法：
 ```
 /learn <url> [--shots auto|none|many] [--vision true|false|auto] <url> ...
        # 選項只影響前一個 URL；預設 shots=auto、vision=true
 /learn input.yaml
-/learn --from <stage> <id>        # 從某階段往後重跑：fetch|segment|shot|analyze|render
+/learn --from <stage> <id>        # 從某階段往後重跑：fetch|segment|shot|analyze|digest|render|narrate|listen
 /learn --dry-run <url> ...        # 只列各階段會跳過/執行
 ```
+
+## 來源：YouTube 或部落格文章
+
+非 YouTube 的 `http(s)` 網址一律當**部落格文章**（id 由網址算出，`b_` 開頭）。流程與十個步驟完全相同，差別由 script 自己處理：
+- fetch：正文段落當 transcript，`start` 是閱讀秒數，文中圖片列在 `transcript.images`
+- shot：不下載影片、不需要 ffmpeg，直接下載 agent 挑到的文中圖片
+- narrate：沒有原聲，clip 改成用文章語言的另一個聲音朗讀原文
+- plan.html：時間顯示成 ¶段落編號，連結用 text fragment 跳到原文那一段
+`--shots` / `--vision` / `--digest` / `--narrate` / `--listen` 對文章同樣有效（`--shots none` = 不取文中圖片）。
 
 ## 開始前：確認參數
 
@@ -52,30 +63,56 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - `--shots`：`auto`（預設，只截看了才懂的畫面）｜`none`（完全不截圖，也不下載影片，步驟 4 直接跳過）｜`many`（投影片型影片，每段至少一張）。使用者說「畫面沒什麼東西」「重點都在講的內容」「不用截圖」就用 `none`。
 - `--vision`：AI 要不要逐張讀截圖，預設 `true`；`--shots none` 時自動失效。
 - `--narrate`：要不要順便產出聽力版（第 8 步），**預設 `true`**。使用者說「不用聲音」「只要網頁」就用 `false`。
-- 兩者都寫進 `workspace/input.yaml` 該支影片底下，並由 `/learn-segment` 寫進 `segments.json` 的 `shots_mode` / `vision`。
+- `--digest`：要不要做 PACER 消化工作單（第 6 步），**預設 `true`**。使用者說「只要規劃」「不用工作單」就用 `false`。
+- `--force`：消化積欠超過 `config/estimate.yaml` 的 `balance.max_backlog` 時 estimate 會警告並建議先消化；使用者堅持就加 `--force` 往下跑。
+- `--listen`：要不要重產 podcast 頁 listen.html（第 10 步），**預設 `true`**。`--narrate false` 且 workspace 裡還沒有任何聽力版時自動跳過。
+- `--shots` / `--vision` 寫進 `workspace/input.yaml` 該支影片底下，並由 `/learn-segment` 寫進 `segments.json` 的 `shots_mode` / `vision`。
 
-**[1/8] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
+**[1/10] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
+- **消化平衡閥**：estimate 最後會印「消化積欠：…（共 N，上限 M）」。N > M 且沒 `--force` → **停在這裡**，說明「沒消化的東西會忘掉九成」，建議先 `/learn-digest do due`；使用者說「還是要看」就當 `--force` 繼續。N ≤ M 或沒有任何工作單就照常往下。
+  - 積欠只算**已標「讀完了」的站**（digest.html 每站的 📖 按鈕，或 `digest.py --mark <vid> read`）；產出工作單本身不算讀過，所以剛跑完 `/learn` 的站不會立刻變成積欠。積欠行末的「未讀 N 站不計」是提醒有多少站產了還沒讀。
 
-**[2/8]–[5/8]**：每支影片依序 `/learn-fetch` → `/learn-segment` → `/learn-shot` → `/learn-analyze`。
-- 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）；跳過也要說「[N/7] X 跳過：<檔案> 已存在」。
+**[2/10]–[4/10]**：每支影片依序 `/learn-fetch` → `/learn-segment` → `/learn-shot`。
+- 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）；跳過也要說「[N/10] X 跳過：<檔案> 已存在」。
 - agent 產的 JSON 一定要過 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py <kind> <file>`，不過就修到過。
 
-**[6/8] render**：
+**[5/10] analyze：一定用 subagent 跑，不要在主對話裡做。**
+逐段分析會把整份 transcript 片段、所有截圖、每段的 analysis 累積進 context（實測 150–200k tokens），
+留在主對話裡會讓後面的 render / atlas / narrate 每一輪都重送一次。丟進 subagent 就只有結果會回來。
+
+- 用 Agent（Task）tool 開一個 `general-purpose` subagent，一支影片一個；多支影片可以同時開。
+- prompt 至少要寫清楚：
+  1. 「照 `skills/learn-analyze/SKILL.md` 做」＋ 影片資料夾絕對路徑 ＋ `${CLAUDE_PLUGIN_ROOT:-.}` 的實際值。
+  2. `--vision` / `--force` 這次的值。
+  3. 「自己讀 `rules/narrative.md`、`schemas/analysis.schema.json`、`segments.json`、`meta.json`，不要問我」。
+  4. 「寫完跑 validate.py，不過就自己修到過」。
+  5. **回傳格式**：只回三樣 —— `progress.py analyze` 印出的那兩行、一句話結果（幾段、vision 用了幾張圖）、
+     validate 的最後狀態。**不要把 analysis.json 的內容貼回來。**
+- 主對話**不要**讀 `frames/*.jpg`，也不要讀回 `analysis.json`；需要它的是 [6/10]，那時再讀。
+- subagent 失敗或 validate 過不了時，它會回報錯誤；再開一個 subagent 修，不要自己接手做完。
+- 把 subagent 回傳的那兩行進度原樣轉給使用者。
+
+**[6/10] digest**：`--digest true`（預設）就對每支影片跑 `/learn-digest <id>`（agent 依 `rules/digest.md` 把每筆資訊標 P/A/C/E/R 並寫消化動作 → `validate.py digest` → `digest.py`；這一步**不要**跑 skill 裡的 `render.py`，那是第 7 步）。`false` 則跳過，並提一句「想要工作單可以跑 /pacer:learn-digest <id>」。
+- 只讀 `analysis.json` 與 `_overview.json`（`_overview.json` 還沒有就先由 `/learn-render` 的第 1 步產它，或直接讀 analysis），不讀截圖，留在主對話做即可；多支影片可各開一個 subagent（同 [5/10] 的回傳規則）。
+
+**[7/10] render**：
 - 若 `--narrate true`，**render 之前**先跑一次
   `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> --mark-pending`，
   這樣產出的 `plan.html` 會顯示「🎧 聽力版產生中…」，並在完成後自動偵測、自動重新整理。
 - 每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
 - **render 完成後立刻把 `plan.html` 路徑給使用者**，告訴他可以先開始讀，聽力版還在做。
 
-**[7/8] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站連進知識地圖。只有一站就說「[7/8] atlas 跳過：只有一站」。
+**[8/10] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站跟既有站連起來（route / region）。只有一站就說「[8/10] atlas 跳過：只有一站」。
 
-**[8/8] narrate**：`--narrate true`（預設）就跑 `/learn-narrate`；`false` 則跳過，並提一句「想用聽的可以跑 /atlas:learn-narrate」。
+**[9/10] narrate**：`--narrate true`（預設）就跑 `/learn-narrate`；`false` 則跳過，並提一句「想用聽的可以跑 /pacer:learn-narrate」。
 完成後**再跑一次 `/learn-render`**，讓 `plan.html` 換成正式的播放器與講稿（使用者若還開著頁面，它也會自己重新整理）。
 
-**收尾回報**：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route。
+**[10/10] listen**：`--listen true`（預設）就跑 `/learn-listen`（`listen.py`，把新的聽力版列進 podcast 頁並掛上 digest / notes 連結）。跳過的情形：`--listen false`，或 `--narrate false` 且 workspace 裡沒有任何 `lesson.mp3`（說「[10/10] listen 跳過：沒有聽力版」）。
+
+**收尾回報**：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route、工作單五類各幾筆與 `digest.html` / `listen.html` 路徑（有做才列）。提醒一句：**讀完（或聽完）再到 digest.html 按這站的「📖 讀完了」**，工作單才開始算積欠。最後一句固定是**現在就能做的一件事**：第一筆 P 的 `practice_task`——讀完只是消費，做了才算。
 
 ## 規則檔（改行為就改這些，不改程式）
-- `rules/segment.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）、`rules/narrative.md`、`rules/overview.md`、`rules/output.md`
+- `rules/segment.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）、`rules/narrative.md`、`rules/overview.md`、`rules/digest.md`、`rules/output.md`
 - `config/estimate.yaml`（估算係數）
 - `schemas/*.json`（agent 輸出格式）
 
@@ -83,7 +120,12 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 ```
 workspace/<影片標題>/               # 一站（waypoint）
   estimate.json  transcript.json  meta.json  segments.json  frames/  analysis.json  timings.json
+  digest.json                      # [6/10] PACER 工作單：每筆資訊的類別與消化動作（/learn-digest）
   _overview.json  plan.html        # 每支影片各自一份
 workspace/atlas.json               # 站與站的 route、主題區（agent 維護）
-workspace/atlas.html               # 學習地圖總覽
+workspace/listen.html              # [10/10] podcast 頁：所有聽力版新到舊，置底播放器（/learn-listen）
+workspace/digest.html              # [6/10] 消化工作單：今天到期、每站五類、做完灰掉（digest.py）
+workspace/digest.state.json        # 消化進度（網頁匯出或 /learn-digest do 寫入）
+workspace/notes.html               # 工具：成長筆記（/learn-notes，不在必經步驟裡）
+workspace/atlas.html               # 文字說明列表：所有站的卡片、分類、搜尋、相鄰站
 ```

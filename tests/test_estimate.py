@@ -32,3 +32,12 @@ def test_shots_none_skips_frames_and_download():
     assert none["vision_extra_if_true"] is None
     many = estimate_one(META, "false", cfg, "many")
     assert many["assumed"]["frames"] > auto["assumed"]["frames"]
+
+
+def test_frames_capped_per_video():
+    cfg = load_yaml(CONFIG / "estimate.yaml")
+    long = dict(META, duration=3600)          # 60 分鐘 → 20 段 × 2 張 = 40，應被壓到上限
+    e = estimate_one(long, "true", cfg, "auto")
+    assert e["assumed"]["frames"] == cfg["shot"]["max_frames"]
+    assert estimate_one(long, "true", cfg, "many")["assumed"]["frames"] == cfg["shot"]["max_frames_many"]
+    assert estimate_one(long, "true", cfg, "auto", max_shots=4)["assumed"]["frames"] == 4

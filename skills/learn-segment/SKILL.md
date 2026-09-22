@@ -1,6 +1,6 @@
 ---
 name: learn-segment
-description: [步驟 3/8·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。
+description: [步驟 3/10·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。
 ---
 
 # /learn-segment（agent 自己做，沒有 script）　—　步驟 3/8 切段
@@ -20,6 +20,9 @@ description: [步驟 3/8·切段] 讀 transcript.json，由 agent 切成意義�
    `{"segment": {"sec": 420, "at": "2026-09-08T22:10:17+08:00"}}`（`at` 用當地時間 ISO 8601；用 `python -c` 讀進來改再寫回，不要覆蓋既有欄位）。
 
 已存在且沒有 `--force` 就跳過。
+
+## 來源是部落格文章時
+`meta.json` 有 `source: blog`：`transcript.json` 的 events 是文章段落（`kind`、`para`），`start` 是閱讀秒數；shots 只能從 `transcript.images` 挑，寫 `t` 與 `src`。細節在 `rules/segment.md` 最後一節。
 
 ## 開始前：確認參數
 

@@ -1,6 +1,6 @@
 ---
 name: learn-fetch
-description: [步驟 2/8·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片。重抓資源、換字幕語言時用。
+description: [步驟 2/10·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片；部落格網址則抓正文段落當 transcript。重抓資源、換字幕語言時用。
 ---
 
 # /learn-fetch　—　步驟 2/8 抓字幕
@@ -12,6 +12,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/f
 - 輸出 `transcript.json`（events: start/duration/text）、`meta.json`（title/channel/duration/chapters/transcript_lang）。
 - `--output-lang`：產出文件的語言，跟使用者對話語言一致（/learn 會決定）；存進 `meta.json` 的 `output_lang`。
 - 已存在就跳過，`--force` 才重抓。
+- **部落格文章**（非 YouTube 網址）：正文每個段落／標題／程式碼區塊是一個 event，`start` = 閱讀秒數、`para` = 第幾段；文中圖片列在 `transcript.images`；`meta.json` 有 `source: blog`、`thumbnail`（og:image）、`chapters`（各級標題）。`--lang` 對文章無效。
 - 失敗常見原因：沒字幕（`yt-dlp --list-subs <url>` 看有哪些語言）、IP 被擋（換網路或加 `--cookies-from-browser`，需改 script）。
 
 ## 開始前：確認參數
@@ -28,4 +29,4 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 4. 使用者這次已經在對話裡表達過偏好（例如「這支不用截圖」），視同已指定，不要重複問。
 
 ## 進度
-script 執行完會自己印 `[N/8] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[N/10] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。

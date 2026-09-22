@@ -21,6 +21,7 @@ from common import (
     find_video_dir,
     fmt_dur,
     fmt_ts,
+    is_blog,
     load_json,
     print_step,
     template_dirs,
@@ -168,6 +169,26 @@ def _norm_timings(t: dict) -> dict:
     return {k: (v if isinstance(v, dict) else {"sec": v}) for k, v in t.items()}
 
 
+def seeker(meta: dict, vdir: Path):
+    """回傳 at(t) → (連到來源那個位置的網址, 顯示文字)。
+    影片：url&t=Ns 與 m:ss；文章：text fragment 連結與 ¶段落編號（時間軸是閱讀秒數，顯示出來沒意義）。"""
+    url = meta.get("url") or ""
+    if not is_blog(meta):
+        sep = "&" if "?" in url else "?"
+        return lambda t, end=False, text=None: (f"{url}{sep}t={int(t)}s", fmt_ts(t))
+    import blog
+
+    tp = vdir / "transcript.json"
+    events = load_json(tp).get("events", []) if tp.exists() else []
+
+    def at(t, end=False, text=None):
+        # 段落的 end 等於下一段的 start：當結尾看時要算前一個段落
+        t = t - 0.01 if end else t
+        return blog.source_href(url, events, t, text), blog.pos_label(events, t)
+
+    return at
+
+
 def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | None:
     need = ["meta.json", "segments.json", "analysis.json"]
     if not all((vdir / n).exists() for n in need):
@@ -175,6 +196,10 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
     v = {n.split(".")[0]: load_json(vdir / n) for n in need}
     v["id"] = v["meta"]["video_id"]
     v["dir"] = vdir.name
+    v["kind"] = "blog" if is_blog(v["meta"]) else "youtube"
+    v["source_name"] = S.blog_link if v["kind"] == "blog" else "YouTube"
+    v["dur_label"] = (S.reading + " " if v["kind"] == "blog" else "") + fmt_dur(v["meta"].get("duration") or 0)
+    at = seeker(v["meta"], vdir)
     v["estimate"] = load_json(vdir / "estimate.json") if (vdir / "estimate.json").exists() else None
     v["lesson"] = load_json(vdir / "lesson.json") if (vdir / "lesson.json").exists() else None
     st = vdir / "lesson.status.json"
@@ -189,11 +214,21 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
     for s in v["analysis"]["segments"]:
         src = seg_by_id.get(s["id"], {})
         s["start"], s["end"] = src.get("start", 0), src.get("end", 0)
+        s["start_href"], s["start_label"] = at(s["start"])
+        s["end_label"] = at(s["end"], end=True)[1]
         s["summary"] = src.get("summary", "")
         s["shots"] = [sh for sh in src.get("shots", []) if sh.get("file")]
         for sh in s["shots"]:
             sh["href"] = href_prefix + quote(sh["file"])
             sh["seg_title"] = s["title"]
+            sh["t_label"] = at(sh["t"])[1]
+        for iss in s.get("issues", []):
+            iss["href"], iss["t_label"] = at(iss.get("t", 0), text=iss.get("quote"))
+    # PACER 消化工作單（digest.json）：每段列出這段的資訊類別與該做的事，連到 digest.html 那一筆
+    dg = load_json(vdir / "digest.json") if (vdir / "digest.json").exists() else None
+    for s in v["analysis"]["segments"]:
+        s["digest"] = [dict(it, href=f"../digest.html#{v['id']}-d{it['id']}")
+                       for it in (dg["items"] if dg else []) if it["seg_id"] == s["id"]]
     v["all_shots"] = [sh for s in v["analysis"]["segments"] for sh in s["shots"]]
     for i, sh in enumerate(v["all_shots"]):
         sh["idx"] = i
@@ -211,7 +246,7 @@ def load_video(vdir: Path, tips: Tips, href_prefix: str, S: Strings) -> dict | N
 
 
 def atlas_context(ws: Path, vid: str, S: Strings) -> dict | None:
-    """這支影片在學習地圖上的位置：region、進出 route（含對方 plan.html 的相對路徑）。"""
+    """這支影片與其他站的關係：region、進出 route（含對方 plan.html 的相對路徑）。"""
     p = ws / "atlas.json"
     if not p.exists():
         return None
@@ -224,10 +259,11 @@ def atlas_context(ws: Path, vid: str, S: Strings) -> dict | None:
     region = next((r for r in atlas["regions"] if vid in r["waypoints"]), None)
     links = []
     for e in atlas["routes"]:
+        undirected = e["type"] != "next"          # related 沒有先後，不畫箭頭
         if vid == e["from"] and e["to"] in titles:
-            links.append({"dir": "→", "type": S.route(e["type"]), "via": e["via"], **titles[e["to"]]})
+            links.append({"dir": "—" if undirected else "→", "type": S.route(e["type"]), "via": e["via"], **titles[e["to"]]})
         elif vid == e["to"] and e["from"] in titles:
-            links.append({"dir": "←", "type": S.route(e["type"]), "via": e["via"], **titles[e["from"]]})
+            links.append({"dir": "—" if undirected else "←", "type": S.route(e["type"]), "via": e["via"], **titles[e["from"]]})
     if region is None and not links:
         return {"atlas_href": "../atlas.html", "region": None, "links": []}
     return {"atlas_href": "../atlas.html", "region": region, "links": links}
@@ -258,6 +294,16 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     tg, edges, legend = term_graph(videos, tips, S)
     ws = out.parent.parent if out.parent != overview_path.parent.parent else out.parent
     atlas = atlas_context(ws, videos[0]["id"], S) if len(videos) == 1 else None
+    # workspace 層級的其他頁：podcast 頁與成長筆記（有才連）
+    hub = {}
+    if len(videos) == 1:
+        vid = videos[0]["id"]
+        if (ws / "listen.html").exists():
+            hub["listen"] = f"../listen.html#{vid}"
+        if (ws / "notes.html").exists():
+            hub["notes"] = f"../notes.html#{vid}"
+        if (ws / "digest.html").exists():
+            hub["digest"] = f"../digest.html#{vid}"
     env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["ts"] = fmt_ts
     env.filters["dur"] = fmt_dur
@@ -271,7 +317,9 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
         term_legend=legend,
         tips=tips,
         atlas=atlas,
+        hub=hub,
         S=S,
+        h_reasoning=S.h_reasoning_blog if all(v["kind"] == "blog" for v in videos) else S.h_reasoning,
         generated=datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M"),
     )
     write_text(out, html)

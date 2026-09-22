@@ -60,13 +60,10 @@
           "type": {
             "type": "string",
             "enum": [
-              "prerequisite",
-              "deepens",
-              "contrasts",
-              "applies",
+              "next",
               "related"
             ],
-            "description": "prerequisite: 先看 from 再看 to｜deepens: to 深入 from 的某主題｜contrasts: to 與 from 對照｜applies: to 把 from 的概念用到場景｜related: 相關，無方向"
+            "description": "next: 看完 from 接著看 to（有方向，地圖只畫這種）｜related: 兩站相關但沒有先後（不畫進地圖，只在卡片詳細）"
           },
           "via": {
             "type": "string",

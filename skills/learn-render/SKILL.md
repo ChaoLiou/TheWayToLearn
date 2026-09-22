@@ -1,6 +1,6 @@
 ---
 name: learn-render
-description: [步驟 6/8·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產學習規劃、不重抓資源時用。
+description: [步驟 7/10·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產學習規劃、不重抓資源時用。
 ---
 
 # /learn-render　—　步驟 6/8 產出 plan.html
@@ -43,4 +43,4 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/r
 - `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py --combined [--out workspace/plan.html] <id> <id> ...`
 
 ## 進度
-script 執行完會自己印 `[N/8] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[N/10] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。

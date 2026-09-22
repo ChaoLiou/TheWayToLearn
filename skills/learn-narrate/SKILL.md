@@ -1,11 +1,14 @@
 ---
 name: learn-narrate
-description: [步驟 8/8·產出聽力版] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
+description: [步驟 9/10·產出聽力版] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
 ---
 
 # /learn-narrate　—　步驟 8/8 產出聽力版
 
 把 `analysis.json` 改寫成**寫給耳朵**的講稿，中間穿插作者的原聲片段，合成一份 `lesson.mp3`。
+
+## 來源是部落格文章時
+沒有原聲：`clip` 會用文章語言、跟講解不同的聲音逐句朗讀那幾段原文（`lesson.json` 的 `read_voice`），不下載任何音訊。講稿寫法見 `rules/narration.md` 最後一節。
 
 ## 開始前：確認參數
 
@@ -38,4 +41,8 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/n
 - 之後重跑 `/learn-render`，`plan.html` 頂端會出現播放器、章節，以及「🎤 開啟講稿」的 karaoke 視窗。
 
 ## 進度
-script 執行完會自己印 `[8/8] ✔ … ●●●●●●●●` 兩行，把它原樣回報給使用者，不要改寫。
+script 執行完會自己印 `[9/10] ✔ … ●●●●●●●●●○` 與下一步兩行，把它原樣回報給使用者，不要改寫。
+
+## 產出後
+
+`narrate.py` 跑完會自動重產 `workspace/listen.html`（podcast 頁，新的一集會排在最上面）；沒更新就手動跑 `scripts/listen.py`。

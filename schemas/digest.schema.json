@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "digest.json — 這一站的消化工作單：每筆資訊標 PACER 類別與該做的消化動作，/learn-digest 由 agent 依 rules/digest.md 產生",
+  "type": "object",
+  "required": ["video_id", "items"],
+  "properties": {
+    "video_id": { "type": "string" },
+    "created": { "type": "string", "description": "ISO 時間，排序用；沒有就看檔案 mtime" },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 60,
+      "items": {
+        "type": "object",
+        "required": ["id", "seg_id", "kind", "text"],
+        "properties": {
+          "id": { "type": "integer", "minimum": 1, "description": "站內流水號，digest.state.json 靠它對狀態" },
+          "seg_id": { "type": "integer", "minimum": 1, "description": "出自 analysis.json 的哪一段；連回 plan.html#<vid>-s<seg_id>" },
+          "kind": { "enum": ["P", "A", "C", "E", "R"], "description": "P procedural 怎麼做→練習；A analogous 類比→批判；C conceptual 是什麼→畫地圖；E evidence 證據→存＋演練；R reference 參考→存＋回想" },
+          "text": { "type": "string", "minLength": 4, "maxLength": 80, "description": "這筆資訊是什麼，一句話；plan.html 標籤旁顯示" },
+          "terms": { "type": "array", "items": { "type": "string" }, "description": "選填：牽涉的術語（英文原文，跟 analysis.json 一致）" },
+
+          "procedure": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string" }, "description": "P：步驟，照著就能做" },
+          "practice_task": { "type": "string", "minLength": 8, "maxLength": 240, "description": "P：今天就能在真實情境做的一件具體練習，≤ 30 分鐘" },
+
+          "new": { "type": "string", "description": "A：新資訊那一端" },
+          "known": { "type": "string", "description": "A：已知那一端（使用者既有知識，或影片內先出現的概念）" },
+          "critique_key": {
+            "type": "object",
+            "description": "A：選填，AI 版的批判當答案卷；使用者先自己寫，/learn-digest 對照用",
+            "properties": {
+              "alike": { "type": "string" },
+              "unlike": { "type": "string" },
+              "breaks": { "type": "string", "description": "什麼情況下這個類比失效" }
+            }
+          },
+
+          "concept": { "type": "string", "description": "C：概念名稱（英文原文），地圖上的節點；同站內唯一" },
+          "relations": {
+            "type": "array",
+            "description": "C：這個概念連到哪些概念——答案卷，頁面預設不顯示",
+            "items": {
+              "type": "object",
+              "required": ["to", "rel"],
+              "properties": {
+                "to": { "type": "string", "description": "另一個 C 的 concept，或 analysis.json 的 term" },
+                "rel": { "type": "string", "maxLength": 12, "description": "A → B 的關係，例如「前提」「對照」「實作於」" }
+              }
+            }
+          },
+
+          "detail": { "type": "string", "description": "E：具體的細節／數字／案例" },
+          "supports": { "type": "string", "description": "E：這筆證據是哪個 C concept 的例子" },
+          "rehearse_q": { "type": "string", "minLength": 8, "description": "E：之後演練時要回答的問題（這筆證據證明了什麼？你會怎麼用它？）" },
+
+          "q": { "type": "string", "minLength": 4, "description": "R：flashcard 正面" },
+          "a": { "type": "string", "minLength": 1, "description": "R：flashcard 背面，短到一眼看完" }
+        },
+        "allOf": [
+          { "if": { "properties": { "kind": { "const": "P" } } }, "then": { "required": ["procedure", "practice_task"] } },
+          { "if": { "properties": { "kind": { "const": "A" } } }, "then": { "required": ["new", "known"] } },
+          { "if": { "properties": { "kind": { "const": "C" } } }, "then": { "required": ["concept", "relations"] } },
+          { "if": { "properties": { "kind": { "const": "E" } } }, "then": { "required": ["detail", "supports", "rehearse_q"] } },
+          { "if": { "properties": { "kind": { "const": "R" } } }, "then": { "required": ["q", "a"] } }
+        ]
+      }
+    }
+  }
+}

@@ -63,6 +63,10 @@
                 },
                 "why": {
                   "type": "string"
+                },
+                "src": {
+                  "type": "string",
+                  "description": "來源是部落格時：文中圖片的網址（transcript.images[].src）；省略就取離 t 最近的那張"
                 }
               }
             }
@@ -106,6 +110,11 @@
         "many"
       ],
       "description": "截圖策略：auto=只截看了才懂的畫面｜none=完全不截圖｜many=每段至少一張"
+    },
+    "max_shots": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "整支影片的截圖上限；省略時用 config/estimate.yaml 的 shot.max_frames（many 模式 max_frames_many）"
     }
   }
 }

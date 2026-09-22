@@ -1,0 +1,180 @@
+{% extends "_lite.html.j2" %}
+{% import "_search.html.j2" as search %}
+{% block title %}{{ S.notes_title }}{% endblock %}
+{% block css %}
+  {{ search.css() }}
+  .search { margin-bottom:0; }
+  .filters { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.4rem 0 1.2rem; position:sticky; top:0;
+             background:var(--bg); padding:.5rem 0; z-index:5; border-bottom:1px solid var(--line); }
+  .filters button { font:inherit; font-size:.85rem; padding:.2rem .7rem; border-radius:999px; border:1px solid var(--line);
+                    background:var(--card); color:var(--fg); cursor:pointer; }
+  .filters button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .filters .sp { flex:1; } .filters .n { font-size:.82rem; color:var(--muted); }
+  .filters .tool { border-style:dashed; font-size:.8rem; }
+  /* ---- 一站 ---- */
+  .st { margin:1.6rem 0; }
+  .st .hd { display:grid; grid-template-columns: 5.2rem 1fr; gap:.7rem; align-items:center; margin-bottom:.4rem; }
+  .st .hd img { width:5.2rem; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:var(--card); }
+  .st h2 { margin:0; border:none; padding:0; font-size:1.05rem; line-height:1.35; }
+  .st h2 a { color:var(--fg); text-decoration:none; } .st h2 a:hover { color:var(--accent); }
+  .st .meta { font-size:.8rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.2rem .7rem; }
+  .st .meta a { color:var(--muted); } .st .meta a:hover { color:var(--accent); }
+  .st .meta .cat { cursor:pointer; border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st .meta .cat:hover { border-color:var(--accent); color:var(--accent); }
+  .st[hidden] { display:none; }
+  /* ---- 一條筆記 ---- */
+  .nt { display:grid; grid-template-columns: 3.2rem 1fr auto; gap:.3rem .7rem; align-items:start;
+        padding:.55rem .6rem; border-left:3px solid var(--line); margin:.3rem 0; border-radius:0 8px 8px 0; background:var(--card); }
+  .nt .k { font-size:.7rem; font-weight:700; text-align:center; border-radius:4px; padding:.1rem .2rem; color:#fff; margin-top:.25rem; }
+  .nt[data-kind="concept"] .k { background:#4e79a7; } .nt[data-kind="skill"] .k { background:#59a14f; } .nt[data-kind="insight"] .k { background:#b07aa1; }
+  .nt .tx { font-size:.98rem; line-height:1.55; }
+  .nt .dt { font-size:.86rem; color:var(--muted); margin-top:.15rem; }
+  .nt .src { font-size:.78rem; margin-top:.2rem; } .nt .src a { text-decoration:none; }
+  .nt .terms { font-size:.75rem; color:var(--muted); } .nt .terms code { font-size:.75rem; }
+  .nt .kd { display:flex; gap:.25rem; }
+  .nt .kd button { font:inherit; font-size:.78rem; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer; }
+  .nt .kd button:hover { border-color:var(--accent); color:var(--accent); }
+  .nt[data-st="keep"] { border-left-color:var(--ok); }
+  .nt[data-st="keep"] .kd .keep { background:var(--ok); color:#fff; border-color:var(--ok); }
+  .nt[data-st="drop"] { border-left-color:var(--wrong); opacity:.55; }
+  .nt[data-st="drop"] .tx { text-decoration:line-through; }
+  .nt[data-st="drop"] .kd .drop { background:var(--wrong); color:#fff; border-color:var(--wrong); }
+  .nt[hidden] { display:none; }
+  @media (max-width:520px) { .nt { grid-template-columns: 3rem 1fr; } .nt .kd { grid-column:2; } }
+{% endblock %}
+
+{% block body %}
+<main>
+<p class="topnav">
+  {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
+  <a class="on" href="notes.html">{{ S.nav_notes }}</a>
+  {% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}
+  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
+</p>
+<h1>{{ S.notes_h1 }}</h1>
+<p class="muted">{{ S.notes_sub }}</p>
+<p class="stats"><span>{{ S.f("n_wp", n=stations|length) }}</span><span>{{ S.f("n_notes", n=n_notes) }}</span><span id="kept"></span><span>{{ S.f("updated", t=generated) }}</span></p>
+
+{% if not stations %}
+<p class="card">{{ S.no_notes | safe }}</p>
+{% else %}
+{{ search.bar(S, stations|length) }}
+<div class="filters" id="filters">
+  <button type="button" class="on" data-f="all">{{ S.notes_all }}</button>
+  <button type="button" data-f="keep">{{ S.notes_kept }}</button>
+  <button type="button" data-f="undecided">{{ S.notes_undecided }}</button>
+  <button type="button" data-f="drop">{{ S.notes_dropped }}</button>
+  <span class="sp"></span>
+  <button type="button" class="tool" id="export" title="{{ S.notes_export_hint }}">{{ S.notes_export }}</button>
+  <button type="button" class="tool" id="reset">{{ S.notes_reset }}</button>
+</div>
+
+{% for s in stations %}
+<section class="st" id="{{ s.id }}" data-id="{{ s.id }}" data-title="{{ s.title }}" data-channel="{{ s.channel or '' }}"
+         data-category="{{ s.category or S.unplaced }}" data-text="{{ s.notes | map(attribute='text') | join('\n') }}">
+  <div class="hd">
+    {% if s.yt_thumb %}<img src="{{ s.yt_thumb }}" alt="" loading="lazy">{% else %}<span></span>{% endif %}
+    <div>
+      <h2>{% if s.plan %}<a href="{{ s.plan }}">{{ s.title }}</a>{% else %}{{ s.title }}{% endif %}</h2>
+      <div class="meta">
+        {% if s.channel %}<span>{{ s.channel }}</span>{% endif %}
+        <span class="cat" data-cat="{{ s.category or S.unplaced }}" title="{{ S.f_category }}">{{ s.category or S.unplaced }}</span>
+        <span>{{ S.f("ep_produced", t=s.created_ymd) }}</span>
+        {% if s.plan %}<a href="{{ s.plan }}">{{ S.notes_open_plan }}</a>{% endif %}
+        {% if s.has_lesson and has_listen %}<a href="listen.html#{{ s.id }}">{{ S.notes_listen }}</a>{% endif %}
+        {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener">{{ "🔗 " ~ (S.blog_link if s.kind == "blog" else S.watch_yt) }}</a>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% for n in s.notes %}
+  <div class="nt" data-key="{{ n.key }}" data-kind="{{ n.kind }}" data-st="{{ keep.get(n.key, '') }}">
+    <span class="k">{{ S["kind_" ~ n.kind] }}</span>
+    <div>
+      <div class="tx">{{ n.text }}</div>
+      {% if n.detail %}<div class="dt">{{ n.detail }}</div>{% endif %}
+      <div class="src">{% if s.plan %}<a href="{{ n.href }}">{{ S.f("note_seg", id=n.seg_id) }}</a>{% else %}{{ S.f("note_seg", id=n.seg_id) }}{% endif %}
+        {% if n.seg_title %}<span class="muted">{{ n.seg_title }}</span>{% endif %}
+        {% if n.terms %}<span class="terms"> · {% for t in n.terms %}<code>{{ t }}</code>{% if not loop.last %} {% endif %}{% endfor %}</span>{% endif %}
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">{{ S.note_keep }}</button>
+      <button type="button" class="drop" data-set="drop">{{ S.note_drop }}</button>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}
+{% endif %}
+</main>
+{% endblock %}
+
+{% block json %}
+{% if stations %}{{ search.json(S) }}{% endif %}
+<script id="ui-str" type="application/json">{{ {"kept": S.n_kept, "dropped": S.n_dropped} | tojson }}</script>
+{% endblock %}
+
+{% block js %}
+(() => {
+  const T = JSON.parse(document.getElementById("ui-str").textContent);
+  const LS_KEY = "notes-keep";
+  const LS = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+               del: (k) => { try { localStorage.removeItem(k); } catch (_) {} } };
+  // 預設狀態來自 notes.keep.json（已寫在 data-st），瀏覽器裡的操作蓋在上面
+  let local = {};
+  try { local = JSON.parse(LS.get(LS_KEY) || "{}"); } catch (_) { local = {}; }
+  const notes = [...document.querySelectorAll(".nt")];
+  const stateOf = (el) => local[el.dataset.key] ?? (el.dataset.st || "");
+  let filter = "all";
+  if (!notes.length) return;
+
+  // 留／刪篩選先決定每條筆記的顯示，搜尋列（作者／分類／標題／任意，含筆記內文）再決定站；
+  // 一站的筆記全被留／刪篩掉就整站隱藏（extra_ok 給 _search.html.j2 的 refilter 用）。
+  const applyNotes = () => {
+    let kept = 0, dropped = 0;
+    notes.forEach((el) => {
+      const st = stateOf(el);
+      el.dataset.st = st;
+      if (st === "keep") kept++; if (st === "drop") dropped++;
+      el.hidden = !(filter === "all" || (filter === "undecided" ? st === "" : st === filter));
+    });
+    document.getElementById("kept").textContent = `${T.kept.replace("{n}", kept)} · ${T.dropped.replace("{n}", dropped)}`;
+  };
+  function extra_ok(sec) { return [...sec.querySelectorAll(".nt")].some((n) => !n.hidden); }
+  applyNotes();
+{{ search.js(".st", none) }}
+  document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+  const apply = () => { applyNotes(); refilter(); };
+
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-set]");
+    if (b) {
+      const el = b.closest(".nt"), want = b.dataset.set;
+      local[el.dataset.key] = stateOf(el) === want ? "" : want;   // 再按一次 = 取消
+      LS.set(LS_KEY, JSON.stringify(local));
+      apply();
+      return;
+    }
+    const f = ev.target.closest("[data-f]");
+    if (f) {
+      filter = f.dataset.f;
+      document.querySelectorAll("[data-f]").forEach((x) => x.classList.toggle("on", x === f));
+      apply();
+    }
+  });
+
+  document.getElementById("export")?.addEventListener("click", () => {
+    const out = {};
+    notes.forEach((el) => { const st = stateOf(el); if (st) out[el.dataset.key] = st; });
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "notes.keep.json"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); apply(); });
+
+  // 從 listen.html / plan.html 帶 #<vid> 進來：捲到那一站
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+})();
+{% endblock %}

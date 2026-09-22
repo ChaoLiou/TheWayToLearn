@@ -19,7 +19,7 @@
 /plugin install atlas@thewaytolearn
 ```
 或在終端機：`claude plugin marketplace add <位址>` 然後 `claude plugin install atlas@thewaytolearn`。
-之後在任何目錄：`/atlas:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
+之後在任何目錄：`/pacer:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
 
 **方式 B：clone 下來在裡面用**
 ```

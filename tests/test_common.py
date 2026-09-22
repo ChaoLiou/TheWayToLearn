@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import common
 import pytest
 from common import fmt_dur, fmt_ts, locked, save_json, video_dir, video_id
 
@@ -19,7 +20,17 @@ def test_video_id(u):
 
 def test_video_id_bad():
     with pytest.raises(ValueError):
-        video_id("https://example.com")
+        video_id("not a url or id")
+
+
+def test_blog_url_gets_stable_id():
+    a = video_id("https://example.com/posts/attention/")
+    b = video_id("http://www.example.com/posts/attention#comments")
+    assert a == b and a.startswith("b_") and len(a) == 11
+    assert video_id(a) == a                      # 裸 id 原樣回傳
+    assert common.is_blog(a) and not common.is_blog("dQw4w9WgXcQ")
+    assert common.is_blog({"video_id": "xxxxxxxxxxx", "source": "blog"})
+    assert video_id("https://m.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
 
 
 def test_fmt():
@@ -44,13 +55,14 @@ def test_title_dirname_cuts_at_word_boundary():
 
 def test_step_line_format():
     from common import STEPS, step_line, step_no
-    assert step_no("segment") == 3 and len(STEPS) == 8
+    assert step_no("segment") == 3 and len(STEPS) == 10
     first = step_line("segment", "9 段")
-    assert first.startswith("[3/8] ✔ segment 切段 完成  ●●●○○○○○") and "9 段" in first
-    assert "下一步 [4/8] shot" in first
-    last = step_line("narrate")
-    assert last.startswith("[8/8]") and "全部完成" in last and "下一步" not in last
+    assert first.startswith("[3/10] ✔ segment 切段 完成  ●●●○○○○○○○") and "9 段" in first
+    assert "下一步 [4/10] shot" in first
+    last = step_line("listen")
+    assert last.startswith("[10/10]") and "全部完成" in last and "下一步" not in last
     assert "≥ 2 站" in step_line("render") and "選配" in step_line("atlas")
+    assert step_no("digest") == 6 and "--digest false" in step_line("analyze")
 
 
 def test_options_lists_params_per_skill(capsys, tmp_path):
@@ -124,3 +136,7 @@ def test_dub_lines_and_voice():
     assert all(len(x) <= narrate.DUB_MAX for x in lines)      # 太長的句子會再斷
     assert "".join(lines).replace("", "") .startswith("他說 partition")
     assert narrate.dub_lines("好。這句話夠長了可以自己成一句話。") == ["好。這句話夠長了可以自己成一句話。"]  # 太短就併回前一句
+    # 句號在引號裡：收尾的「」」要跟著前一句，不能單獨成一句（edge-tts 對純標點回 NoAudioReceived）
+    quoted = narrate.dub_lines("我就說：「你能建立一個新的範例專案嗎？」就是建一個可以展示的 demo 專案。")
+    assert quoted == ["我就說：「你能建立一個新的範例專案嗎？」", "就是建一個可以展示的 demo 專案。"]
+    assert all(__import__("re").search(r"\w", x) for x in narrate.dub_lines("他問：「好嗎？」"))

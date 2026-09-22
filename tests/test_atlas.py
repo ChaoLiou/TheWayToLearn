@@ -31,7 +31,7 @@ def test_check_rejects_bad_routes(tmp_path):
     wps = atlas.load_waypoints(ws)
     bad = {"regions": [{"id": "r", "name": "r", "blurb": "", "waypoints": ["nope"]}],
            "routes": [{"from": "abcdefghijk", "to": "abcdefghijk", "type": "related", "via": ""},
-                      {"from": "abcdefghijk", "to": "zzzzzzzzzzz", "type": "deepens", "via": ""},
+                      {"from": "abcdefghijk", "to": "zzzzzzzzzzz", "type": "next", "via": ""},
                       {"from": "zzzzzzzzzzz", "to": "abcdefghijk", "type": "related", "via": ""}]}
     errs = atlas.check_atlas(bad, wps)
     assert any("未知 waypoint" in e for e in errs)
@@ -43,14 +43,43 @@ def test_render_atlas_and_plan_nav(tmp_path):
     ws = _ws(tmp_path)
     out = atlas.render(ws)
     html = out.read_text(encoding="utf-8")
-    assert "graph LR" in html and "subgraph ab[" in html
     assert html.count('class="wp"') == 2
     assert 'href="%E6%B8%AC%E8%A9%A6%E5%BD%B1%E7%89%87%20C/plan.html"' in html
-    assert "深入 →" in html and "深入 ←" in html
+    assert "接著看 →" in html and "接著看 ←" in html
     render.main(["--workspace", str(ws)])
     plan = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
     assert 'href="../atlas.html"' in plan and "主題區: <b>A 與 B</b>" in plan
     assert 'href="../%E6%B8%AC%E8%A9%A6%E5%BD%B1%E7%89%87%20C/plan.html"' in plan
+
+
+def test_related_routes_show_without_direction(tmp_path):
+    ws = _ws(tmp_path)
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert "接著看 →" in html                                 # fixture 的那條是 next
+    a = json.loads((ws / "atlas.json").read_text(encoding="utf-8"))
+    a["routes"][0]["type"] = "related"
+    (ws / "atlas.json").write_text(json.dumps(a, ensure_ascii=False), encoding="utf-8")
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert "相關 —" in html and "相關 →" not in html          # 卡片詳細裡還在，且不畫方向
+
+
+def test_no_map_left(tmp_path):
+    html = atlas.render(_ws(tmp_path)).read_text(encoding="utf-8")
+    assert 'class="mermaid"' not in html and "openmap" not in html and "focusbar" not in html
+    assert "地圖" not in html
+    assert 'id="sinput"' in html and 'data-category="A 與 B"' in html   # 搜尋列與分類還在
+
+
+def test_migrate_routes_maps_old_types(tmp_path):
+    ws = _ws(tmp_path)
+    assert set(atlas.ROUTE_MIGRATE) == {"prerequisite", "deepens", "contrasts", "applies", "related"}
+    assert atlas.ROUTE_MIGRATE["applies"] == "next" and atlas.ROUTE_MIGRATE["contrasts"] == "related"
+    a = json.loads((ws / "atlas.json").read_text(encoding="utf-8"))
+    a["routes"][0].update(type="applies", via="舊的理由")
+    (ws / "atlas.json").write_text(json.dumps(a, ensure_ascii=False), encoding="utf-8")
+    atlas.main(["--workspace", str(ws), "--migrate-routes"])
+    got = json.loads((ws / "atlas.json").read_text(encoding="utf-8"))
+    assert got["routes"][0]["type"] == "next" and got["routes"][0]["via"] == "舊的理由"
 
 
 def test_status_reports_new_waypoint(tmp_path, capsys):
@@ -108,7 +137,7 @@ def test_merge_keeps_other_routes(tmp_path):
     base = {"regions": [], "routes": []}
     a = atlas.merge_atlas(base, {"routes": [{"from": "a", "to": "b", "type": "related", "via": "x"}],
                                  "regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["a"]}]})
-    b = atlas.merge_atlas(a, {"routes": [{"from": "c", "to": "b", "type": "deepens", "via": "y"}],
+    b = atlas.merge_atlas(a, {"routes": [{"from": "c", "to": "b", "type": "next", "via": "y"}],
                               "regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["c"]}]})
     assert {(e["from"], e["to"]) for e in b["routes"]} == {("a", "b"), ("c", "b")}
     assert b["regions"][0]["waypoints"] == ["a", "c"]
@@ -117,7 +146,7 @@ def test_merge_keeps_other_routes(tmp_path):
 def test_merge_replaces_same_pair_and_moves_region(tmp_path):
     a = {"regions": [{"id": "r1", "name": "R1", "blurb": "", "waypoints": ["a", "b"]}],
          "routes": [{"from": "a", "to": "b", "type": "related", "via": "舊"}]}
-    b = atlas.merge_atlas(a, {"routes": [{"from": "b", "to": "a", "type": "prerequisite", "via": "新"}],
+    b = atlas.merge_atlas(a, {"routes": [{"from": "b", "to": "a", "type": "next", "via": "新"}],
                               "regions": [{"id": "r2", "name": "R2", "blurb": "", "waypoints": ["b"]}]})
     assert len(b["routes"]) == 1 and b["routes"][0]["via"] == "新"        # 同一對站只留一條
     assert [r["waypoints"] for r in b["regions"]] == [["a"], ["b"]]        # b 換區，不會兩區都有
@@ -128,7 +157,7 @@ def test_merge_cli_writes_and_renders(tmp_path):
     (ws / "atlas.json").write_text(json.dumps({"regions": [], "routes": []}), encoding="utf-8")
     patch = tmp_path / "patch.json"
     patch.write_text(json.dumps({"routes": [{"from": "abcdefghijk", "to": "zzzzzzzzzzz",
-                                             "type": "deepens", "via": "共同術語"}]}), encoding="utf-8")
+                                             "type": "next", "via": "共同術語"}]}), encoding="utf-8")
     atlas.main(["--workspace", str(ws), "--merge", str(patch)])
     assert json.loads((ws / "atlas.json").read_text())["routes"][0]["via"] == "共同術語"
     assert (ws / "atlas.html").exists()
@@ -139,7 +168,7 @@ def test_merge_cli_rejects_broken_patch(tmp_path):
     before = (ws / "atlas.json").read_text()
     patch = tmp_path / "patch.json"
     patch.write_text(json.dumps({"routes": [{"from": "abcdefghijk", "to": "nope",
-                                             "type": "deepens", "via": ""}]}), encoding="utf-8")
+                                             "type": "next", "via": ""}]}), encoding="utf-8")
     with pytest.raises(SystemExit):
         atlas.main(["--workspace", str(ws), "--merge", str(patch)])
     assert (ws / "atlas.json").read_text() == before  # 驗證沒過就不寫入
@@ -156,18 +185,21 @@ def test_pipeline_and_next_actions(tmp_path):
     assert st["analyze"]["state"] == "done" and st["atlas"]["state"] == "done"
     assert st["estimate"]["state"] == "todo"          # fixture 沒有 estimate.json
     assert st["narrate"]["state"] == "todo"           # 也還沒做聽力版
-    assert atlas.pipeline(d, False, False, S)[6]["state"] == "skip"   # 只有一站時不需要上地圖
+    assert st["listen"]["state"] == "skip"            # 沒聽力版就沒東西可列
+    assert st["digest"]["state"] == "todo"            # 測試影片 A 沒有 digest.json
+    assert atlas.pipeline(d, False, False, S)[7]["state"] == "skip"   # 只有一站時不需要連結
 
     # 做了聽力版但沒挑原聲片段 → 沒做完，而且說得出缺什麼
     (d / "lesson.json").write_text(json.dumps({"duration": 1, "dub": None}), encoding="utf-8")
     nar = {x["key"]: x for x in atlas.pipeline(d, True, True, S)}["narrate"]
     assert nar["state"] == "partial" and nar["note"] == S.n_no_clips
+    assert {x["key"]: x for x in atlas.pipeline(d, True, True, S)}["listen"]["state"] == "todo"
 
     w = next(x for x in atlas.load_waypoints(ws) if x["dir"] == d.name)
     acts = atlas.next_actions(w, atlas.pipeline(d, True, True, S), S)
     assert [a["prompt"] for a in acts if a["prompt"].startswith("/atlas:learn-estimate")]  # 單一階段就給指令
-    # 沒做完的是 estimate / render / narrate，做到最後一步就把三步都寫進 prompt
-    assert acts[-1]["prompt"].count("/atlas:learn-") == 3
+    # 沒做完的是 estimate / digest / render / narrate / listen，做到最後一步就把五步都寫進 prompt
+    assert acts[-1]["prompt"].count("/atlas:learn-") == 5
     assert S.n_no_clips not in acts[-1]["prompt"] and "rules/narration.md" in acts[-1]["prompt"]
 
 
@@ -178,28 +210,32 @@ def test_atlas_html_has_stage_ui(tmp_path):
     assert 'id="nextstep"' in html and html.count('class="prog"') == 2
     data = json.loads(html.split('id="steps-data" type="application/json">')[1].split("</script>")[0])
     assert set(data) == {"abcdefghijk", "zzzzzzzzzzz"}
-    assert len(data["abcdefghijk"]["stages"]) == 8 and data["abcdefghijk"]["actions"]
+    assert len(data["abcdefghijk"]["stages"]) == 10 and data["abcdefghijk"]["actions"]
 
 
-def test_author_error_rate_badge(tmp_path):
+def test_video_error_rate_badge(tmp_path):
     ws = _ws(tmp_path)
     a = json.loads((ws / "測試影片 C/analysis.json").read_text(encoding="utf-8"))
     a["segments"][0]["issues"] = [{"level": "debatable", "t": 1, "quote": "看情況",
                                    "note": "取決於版本", "evidence": "本片第 1 段"}]
     (ws / "測試影片 C/analysis.json").write_text(json.dumps(a, ensure_ascii=False), encoding="utf-8")
     wps = atlas.load_waypoints(ws)
-    st = atlas.author_stats(wps, Strings("zh-TW"))["Ch"]  # 兩支都是同一個頻道
-    assert (st["videos"], st["segments"], st["wrong"], st["debatable"]) == (2, 6, 2, 1)
+    w = next(x for x in wps if x["dir"] == "測試影片 C")   # 以影片為單位，不跨同頻道的其他站
+    st = atlas.errata_stats(w, Strings("zh-TW"))
+    assert (st["segments"], st["wrong"], st["debatable"]) == (3, 1, 1)
     assert st["clean"] is False
+    assert [i["seg_id"] for i in w["issues"]] == [s["id"] for s in a["segments"] if s.get("issues")]
     html = atlas.render(ws).read_text(encoding="utf-8")
-    assert html.count('class="err w"') == 2 and html.count('class="err d"') == 2
-    assert "2 處確定錯誤" in html and "1 處見仁見智" in html
+    assert html.count('class="err w"') == 2 and html.count('class="err d"') == 1
+    assert "共 3 段，其中 1 處確定錯誤" in html
     assert "%" not in html.split('class="by"')[1].split("</div>")[0]  # 顯示件數不是比例
 
 
-def test_map_nodes_use_image_shape(tmp_path):
+def test_errata_dialog_table(tmp_path):
     ws = _ws(tmp_path)
     html = atlas.render(ws).read_text(encoding="utf-8")
-    assert html.count("@{ img: &#34;https://i.ytimg.com/vi/") == 2  # 兩站都帶縮圖
-    nodes = json.loads(re.search(r'id="nodes-data"[^>]*>(.*?)</script>', html, re.DOTALL).group(1))
-    assert nodes["w0"] == "abcdefghijk" and set(nodes.values()) == {"abcdefghijk", "zzzzzzzzzzz"}
+    assert 'id="errinfo"' in html
+    body = html.split('class="wp-err"')[1]
+    assert 'class="issues-sum"' in body and "plan.html#" in body   # 每列連到該段
+
+

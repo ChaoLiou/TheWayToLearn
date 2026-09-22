@@ -1,0 +1,5 @@
+{# 勘誤圖示，兩張頁面共用：八角形（danger）= 確定錯誤／已過時；三角形（warning）= 見仁見智。
+   用 currentColor 才能跟著深淺色主題與所在元件的顏色。 #}
+{% macro danger() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
+{% macro warn() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
+{% macro level(lv) %}{% if lv == 'wrong' %}{{ danger() }}{% else %}{{ warn() }}{% endif %}{% endmacro %}

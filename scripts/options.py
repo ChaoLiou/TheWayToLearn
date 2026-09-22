@@ -26,6 +26,11 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
         ("false", "只讀字幕，截圖仍會放進文件但 AI 不看"),
         ("auto", "由 AI 依字幕裡的視覺指示語（「看這張圖」）自行判斷"),
     ]),
+    "max_shots": ("--max-shots", "12（many 模式 24）", "整支影片最多截幾張圖 —— 直接決定 analyze 的 token 量", [
+        ("12", "預設：只留最關鍵的畫面；AI 讀 12 張圖約 15k tokens"),
+        ("0", "等同 --shots none"),
+        ("24", "白板／程式碼 demo 密集的影片；成本約多一倍"),
+    ]),
     "lang": ("--lang", "zh-TW,zh,en", "字幕語言優先序（抓得到哪個就用哪個）", []),
     "output_lang": ("--output-lang", "跟著你的對話語言", "產出文件與介面的語言", [
         ("zh-TW", "繁體中文"), ("en", "English"),
@@ -42,6 +47,14 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "narrate": ("--narrate", "true", "要不要順便產出聽力版（第 8 步）", [
         ("true", "產出 lesson.mp3：TTS 講解與作者原聲交錯，plan.html 有播放器與講稿（預設）"),
         ("false", "只產出網頁版，不做聲音；之後想要再跑 /learn-narrate 也可以"),
+    ]),
+    "digest": ("--digest", "true", "要不要做 PACER 消化工作單（第 6 步）", [
+        ("true", "agent 把每筆資訊標 P/A/C/E/R 並寫消化動作成 digest.json，彙整進 digest.html；plan.html 每段有標籤（預設）"),
+        ("false", "不做；之後想要再跑 /learn-digest 也可以"),
+    ]),
+    "listen": ("--listen", "true", "要不要重產 podcast 頁 listen.html（第 10 步）", [
+        ("true", "把所有聽力版列成一集一集，並連到這站的 digest / notes（預設）"),
+        ("false", "不重產；之後想要再跑 /learn-listen 也可以"),
     ]),
     "clips": ("clips（在 segments.json）", "整段", "聽力版要播多長的作者原聲", [
         ("整段", "段落完整播出（預設）；超過 150 秒的段落取其中核心 60–120 秒"),
@@ -73,15 +86,18 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
 }
 
 SKILL_PARAMS: dict[str, list[str]] = {
-    "learn": ["shots", "vision", "narrate", "output_lang", "lang"],
-    "learn-estimate": ["shots", "vision"],
+    "learn": ["shots", "vision", "max_shots", "digest", "narrate", "listen", "output_lang", "lang"],
+    "learn-estimate": ["shots", "vision", "max_shots"],
     "learn-fetch": ["lang", "output_lang", "force"],
-    "learn-segment": ["shots", "vision"],
+    "learn-segment": ["shots", "vision", "max_shots"],
     "learn-shot": ["force", "keep_video", "max_height"],
     "learn-analyze": ["vision", "force"],
     "learn-render": ["combined"],
     "learn-atlas": [],
     "learn-narrate": ["clips", "voice", "dub", "dub_voice", "rate", "force"],
+    "learn-notes": ["force"],
+    "learn-digest": ["force"],
+    "learn-listen": [],
     "learn-publish": ["project_name", "deploy"],
 }
 
@@ -92,6 +108,14 @@ def _norm(v) -> str:
 
 def effective(name: str, workspace: Path) -> str | None:
     """從 workspace/input.yaml 或 config 讀出目前生效的值（沒有就回 None）。"""
+    if name == "max_shots":
+        cfg = load_yaml(config_file("estimate.yaml"))["shot"]
+        from_input = None
+        p = workspace / "input.yaml"
+        if p.exists():
+            vals = {_norm(v.get(name)) for v in ((load_yaml(p) or {}).get("videos") or []) if v.get(name) is not None}
+            from_input = vals.pop() if len(vals) == 1 else (" / ".join(sorted(vals)) if vals else None)
+        return from_input or f"{cfg['max_frames']}（many 模式 {cfg['max_frames_many']}）"
     if name == "max_height":
         return str(load_yaml(config_file("estimate.yaml"))["download"]["max_height"])
     p = workspace / "input.yaml"

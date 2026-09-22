@@ -50,16 +50,39 @@ def template_dirs() -> list[str]:
     return [str(o), str(TEMPLATES)] if o.is_dir() else [str(TEMPLATES)]
 
 _ID_RE = re.compile(r"(?:v=|youtu\.be/|/shorts/|/embed/|/live/)([A-Za-z0-9_-]{11})")
+_YT_HOST = re.compile(r"^https?://(?:[\w-]+\.)?(?:youtube\.com|youtu\.be|youtube-nocookie\.com)/", re.IGNORECASE)
+BLOG_PREFIX = "b_"  # 部落格站的 id 開頭：後面 9 碼是網址的 sha1，湊成跟 YouTube 一樣的 11 碼
+
+
+def blog_id(url: str) -> str:
+    """部落格文章的 id：去掉 fragment 與結尾斜線後取 sha1，同一篇文章不管怎麼貼都是同一站。"""
+    import hashlib
+    norm = re.sub(r"#.*$", "", url.strip()).rstrip("/")
+    norm = re.sub(r"^https?://(www\.)?", "", norm, flags=re.IGNORECASE)
+    return BLOG_PREFIX + hashlib.sha1(norm.encode("utf-8")).hexdigest()[:9]
+
+
+def is_blog(vid_or_meta) -> bool:
+    """給 id 或 meta.json 的 dict 都可以：這一站是不是部落格文章。"""
+    if isinstance(vid_or_meta, dict):
+        return vid_or_meta.get("source") == "blog" or str(vid_or_meta.get("video_id", "")).startswith(BLOG_PREFIX)
+    return str(vid_or_meta).startswith(BLOG_PREFIX)
+
+
+def is_youtube_url(s: str) -> bool:
+    return bool(_YT_HOST.match(s))
 
 
 def video_id(url_or_id: str) -> str:
-    """接受 URL 或裸 id，回傳 11 碼 id。"""
+    """接受 URL 或裸 id，回傳 11 碼 id。YouTube 以外的網址當成部落格文章，id 由網址算出。"""
     if re.fullmatch(r"[A-Za-z0-9_-]{11}", url_or_id):
         return url_or_id
     m = _ID_RE.search(url_or_id)
-    if not m:
-        raise ValueError(f"看不出 video id: {url_or_id}")
-    return m.group(1)
+    if m:
+        return m.group(1)
+    if re.match(r"^https?://", url_or_id, re.IGNORECASE) and not is_youtube_url(url_or_id):
+        return blog_id(url_or_id)
+    raise ValueError(f"看不出 video id: {url_or_id}")
 
 
 _BAD_FS = re.compile(r'[\\/:*?"<>|\x00-\x1f]+')
@@ -190,9 +213,11 @@ STEPS: list[tuple[str, str]] = [
     ("segment", "切段"),
     ("shot", "截圖"),
     ("analyze", "逐段分析"),
+    ("digest", "消化工作單"),
     ("render", "產出 plan.html"),
-    ("atlas", "更新知識地圖"),
+    ("atlas", "連結各站"),
     ("narrate", "產出聽力版"),
+    ("listen", "podcast 頁"),
 ]
 STEP_CMD = {k: f"/atlas:learn-{k}" for k, _ in STEPS}
 
@@ -210,13 +235,15 @@ def step_line(key: str, note: str = "") -> str:
     if note:
         head += f"  · {note}"
     if n == total:
-        return f"{head}\n        全部完成 → 開 workspace/atlas.html"
+        return f"{head}\n        全部完成 → 開 workspace/listen.html"
     nk, nzh = STEPS[n]
     tail = f"        下一步 [{n + 1}/{total}] {nk} {nzh} → {STEP_CMD[nk]}"
     if nk == "atlas":
         tail += "（workspace 有 ≥ 2 站時才需要）"
     if nk == "narrate":
         tail += "（選配：想用聽的再跑）"
+    if nk == "digest":
+        tail += "（選配：--digest false 可跳過）"
     return f"{head}\n{tail}"
 
 

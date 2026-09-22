@@ -20,7 +20,33 @@
 - 每個 shot 寫 `why`：這張圖在推理裡扮演什麼角色。寫不出 `why` 就不該截。
 - 同一張投影片不要重複截（作者停在同一畫面講很久時只取一張）。
 
+### 整支影片的截圖上限（硬規則，validate.py 會擋）
+
+**`auto` 最多 12 張、`many` 最多 24 張**（數字在 `config/estimate.yaml` 的 `shot.max_frames` / `max_frames_many`；
+使用者用 `--max-shots` 指定時寫進 `segments.json` 的 `max_shots`，以它為準）。
+
+上限存在的理由：每張截圖在 analyze 階段約佔 1,200 tokens，而且一旦讀進來就會**常駐**在往後每一輪的 context。
+41 張圖 = 50k tokens 常駐，是一支影片最大的單一成本來源。
+
+超過上限時，**不要平均砍**，依這個順序保留：
+1. 作者明確指著畫面說「你看這裡／這張圖／這段 code」的瞬間 —— 沒有圖就讀不懂。
+2. 推理鏈的轉折點：架構圖、對照表、before/after。
+3. 同一概念只留最完整的那一張（通常是作者畫完、講完的最後狀態）。
+
+被砍掉的段落 `shots` 留空陣列即可；不必為了「每段都有圖」硬湊。
+
 ## vision 判斷（input 為 auto 時；`shots_mode: none` 時一律 false）
 - transcript 中出現「這張圖」「你看這裡」「這段 code」「如圖」等指示語 ≥ 3 次 → `vision: true`
 - 否則 `vision: false`
 - 把理由寫進 `vision_reason`。
+
+## 來源是部落格文章時（`meta.json` 的 `source: blog`）
+
+`transcript.json` 的 `events` 一個就是文章的一個段落／標題／程式碼區塊／清單（`kind` 標明），
+`start` 是「讀到這裡累積的閱讀秒數」（`config/estimate.yaml` 的 `blog.*` 速度），`para` 是第幾段。
+規則跟影片一樣，只有這幾點不同：
+
+- **切段**用 `start` / `end` 的秒數照常寫（validate 才過），但判斷依據是內容：標題（`kind: h1/h2/h3`）通常就是段落邊界，一個小節太長就依論證步驟再拆。
+- **shots = 文中的圖片**：候選只有 `transcript.images`（每張有 `t`、`src`、`alt`）。挑「看了才懂」的（架構圖、對照表、程式碼截圖），寫進該段 `shots`：`t` 用圖片的 `t`，並加 `src` 指定是哪張（沒寫就取離 `t` 最近的那張）。裝飾用的 banner、頭像、表情圖不要。文章沒有圖或都不值得放 → `shots_mode: none`。
+- **clips = 值得逐字讀的段落**：起訖照樣用秒數（會自動對齊到段落邊界）；聽力版會用文章語言的另一個聲音把那幾段原文唸出來，所以挑作者的關鍵論述、定義、範例，不要挑程式碼區塊與表格（唸出來沒意義）。外語文章一樣要給 `translation`。
+- **vision**：文章的圖片通常本來就是給人看的，`auto` 時只要有挑到圖就 `true`。

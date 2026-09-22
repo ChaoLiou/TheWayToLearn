@@ -44,3 +44,11 @@
 - 講稿語言用該站 `meta.json` 的 `output_lang`。
 - `voice` 預設：`zh-TW` → `zh-TW-HsiaoChenNeural`，`en` → `en-US-AriaNeural`。使用者指定就照他的。
 - `rate` 預設 `+0%`；使用者嫌慢可設 `+15%`。
+
+## 來源是部落格文章時
+
+文章沒有原聲。`clip` 照樣寫（`start` / `end` 是閱讀秒數，取自 `segments.json` 的 `clips`），
+`narrate.py` 會用**文章語言、跟講解不同的聲音**逐句朗讀那幾段原文，網頁上一樣標成「原聲」。
+- 導聽改成「我們先聽作者原文怎麼寫，注意他怎麼定義…」。
+- 程式碼、表格、清單朗讀起來沒意義，不要選進 clip；講稿裡用口語描述它在做什麼。
+- 有 `translation` 一樣會多產一軌翻譯配音。

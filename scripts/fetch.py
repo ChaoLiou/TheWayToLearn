@@ -1,4 +1,5 @@
 """/learn-fetch：抓 transcript（json3）+ metadata，不下載影片。
+來源也可以是部落格文章：非 YouTube 的網址走 blog.py，正文段落當 transcript、閱讀時間當時間軸。
 
 用法：uv run scripts/fetch.py <url|id> [--lang zh-TW,zh,en] [--force]
 輸出：workspace/<id>/transcript.json, meta.json
@@ -16,6 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
     DEFAULT_WORKSPACE,
     find_video_dir,
+    is_blog,
+    load_json,
     print_step,
     record_timing,
     save_json,
@@ -43,6 +46,28 @@ def parse_json3(p: Path) -> list[dict]:
     return out
 
 
+def parse_vtt(p: Path) -> list[dict]:
+    """WebVTT → [{start, duration, text}]。有些自動字幕只有 vtt，沒有 json3。"""
+    import re
+    ts = re.compile(r"(\d+):(\d\d):(\d\d)\.(\d\d\d)\s+-->\s+(\d+):(\d\d):(\d\d)\.(\d\d\d)")
+
+    def sec(h, m, s, ms):
+        return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
+
+    out, cur = [], None
+    for line in p.read_text(encoding="utf-8").splitlines():
+        m = ts.match(line.strip())
+        if m:
+            g = m.groups()
+            cur = {"start": sec(*g[:4]), "duration": round(sec(*g[4:]) - sec(*g[:4]), 3), "text": ""}
+            out.append(cur)
+        elif cur is not None and line.strip():
+            cur["text"] = (cur["text"] + " " + re.sub(r"<[^>]+>", "", line).strip()).strip()
+        elif not line.strip():
+            cur = None
+    return [e for e in out if e["text"]]
+
+
 def fetch(url: str, langs: list[str], vdir: Path, output_lang: str = "zh-TW") -> dict:
     cmd = [
         "yt-dlp", "--skip-download", "--no-playlist",
@@ -53,13 +78,14 @@ def fetch(url: str, langs: list[str], vdir: Path, output_lang: str = "zh-TW") ->
     ]
     subprocess.run(cmd, check=True, capture_output=True, text=True)
 
-    files = sorted(vdir.glob("subs.*.json3"))
+    files = sorted(vdir.glob("subs.*.json3")) or sorted(vdir.glob("subs.*.vtt"))
     if not files:
         raise SystemExit(f"沒有拿到字幕（語言 {langs}）。用 yt-dlp --list-subs {url} 看有哪些。")
     # 依語言優先序挑
     by_lang = {f.name.split(".")[1]: f for f in files}
     chosen_lang = next((l for l in langs if l in by_lang), next(iter(by_lang)))
-    events = parse_json3(by_lang[chosen_lang])
+    chosen = by_lang[chosen_lang]
+    events = parse_json3(chosen) if chosen.suffix == ".json3" else parse_vtt(chosen)
     for f in files:
         if f != by_lang[chosen_lang]:
             f.unlink()
@@ -83,6 +109,33 @@ def fetch(url: str, langs: list[str], vdir: Path, output_lang: str = "zh-TW") ->
     return meta
 
 
+def fetch_blog(url: str, vid: str, vdir: Path, output_lang: str = "zh-TW") -> dict:
+    """部落格：正文段落 → transcript.json（start = 閱讀秒數），文章裡的圖片列在 images 給步驟 4 挑。"""
+    import blog
+
+    art = blog.extract(blog.fetch_html(url), url)
+    meta = {
+        "video_id": vid,
+        "source": "blog",
+        "title": art["title"],
+        "channel": art["author"] or art["site"],
+        "site": art["site"],
+        "duration": art["duration"],  # 閱讀時間（秒）
+        "url": url,
+        "upload_date": art["date"],
+        "thumbnail": art["image"],
+        "chapters": art["chapters"],
+        "transcript_lang": art["lang"],
+        "output_lang": output_lang,
+        "chars": art["chars"],
+        "n_images": len(art["images"]),
+    }
+    save_json(vdir / "meta.json", meta)
+    save_json(vdir / "transcript.json", {"video_id": vid, "source": "blog", "lang": art["lang"],
+                                         "events": art["events"], "images": art["images"]})
+    return meta
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("url")
@@ -97,18 +150,30 @@ def main(argv=None):
     if vdir and (vdir / "transcript.json").exists() and not args.force:
         print(f"跳過：{vdir / 'transcript.json'} 已存在（--force 重抓）")
         return
-    url = args.url if args.url.startswith("http") else f"https://www.youtube.com/watch?v={vid}"
+    blog_src = is_blog(vid)
+    if args.url.startswith("http"):
+        url = args.url
+    elif blog_src:  # 只給 id 的部落格站：網址要從已有的 meta.json / estimate.json 找
+        src = next((load_json(vdir / f).get("url") for f in ("meta.json", "estimate.json")
+                    if vdir and (vdir / f).exists()), None)
+        if not src:
+            raise SystemExit(f"{vid} 是部落格站但 workspace 裡沒有它的網址，請直接給 URL")
+        url = src
+    else:
+        url = f"https://www.youtube.com/watch?v={vid}"
     # 資料夾名要用標題，但標題要抓完才知道：先下到暫存夾，再搬到正式資料夾
     tmp = args.workspace / f".tmp-{vid}"
     tmp.mkdir(parents=True, exist_ok=True)
     t0 = time.monotonic()
-    meta = fetch(url, args.lang.split(","), tmp, args.output_lang)
+    meta = (fetch_blog(url, vid, tmp, args.output_lang) if blog_src
+            else fetch(url, args.lang.split(","), tmp, args.output_lang))
     vdir = video_dir(vid, args.workspace, title=meta["title"])
     for f in tmp.iterdir():
         f.replace(vdir / f.name)
     tmp.rmdir()
     record_timing(vdir, "fetch", time.monotonic() - t0)
-    print(f"OK {meta['title']} ({meta['duration']}s, 字幕 {meta['transcript_lang']}) → {vdir}")
+    what = f"閱讀約 {meta['duration']:.0f}s、{meta['n_images']} 張圖" if blog_src else f"{meta['duration']}s, 字幕 {meta['transcript_lang']}"
+    print(f"OK {meta['title']} ({what}) → {vdir}")
     print_step("fetch", meta["title"])
 
 

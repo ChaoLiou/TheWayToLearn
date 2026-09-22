@@ -18,6 +18,8 @@ segment:                 # agent 切段
 
 shot:
   frames_per_segment: 2
+  max_frames: 12         # 整支影片的截圖上限（shots: auto）——超過就只留最關鍵的
+  max_frames_many: 24    # shots: many 的上限（投影片型影片）
   sec_per_frame: 2       # ffmpeg seek + 抽一幀
 
 analyze:                 # agent 逐段寫說明
@@ -34,4 +36,13 @@ overview:                # 跨影片彙整（前情提要、總結、三個下�
   base_sec: 40
   per_video_sec: 20
 
+blog:                    # 來源是部落格文章時（非 YouTube 網址）
+  cjk_chars_per_min: 350 # 中文閱讀速度：時間軸用「讀到這裡要幾秒」
+  words_per_min: 220     # 英文閱讀速度
+  fetch_sec: 5           # 抓頁面 + 抽正文
+  sec_per_image: 1       # 步驟 4 每張圖下載（不用 ffmpeg）
+
 tokens_per_transcript_word: 1.6   # 中文字/英文字 → token 粗估
+
+balance:                 # 消化平衡閥（PACER：沒消化就別再吸收）
+  max_backlog: 20        # digest.py --backlog 的未做總數超過這個，/learn 先停下來建議消化；--force 硬跑
