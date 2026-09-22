@@ -19,6 +19,10 @@ description: 使用者貼 YouTube 連結或部落格文章網址並要求學習�
 ```
 /learn <url> [--shots auto|none|many] [--vision true|false|auto] <url> ...
        # 選項只影響前一個 URL；預設 shots=auto、vision=true
+/learn <playlist_url> [--playlist-items 1-10] [--playlist-limit N]
+       # YouTube 播放清單：展開成清單順序，一支一支跑
+/learn <watch?v=…&list=…> [--playlist one|all|from-here]
+       # 從清單裡點進來的單支：預設只做那一支，要整串就 all / from-here
 /learn input.yaml
 /learn --from <stage> <id>        # 從某階段往後重跑：fetch|segment|shot|analyze|digest|render|narrate|listen
 /learn --dry-run <url> ...        # 只列各階段會跳過/執行
@@ -32,6 +36,37 @@ description: 使用者貼 YouTube 連結或部落格文章網址並要求學習�
 - narrate：沒有原聲，clip 改成用文章語言的另一個聲音朗讀原文
 - plan.html：時間顯示成 ¶段落編號，連結用 text fragment 跳到原文那一段
 `--shots` / `--vision` / `--digest` / `--narrate` / `--listen` 對文章同樣有效（`--shots none` = 不取文中圖片）。
+
+## 來源是播放清單時（一支一支照順序跑）
+
+網址分兩種：
+- `youtube.com/playlist?list=…`（純清單）＝ **這一串，照順序做**，直接往下走。
+- `watch?v=…&list=…&index=N`（從清單裡點進某一支）＝ **有歧義**：可能只想看這一支，也可能想跟著清單往下上。
+  先跑 `playlist.py <網址>` 看清單有幾支、使用者點的是第幾支（`index=N`），再用 AskUserQuestion 問一次，三個選項：
+  「只做這一支（推薦）」「從第 N 支開始到最後（`--playlist from-here`）」「整份清單 N 支（`--playlist all`）」，
+  並附上各自的總時間／token（estimate 的數字）。使用者已經說了（「整個清單」「這一集就好」「從這裡往後」）就照做，不要問。
+
+確定要做整串（或一段）之後：
+
+1. 先展開，看到清單內容再決定做幾支：
+   ```
+   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/playlist.py <url> [--items 1-10] [--limit N]
+   ```
+   把它印出的編號列表**原樣**給使用者看（清單名、幾支、總時長、每支標題與長度）。列表下方的「跳過：…」是清單裡抓不到的影片（會員限定、私人、已刪除）——**一定要講**，尤其整份清單只剩一兩支能做時，先說清楚再問要不要繼續。
+2. 用 AskUserQuestion 問一次要做幾支，選項例如「前 3 支（先試水溫，推薦）」「前 10 支」「全部 N 支」「自己指定範圍」。
+   一次做完整份長清單很貴：把 estimate 的總時間／token 當成理由講清楚，**不要**直接全跑。
+   使用者已經說了範圍（「前五支」「第 3 到 7 集」）就照做，不要再問。
+3. 把選到的影片**依清單順序**寫進 `workspace/input.yaml`（`playlist.py --urls` 可直接拿到網址；既有的 input.yaml 一樣先讀進來去重合併）。
+   `--shots` / `--vision` 等選項套用在清單裡每一支。
+4. `/learn-estimate` 一次估全部（`estimate.py` 吃播放清單網址會自己展開，也可以直接把展開後的網址列給它），表格原樣轉給使用者。
+5. **一支跑完整條流程再跑下一支**，順序就是清單順序：第 1 支 fetch → segment → shot → analyze → digest → render 全部做完、
+   把 `plan.html` 路徑交給使用者（他可以先開始讀），再開始第 2 支。不要把十幾支的 fetch 全部先跑掉。
+   - 每支開頭報一行「第 k/N 支：<標題>」，跑完報一行結果，讓進度看得見。
+   - 某一支失敗（沒有字幕、影片被下架）就**跳過它繼續下一支**，最後一起列出跳過了哪幾支、為什麼，不要整條流程停掉。
+   - `atlas` / `listen` 這種 workspace 層級的步驟在**全部跑完之後做一次**就好；`narrate` 可以在每支 render 後派 subagent 背景跑。
+6. 播放清單通常是同一主題的系列課：`/learn-atlas` 時把它們連成一條 `next` 鏈（清單順序就是先後順序），並放進同一個 region。
+
+清單裡已經做過的站（workspace 有該 id 的資料夾且 `plan.html` 存在）直接跳過，說一句「第 k 支已經做過，跳過」——所以中途停掉再貼同一個清單網址，就是接著上次的地方繼續。
 
 ## 開始前：確認參數
 

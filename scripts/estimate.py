@@ -1,8 +1,11 @@
 """/learn-estimate：只用 yt-dlp --dump-json 拿 metadata，估各階段時間/token/磁碟，不下載。
 部落格網址則抓一次頁面算閱讀時間與圖片數（頁面很小，等於免費）。
 
+播放清單網址（/playlist?list=…）會自動展開成清單順序的每一支再估。
+
 用法：
   uv run scripts/estimate.py <url|id> [<url|id> ...] [--vision true|false|auto] [--json]
+  uv run scripts/estimate.py <playlist_url> [--playlist-items 1-10|--playlist-limit N]
   uv run scripts/estimate.py --input input.yaml
 輸出：每支影片分階段表 + 每支小計 + 全部總和；同時寫 workspace/<id>/estimate.json。
 """
@@ -19,9 +22,11 @@ from common import (
     DEFAULT_WORKSPACE,
     config_file,
     fmt_dur,
+    is_playlist_url,
     is_youtube_url,
     load_input,
     load_yaml,
+    playlist_id,
     print_step,
     save_json,
     video_dir,
@@ -192,18 +197,36 @@ def main(argv=None):
                     help="auto=只截看了才懂的畫面（預設）｜none=完全不截圖，也不下載影片｜many=每段至少一張")
     ap.add_argument("--max-shots", type=int, default=None,
                     help="整支影片的截圖上限（預設看 config/estimate.yaml 的 shot.max_frames）")
+    ap.add_argument("--playlist-items", help="播放清單只取這些（yt-dlp 範圍語法，例如 1-10、3,5,7-9）")
+    ap.add_argument("--playlist-limit", type=int, help="播放清單只取前 N 支")
+    ap.add_argument("--playlist", default="one", choices=["one", "all", "from-here"],
+                    help="watch?v=…&list=… 這種「清單裡的某一支」怎麼處理："
+                         "one=只做那一支（預設）｜all=整份清單｜from-here=從那一支到最後")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--json", action="store_true", help="只輸出 JSON")
     args = ap.parse_args(argv)
 
     cfg = load_yaml(config_file("estimate.yaml"))
     if args.input:
-        inp = load_input(args.input)
+        inp = load_input(args.input)  # 裡面若有播放清單網址已經展開
         videos = [(v["url"], str(v["vision"]).lower(), str(v.get("shots", "auto")), v.get("max_shots"))
                   for v in inp["videos"]]
         workspace = Path(inp["out"])
     else:
-        videos = [(u, args.vision, args.shots, args.max_shots) for u in args.urls]
+        given = [{"url": u, "items": args.playlist_items, "limit": args.playlist_limit} for u in args.urls]
+        for u in args.urls:  # 帶著清單、但指定了某一支：預設只做那一支，把另外兩條路寫出來
+            if args.playlist == "one" and playlist_id(u) and not is_playlist_url(u):
+                print(f"註：{u}\n    帶著播放清單 {playlist_id(u)}，這裡只做指定的那一支。"
+                      f"整份清單加 --playlist all，從這一支開始加 --playlist from-here。\n")
+        if any(is_playlist_url(u, only=(args.playlist == "one")) for u in args.urls):
+            import playlist
+            before = len(given)
+            given = playlist.expand_videos(given, mode=args.playlist)
+            print(f"播放清單展開成 {len(given)} 支（{before} 個網址），依清單順序：")
+            for i, v in enumerate(given, 1):
+                print(f"  {i:>3}. {v['url']}")
+            print()
+        videos = [(v["url"], args.vision, args.shots, args.max_shots) for v in given]
         workspace = args.workspace
     if not videos:
         ap.error("要給 URL 或 --input")

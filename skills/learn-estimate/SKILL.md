@@ -7,6 +7,7 @@ description: [步驟 1/10·估成本] 只給 YouTube 連結或部落格網址就
 
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <url> [<url> ...] [--shots auto|none|many] [--vision true|false|auto]
+uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <playlist_url> [--playlist-items 1-10|--playlist-limit N]
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py --input input.yaml
 ```
 
@@ -15,6 +16,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/e
 - `--shots none` 時不計截圖與影片下載，analyze 也不含讀圖成本；表頭會顯示 `shots=none`。
 - `vision=auto` 時以 false 估，並另列「若 true 再加多少」，讓使用者決定。
 - 出現「沒有任何字幕」的警告要特別指出，那支影片目前跑不了。
+- **播放清單網址**（`/playlist?list=…`）：自動展開成清單順序的每一支再估，最前面會印展開了哪幾支——那行也原樣貼給使用者，並提醒總和是整份清單的成本；只想做前幾支就用 `--playlist-items 1-5`。想先看清單內容不估成本，跑 `scripts/playlist.py <url>`。`watch?v=…&list=…`（從清單裡點進某一支）預設只做那一支，並印一行「註：…帶著播放清單 …」——看到這行就問使用者要哪一種：`--playlist all`（整份清單）／`--playlist from-here`（從這一支到最後）／不加（只這一支）。
 - **部落格網址**（非 YouTube）：抓一次頁面算閱讀時間與圖片數，表頭顯示「文章，閱讀約 …」；截圖上限套用在文中圖片數上，沒有影片下載量。
 - 係數在 `config/estimate.yaml`；使用者覺得估得不準就改係數，不改程式。
 - 結果寫在 `workspace/<影片標題>/estimate.json`，render 會拿來跟實際耗時對照。

@@ -73,6 +73,32 @@ def is_youtube_url(s: str) -> bool:
     return bool(_YT_HOST.match(s))
 
 
+_LIST_RE = re.compile(r"[?&]list=([A-Za-z0-9_-]+)")
+
+
+def playlist_id(url: str) -> str | None:
+    """YouTube 網址裡的播放清單 id（`list=`），沒有就回 None。"""
+    if not is_youtube_url(url):
+        return None
+    m = _LIST_RE.search(url)
+    return m.group(1) if m else None
+
+
+def playlist_index(url: str) -> int | None:
+    """`watch?v=…&list=…&index=N` 的 N：使用者是從清單第幾支點進來的。"""
+    m = re.search(r"[?&]index=(\d+)", url)
+    return int(m.group(1)) if m and playlist_id(url) else None
+
+
+def is_playlist_url(url: str, only: bool = True) -> bool:
+    """這個網址要不要當播放清單展開。
+    only=True（預設）：只有同時沒指定某一支影片時才算（`/playlist?list=…`）；
+    `watch?v=X&list=Y` 是「清單裡的第 X 支」，預設只做那一支，only=False 才連整份清單一起算。"""
+    if not playlist_id(url):
+        return False
+    return not (only and _ID_RE.search(url))
+
+
 def video_id(url_or_id: str) -> str:
     """接受 URL 或裸 id，回傳 11 碼 id。YouTube 以外的網址當成部落格文章，id 由網址算出。"""
     if re.fullmatch(r"[A-Za-z0-9_-]{11}", url_or_id):
@@ -82,6 +108,9 @@ def video_id(url_or_id: str) -> str:
         return m.group(1)
     if re.match(r"^https?://", url_or_id, re.IGNORECASE) and not is_youtube_url(url_or_id):
         return blog_id(url_or_id)
+    if playlist_id(url_or_id):
+        raise ValueError(f"這是播放清單不是單支影片: {url_or_id}\n"
+                         f"先展開：scripts/playlist.py <網址>（estimate.py 與 /learn 會自動展開）")
     raise ValueError(f"看不出 video id: {url_or_id}")
 
 
@@ -174,11 +203,15 @@ def load_yaml(p: Path):
 
 
 def load_input(p: Path) -> dict:
-    """input.yaml → 正規化：每支影片有 url/id/vision。"""
+    """input.yaml → 正規化：每支影片有 url/id/vision；播放清單網址就地展開成清單順序的每一支。"""
     data = load_yaml(p)
     data.setdefault("lang", ["zh-TW", "zh", "en"])
     data.setdefault("out", str(DEFAULT_WORKSPACE))
     data.setdefault("output_lang", "zh-TW")  # /learn 依對話語言填
+    if any(playlist_id(str(v.get("url", ""))) for v in data["videos"]):
+        # 只有真的有清單時才載（展不展開由 expand_videos 依該筆的 playlist 決定）
+        from playlist import expand_videos
+        data["videos"] = expand_videos(data["videos"])
     for v in data["videos"]:
         v["id"] = video_id(v["url"])
         v.setdefault("vision", True)

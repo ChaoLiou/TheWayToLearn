@@ -16,7 +16,8 @@ uv sync                                   # 安裝依賴（Python 3.11+，yt-dlp
 uv run pytest -q                          # 全部測試
 uv run pytest tests/test_validate.py -k forward   # 單一測試
 uv run ruff check scripts tests           # lint
-uv run scripts/estimate.py <url> ...      # 估時間成本，不下載
+uv run scripts/estimate.py <url> ...      # 估時間成本，不下載（播放清單網址會自動展開）
+uv run scripts/playlist.py <playlist_url> # 展開播放清單：依清單順序列出每一支（--items 1-10 / --urls / --json）
 uv run scripts/fetch.py <url>             # 抓字幕 + meta（非 YouTube 網址 = 部落格文章，抓正文段落）
 uv run scripts/screenshot.py <id>         # 下載 + ffmpeg 抽幀（讀 segments.json）
 uv run scripts/validate.py <segments|analysis|overview> <file.json>
@@ -38,6 +39,15 @@ uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudfl
 
 使用者給一串 YouTube 連結（或部落格文章網址）→ 程式抓取 transcript 與重要時間點的截圖 → 產出一份「學習規劃」文件。
 最終交付形式是一個 **skill**（給 AI agent 使用），加上 agent 執行該 skill 所需的全部程式。
+
+## 來源也可以是播放清單
+
+貼 `youtube.com/playlist?list=…` 就是「這一串，照順序做」。展開集中在一個地方，下游完全不知道有播放清單這回事：
+- `scripts/playlist.py`：`yt-dlp --flat-playlist --dump-json` 列出清單，`entries()` 回清單順序的影片（失效／私人／**會員限定、付費、需登入**（`availability`）／清單內重複的跳過並記在 `skipped`，免得跑到 fetch 才發現抓不到），每支換成乾淨的 `watch?v=` 網址（去掉 `list=`），所以 `--no-playlist` 不再有歧義。
+- `expand_videos(videos, mode="one")`：就地把清單那筆換成它的每一支，順序不變、繼承同一筆的 `shots` / `vision` / `max_shots`；`items`（`1-10`）或 `limit` 可限定範圍。`common.load_input()` 與 `estimate.py` 的指令列各呼叫它一次（`load_input` 只在網址真的有 `list=` 時才 import，免得每次都載 yt-dlp）。
+- **`watch?v=…&list=…&index=N`（從清單裡點進某一支）是有歧義的**，用 mode 決定：`one`（預設，只做那一支）／`all`（整份清單）／`from-here`（從那一支到最後，靠 `entries(from_here=True)` 砍掉前面的）。指令列是 `estimate.py --playlist one|all|from-here`、`playlist.py --from-here`，input.yaml 則在該筆寫 `playlist: all`。`/learn` 遇到這種網址一定問一次（三個選項），`estimate.py` 預設只做那一支但會印一行「註：…帶著播放清單 …」提醒還有另外兩條路。`common.playlist_index(url)` 讀 `index=N`。
+- `video_id()` 拿到純清單網址會報「這是播放清單不是單支影片」並指向 `playlist.py`。
+- `/learn` 拿到清單：先 `playlist.py` 展開給使用者看、問要做幾支（不預設全跑），再**一支跑完整條流程才跑下一支**（讀者可以先讀第一支的 `plan.html`）；已經有 `plan.html` 的站跳過，所以重貼同一個清單就是接續上次。atlas 時把清單連成一條 `next` 鏈、同一個 region。
 
 ## 來源也可以是部落格文章
 
