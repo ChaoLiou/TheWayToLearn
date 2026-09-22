@@ -50,6 +50,22 @@ def test_shot_outside_segment():
     assert any("不在段落時間內" in e for e in check_segments(s))
 
 
+def test_shots_over_cap_rejected():
+    s = copy.deepcopy(SEGMENTS)
+    s["segments"][1]["shots"] = [{"t": 200 + i, "why": "w"} for i in range(20)]
+    assert any("超過整支上限" in e for e in check_segments(s))
+    s["max_shots"] = 30
+    assert check_segments(s) == []
+
+
+def test_many_mode_has_higher_cap():
+    s = copy.deepcopy(SEGMENTS)
+    s["segments"][1]["shots"] = [{"t": 200 + i, "why": "w"} for i in range(15)]
+    assert any("超過整支上限" in e for e in check_segments(s))
+    s["shots_mode"] = "many"
+    assert check_segments(s) == []
+
+
 def test_issue_quote_must_be_verbatim():
     from validate import validate
     assert validate("analysis", FX / "測試影片 A: B/analysis.json") == []

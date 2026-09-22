@@ -4,6 +4,7 @@
 
 輸出：workspace/<影片標題>/lesson.mp3（TTS 與原聲交錯）與 lesson.json（章節時間軸）。
 clip 有 translation 時另外產 lesson.dub.mp3：原聲換成另一個聲音唸翻譯，網頁上可以切換。
+部落格站沒有原聲：clip 改成用文章語言的另一個聲音逐句朗讀原文（同樣可以有翻譯配音）。
 需要 ffmpeg；TTS 用 edge-tts（免費、需網路）。
 """
 from __future__ import annotations
@@ -25,7 +26,9 @@ from common import (
     DEFAULT_WORKSPACE,
     Timer,
     fmt_dur,
+    is_blog,
     load_json,
+    locked,
     print_step,
     save_json,
     video_dir,
@@ -177,29 +180,46 @@ def dub_part_name(i: int, j: int, text: str, voice: str, rate: str) -> str:
 
 
 DUB_MIN, DUB_MAX = 12, 60  # 一句配音的字數：太短就併回前一句，太長就再斷一次
-SENT_END = re.compile(r"(?<=[。！？!?；;])|\n+")
+SENT_END = re.compile(
+    r"(?<=[。！？!?；;])(?![」』）〉》\"'”’)])|(?<=[。！？!?；;][」』）〉》\"'”’)])|\n+"
+    r"|(?<=[.!?])\s+(?=[A-Z0-9“\"(])|(?<=[.!?][\"”’)])\s+(?=[A-Z0-9“\"(])"  # 英文：句點後接大寫才算句尾（3.5 不切）
+)
 
 
-def dub_lines(text: str) -> list[str]:
-    """把整段翻譯切成一句一句：每句各自 TTS，長度就是 karaoke 高亮的依據，不必猜時間。"""
+_CJK = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]")
+
+
+def dub_lines(text: str, max_len: int | None = None) -> list[str]:
+    """把整段翻譯切成一句一句：每句各自 TTS，長度就是 karaoke 高亮的依據，不必猜時間。
+    英文一句的字元數是中文的三倍左右，朗讀原文時 max_len 要放大，否則會斷在半句。"""
+    max_len = max_len or (DUB_MAX if _CJK.search(text) else DUB_MAX * 3)
     out: list[str] = []
     for chunk in SENT_END.split(text):
         c = (chunk or "").strip()
-        while len(c) > DUB_MAX:
-            i = max((c.rfind(x, 0, DUB_MAX + 1) for x in "，、,：: "), default=-1)
+        while len(c) > max_len:
+            i = max((c.rfind(x, 0, max_len + 1) for x in "，、,：: "), default=-1)
             if i <= 0:
-                i = DUB_MAX - 1
+                i = max_len - 1
             out.append(c[:i + 1].strip())
             c = c[i + 1:].strip()
         if c:
             out.append(c)
     merged: list[str] = []
     for sline in out:
-        if merged and len(merged[-1]) < DUB_MIN and len(merged[-1]) + len(sline) <= DUB_MAX:
+        if not re.search(r"\w", sline):  # 只剩「」」」之類的標點：edge-tts 會回 NoAudioReceived，併回前一句
+            if merged:
+                merged[-1] += sline
+            continue
+        if merged and len(merged[-1]) < DUB_MIN and len(merged[-1]) + len(sline) <= max_len:
             merged[-1] += sline
         else:
             merged.append(sline)
     return merged
+
+
+def read_texts(events: list[dict], start: float, end: float) -> list[str]:
+    """部落格 clip 要朗讀的原文：範圍內的段落，逐句切開。"""
+    return [ln for e in events if start - 1e-6 <= e["start"] < end for ln in dub_lines(e["text"])]
 
 
 def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
@@ -215,8 +235,14 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
 
     blocks = nar["blocks"]
     has_clip = any(b["kind"] == "clip" for b in blocks)
-    audio = ensure_audio(vid, vdir) if has_clip else None
+    blog_src = is_blog(meta)
+    audio = ensure_audio(vid, vdir) if has_clip and not blog_src else None
     events = load_json(vdir / "transcript.json")["events"] if has_clip else []
+    # 部落格沒有原聲：用文章語言、跟講解不同的聲音朗讀原文
+    read_lang = meta.get("transcript_lang") or lang
+    read_voice = nar.get("read_voice") or voice_for(read_lang)
+    if read_voice == voice:
+        read_voice = dub_voice_for(read_lang, voice)
     parts_dir = vdir / "lesson_parts"
     parts_dir.mkdir(exist_ok=True)
 
@@ -228,6 +254,7 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
         wanted.add(p.name)
         cached = p.exists() and not no_cache
         at = t
+        block_parts = [p]
         if b["kind"] == "say":
             if not cached:
                 synth(b["text"], voice, rate, p)
@@ -236,6 +263,21 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
             d = duration(p)
             lines = [{"at": round(t, 2), "dur": round(d, 2), "text": b["text"]}]
             src = (None, None)
+        elif blog_src:  # 朗讀原文：一句一個檔，長度就是高亮節奏
+            src = snap(events, b["start"], b["end"])
+            block_parts, lines, off = [], [], 0.0
+            for j, text in enumerate(read_texts(events, src[0], src[1]), 1):
+                q = parts_dir / dub_part_name(i, j, text, read_voice, rate).replace("_dub", "_read")
+                wanted.add(q.name)
+                if q.exists() and not no_cache:
+                    reused += 1
+                else:
+                    synth(text, read_voice, rate, q)
+                du = duration(q)
+                lines.append({"at": round(t + off, 2), "dur": round(du, 2), "text": text})
+                block_parts.append(q)
+                off += du
+            d = off
         else:
             src = snap(events, b["start"], b["end"])
             pre = min(PRE_ROLL, src[0])
@@ -254,7 +296,7 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
                                  if b["kind"] == "clip" and abs(c["start"] - b["start"]) < 1), ""),
         }
         timeline.append(entry)
-        parts.append(p)
+        parts.extend(block_parts)
         t += d
 
         if no_dub:
@@ -279,7 +321,7 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
             delta = dt - at
             dtl.append(dict(entry, at=round(dt, 2),
                             lines=[dict(x, at=round(x["at"] + delta, 2)) for x in lines]))
-            dparts.append(p)
+            dparts.extend(block_parts)
             dt += d
 
     for f in parts_dir.iterdir():  # 清掉已經用不到的舊片段
@@ -299,7 +341,9 @@ def build(vdir: Path, vid: str, voice: str | None, rate: str | None,
 
     lesson = {
         "video_id": vid, "voice": voice, "rate": rate,
+        "read_voice": read_voice if blog_src and has_clip else None,
         "duration": round(t, 2), "file": out.name,
+        "created": datetime.now(UTC).astimezone().isoformat(timespec="seconds"),
         "chapters": chapters_of(timeline), "timeline": timeline,
         "dub": dub,
         "reused_parts": reused, "total_parts": len(parts) + (len(dparts) if dub else 0),
@@ -353,7 +397,18 @@ def main(argv=None):
     if lesson["dub"]:
         n_dub = sum(1 for e in lesson["dub"]["timeline"] if e["kind"] == "dub")
         print(f"   翻譯版 {fmt_dur(lesson['dub']['duration'])}（{n_dub} 段配音，{lesson['dub']['voice']}）→ {vdir / 'lesson.dub.mp3'}")
+    refresh_listen(args.workspace)
     print_step("narrate", f"{fmt_dur(lesson['duration'])} 聽力版")
+
+
+def refresh_listen(ws: Path) -> None:
+    """多了一集就重產 podcast 頁（listen.html）；失敗不影響聽力版本身。"""
+    try:
+        from listen import render as render_listen
+        with locked(ws / ".listen.lock", "listen.html"):
+            render_listen(ws)
+    except Exception as e:  # noqa: BLE001
+        print(f"（listen.html 沒更新：{e}；手動跑 scripts/listen.py）")
 
 
 if __name__ == "__main__":

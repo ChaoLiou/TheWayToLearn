@@ -56,6 +56,33 @@
   .v-nav.prev { left:.5rem; } .v-nav.next { right:.5rem; }
   .v-nav[hidden] { display:none; }
 
+  /* 勘誤／過時：plan.html 與 atlas.html 共用同一套外觀
+     紅八角 = 確定錯誤／已過時；橘三角 = 見仁見智 */
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem .6rem; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .issue { border-left:4px solid; border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .issue.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+  .issue.debatable { border-color:var(--debat); background:var(--debat-bg); }
+  .issue .lvl { display:inline-flex; align-items:center; gap:.25rem; font-size:.72rem; font-weight:700;
+                padding:.05rem .5rem; border-radius:999px; color:#fff; margin-right:.4rem; }
+  .issue .lvl svg { width:.9em; height:.9em; }
+  .issue.wrong .lvl { background:var(--wrong); } .issue.debatable .lvl { background:var(--debat); }
+  .issue blockquote { margin:.3rem 0; padding-left:.6rem; border-left:2px solid var(--line); color:var(--muted); font-style:italic; }
+  .issue .ev { font-size:.85rem; color:var(--muted); }
+  table.issues-sum { width:100%; }
+  table.issues-sum th { background:var(--card); text-align:left; font-weight:600; }
+  table.issues-sum td { vertical-align:top; }
+  table.issues-sum td.q { color:var(--muted); font-style:italic; max-width:24rem; }
+  table.issues-sum tr.wrong td:first-child { border-left:4px solid var(--wrong); }
+  table.issues-sum tr.debatable td:first-child { border-left:4px solid var(--debat); }
+  table.issues-sum .lv { display:inline-flex; vertical-align:-.15em; margin-right:.25rem; }
+  table.issues-sum .lv svg { width:.95em; height:.95em; }
+  table.issues-sum tr.wrong .lv { color:var(--wrong); } table.issues-sum tr.debatable .lv { color:var(--debat); }
+  table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
+
 {% block css %}{% endblock %}
 </style>
 </head>
@@ -85,11 +112,16 @@
 {% block json %}{% endblock %}
 <script type="module">
 
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-  mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
-    flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
-  await mermaid.run({ querySelector: ".mermaid" });
+  // 只有頁面真的有圖才去 CDN 抓 mermaid；抓不到（離線）也不能讓下面的搜尋、視窗等失效
+  if (document.querySelector(".mermaid")) {
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
+        flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
+      await mermaid.run({ querySelector: ".mermaid" });
+    } catch (e) { console.warn("mermaid 沒載到：", e); }
+  }
 
   /* mindmap 配色：不吃 mermaid 主題，依 section 上色，線與節點同色，深淺主題都看得清 */
   const PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"];

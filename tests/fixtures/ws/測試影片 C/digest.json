@@ -1,0 +1,15 @@
+{
+  "video_id": "zzzzzzzzzzz",
+  "created": "2026-01-03T00:00:00+00:00",
+  "items": [
+    {"id": 1, "seg_id": 1, "kind": "C", "text": "X 是問題的核心概念", "concept": "X",
+     "relations": [{"to": "A", "rel": "第一個解法"}, {"to": "B", "rel": "結論"}]},
+    {"id": 2, "seg_id": 2, "kind": "P", "text": "用 A 解 X 的步驟",
+     "procedure": ["先量 X", "套 A", "看結果"], "practice_task": "拿你手上的專案跑一次 A，記下結果"},
+    {"id": 3, "seg_id": 2, "kind": "A", "text": "A 像是給 X 裝一個濾網", "new": "A", "known": "濾網",
+     "critique_key": {"alike": "都在擋東西", "unlike": "A 會改變輸入", "breaks": "輸入是串流時"}},
+    {"id": 4, "seg_id": 3, "kind": "E", "text": "作者用 3 個案例證明 B", "detail": "案例 1/2/3 都在 10 秒內收斂",
+     "supports": "X", "rehearse_q": "這三個案例證明了 X 的什麼性質？你會拿它證明什麼？"},
+    {"id": 5, "seg_id": 3, "kind": "R", "text": "B 的預設值", "q": "B 的預設值是多少？", "a": "42"}
+  ]
+}

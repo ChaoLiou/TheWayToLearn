@@ -4,7 +4,8 @@
   uv run scripts/publish.py --deploy                 # 整理後用 wrangler 部署
   uv run scripts/publish.py --project-name my-atlas --deploy
 
-只複製：atlas.html、各站 plan.html、frames/、lesson.mp3、lesson.dub.mp3（外加一份 index.html = atlas.html）。
+只複製：listen.html、digest.html、notes.html、atlas.html、各站 plan.html、frames/、lesson.mp3、lesson.dub.mp3、captions.js
+（外加一份 index.html = listen.html，沒有 listen.html 就用 atlas.html）。
 不複製：原始音訊 audio.mp3、TTS 片段快取 lesson_parts/、transcript 與各種 json（內容已內嵌在 html）。
 """
 from __future__ import annotations
@@ -19,7 +20,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DEFAULT_WORKSPACE, locked
 
 MAX_FILE = 25 * 1024 * 1024  # Cloudflare Pages 單檔上限
-KEEP = ("plan.html", "lesson.mp3", "lesson.dub.mp3")
+KEEP = ("plan.html", "lesson.mp3", "lesson.dub.mp3", "captions.js")
+TOP = ("listen.html", "digest.html", "notes.html", "atlas.html")   # 第一個存在的當 index.html
 
 
 def human(n: int) -> str:
@@ -29,10 +31,14 @@ def human(n: int) -> str:
 def collect(ws: Path) -> list[tuple[Path, Path]]:
     """回傳 [(來源, dist 內的相對路徑)]。"""
     out: list[tuple[Path, Path]] = []
-    atlas = ws / "atlas.html"
-    if atlas.exists():
-        out.append((atlas, Path("atlas.html")))
-        out.append((atlas, Path("index.html")))  # 根網址直接進地圖
+    index_done = False
+    for name in TOP:
+        f = ws / name
+        if f.exists():
+            out.append((f, Path(name)))
+            if not index_done:
+                out.append((f, Path("index.html")))  # 根網址直接進 podcast 頁（沒有就退到文字說明列表）
+                index_done = True
     for d in sorted(p for p in ws.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))):
         for name in KEEP:
             f = d / name

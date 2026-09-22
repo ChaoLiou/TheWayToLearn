@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Why attention is all you need</title>
+<meta property="og:image" content="https://blog.example.com/img/cover.png">
+<meta name="author" content="Jane Doe">
+<meta property="article:published_time" content="2024-03-15T10:00:00Z">
+</head>
+<body>
+<nav><a href="/">Home</a> · <a href="/about">About</a></nav>
+<article>
+<h1>Why attention is all you need</h1>
+<p>Recurrent networks read a sentence one token at a time, which makes them slow to train and forgetful over long spans. This post walks through how attention replaces recurrence with a lookup over every position at once.</p>
+<h2>Queries, keys and values</h2>
+<p>Every token produces three vectors: a query that asks a question, a key that advertises what the token contains, and a value that carries the information actually passed along. The dot product of a query and every key gives a score per position.</p>
+<figure><img src="/img/qkv.png" alt="QKV diagram"><figcaption>Figure 1: query, key, value</figcaption></figure>
+<p>Softmax turns those scores into weights that sum to one, and the output is simply the weighted sum of the values. Nothing here depends on distance, so a token can attend to another token fifty positions away as easily as to its neighbour.</p>
+<pre><code>scores = q @ k.T / sqrt(d)
+weights = softmax(scores)
+out = weights @ v</code></pre>
+<h2>Multiple heads</h2>
+<p>One attention map can only express one kind of relationship. Running several heads in parallel lets the model track syntax in one head and coreference in another, and concatenating them gives the next layer all of it.</p>
+<figure><img src="https://cdn.example.com/heads.jpg" alt="Multi-head attention"></figure>
+<ul><li>Heads are cheap because each one works in a smaller subspace.</li><li>Eight heads is the usual default.</li></ul>
+<p>The takeaway is that attention is a differentiable dictionary lookup, and multiple heads are multiple dictionaries consulted at once. The next question is how the model knows about order at all, which is where positional encodings come in.</p>
+</article>
+<footer>© example</footer>
+</body>
+</html>

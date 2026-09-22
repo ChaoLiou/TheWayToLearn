@@ -6,5 +6,8 @@ videos:
   - url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
     shots: auto          # auto=只截看了才懂的畫面（預設）| none=完全不截圖、不下載影片 | many=每段至少一張
     vision: true         # AI 要不要逐張讀截圖：true | false | auto（預設 true；shots: none 時無意義）
+    max_shots: 12        # 整支影片的截圖上限（預設 12，many 模式 24）；直接決定 analyze 的 token 量
   - url: https://youtu.be/xxxxxxxxxxx   # 畫面沒資訊、重點都在講話
     shots: none
+  - url: https://example.com/blog/some-post   # 非 YouTube 網址 = 部落格文章：正文段落當字幕、閱讀時間當時間軸
+    shots: auto          # 這裡的「截圖」是文中的圖片，挑到的直接下載

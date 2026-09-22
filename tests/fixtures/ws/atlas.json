@@ -14,7 +14,7 @@
     {
       "from": "abcdefghijk",
       "to": "zzzzzzzzzzz",
-      "type": "deepens",
+      "type": "next",
       "via": "共同術語 B"
     }
   ]

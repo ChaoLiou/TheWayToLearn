@@ -1,33 +1,13 @@
 {% extends "_base.html.j2" %}
+{% import "_icons.html.j2" as ic %}
+{% import "_search.html.j2" as search %}
 {% block title %}{{ S.atlas_title }}{% endblock %}
 {% block css %}
   main { max-width: 1180px; }
+  .topnav { display:flex; gap:.4rem 1rem; flex-wrap:wrap; font-size:.9rem; margin:-.6rem 0 1rem; }
+  .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
   .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
-  .route-legend { font-size:.85rem; color:var(--muted); margin:.3rem 0 .8rem; }
-  .route-legend span { margin-right:1rem; }
-  .mm-wrap .node { cursor:pointer; }
-  /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
-  .search { position:relative; margin:.6rem 0 .3rem; }
-  .sbox { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.45rem .6rem;
-          background:var(--card); border:1px solid var(--line); border-radius:10px; cursor:text; }
-  .sbox:focus-within { border-color:var(--accent); }
-  .sbox .ico { color:var(--muted); }
-  .sbox input { flex:1; min-width:11rem; border:none; outline:none; background:none; color:var(--fg); font:inherit; padding:.15rem 0; }
-  .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--accent); color:#fff;
-          border-radius:999px; padding:.1rem .3rem .1rem .55rem; font-size:.83rem; white-space:nowrap; }
-  .chip .k { opacity:.75; font-size:.75rem; }
-  .chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:.95rem; line-height:1; padding:0 .2rem; }
-  .ac { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; margin:0; padding:.25rem 0; list-style:none;
-        background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18);
-        max-height:17rem; overflow:auto; }
-  .ac[hidden] { display:none; }
-  .ac li { display:flex; align-items:center; gap:.5rem; padding:.35rem .7rem; cursor:pointer; font-size:.92rem; }
-  .ac li.on { background:var(--card); }
-  .ac .k { font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3rem; }
-  .ac .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
-  .shint { font-size:.8rem; color:var(--muted); display:flex; gap:1rem; flex-wrap:wrap; margin:.35rem .2rem 1.4rem; }
-  .shint button { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
-  #no-match { color:var(--muted); }
+  {{ search.css() }}
   /* ---- 各站：YouTube 式縮圖卡 ---- */
   .region { margin:2rem 0; padding:1rem 1.2rem; border:2px dashed var(--line); border-radius:12px; }
   .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
@@ -38,8 +18,13 @@
   .wp[hidden] { display:none; }
   .wp .thumb { position:relative; display:block; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
                background:var(--card); border:1px solid var(--line); }
-  .wp .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-  .wp .thumb .ph { display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:1.6rem; }
+  .wp .thumb img { position:relative; width:100%; height:100%; object-fit:cover; display:block; }
+  /* 沒縮圖／圖抓不到：用標題第一個字當縮圖，不留破圖 */
+  /* 沒縮圖：放完整標題，超過四行就截斷加「…」，永遠不溢出 */
+  .wp .thumb .ph { position:absolute; inset:0; display:grid; place-items:center; padding:.6rem .8rem; color:var(--muted);
+                   font-size:.95rem; font-weight:700; line-height:1.3; text-align:center; overflow:hidden; overflow-wrap:anywhere;
+                   background:linear-gradient(135deg, var(--card), var(--line)); user-select:none; }
+  .wp .thumb .ph > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden; }
   .wp .dur { position:absolute; right:.35rem; bottom:.35rem; background:rgba(0,0,0,.8); color:#fff;
              font-size:.75rem; font-weight:600; padding:.05rem .3rem; border-radius:4px; }
   .wp h4 { margin:0; font-size:.98rem; line-height:1.35; color:var(--fg);
@@ -47,9 +32,12 @@
   .wp h4 a { color:inherit; text-decoration:none; }
   .wp h4 a:hover { color:var(--accent); }
   .wp .by { font-size:.88rem; color:var(--muted); }
-  /* 作者錯誤率：紅 = 確定錯誤／已過時，橘 = 見仁見智 */
+  /* 這支影片的勘誤件數：紅 = 確定錯誤／已過時，橘 = 見仁見智；點開看整張表 */
   .err { display:inline-flex; align-items:center; gap:.2rem; margin-left:.35rem; font-size:.74rem; font-weight:600;
-         line-height:1.5; white-space:nowrap; padding:0 .35rem; border-radius:999px; border:1px solid var(--line); }
+         line-height:1.5; white-space:nowrap; padding:0 .35rem; border-radius:999px; border:1px solid var(--line);
+         font-family:inherit; background:none; }
+  button.err { cursor:pointer; }
+  button.err:hover { filter:brightness(1.15); }
   .err svg { width:.85em; height:.85em; }
   .err.w { color:var(--wrong); border-color:var(--wrong); background:var(--wrong-bg); }
   .err.d { color:var(--debat); border-color:var(--debat); background:var(--debat-bg); }
@@ -58,6 +46,7 @@
                 gap:.3rem; flex-wrap:wrap; }
   .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
   .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .wp .wp-err { display:none; }
   .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
   .wp .sub { font-size:.82rem; color:var(--muted); }
   .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted); }
@@ -66,7 +55,7 @@
                   color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
   .wp .wp-info { display:none; }
-  /* 進度：八步各一格 */
+  /* 進度：十步各一格 */
   .wp .prog { display:flex; gap:3px; margin:.1rem 0 0; }
   .wp .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
   .wp .prog span[data-s="done"] { background:var(--accent); }
@@ -83,13 +72,18 @@
   .wp .go.done { background:none; border:1px solid var(--line); color:var(--muted); }
   .wp .go:hover { filter:brightness(1.1); }
   /* 繼續做：選一個目標 → 複製 prompt */
-  #nextstep { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
-              width:min(640px, 94vw); max-height:86vh; padding:0; overflow:hidden; }
-  #nextstep::backdrop { background:var(--overlay); }
-  #nextstep .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
-  #nextstep .head h3 { margin:0; font-size:1.02rem; line-height:1.4; flex:1; }
-  #nextstep .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; }
-  #nextstep .body { padding:.8rem 1.1rem 1.1rem; overflow:auto; max-height:calc(86vh - 4rem); }
+  /* 置中視窗（繼續做／詳細／勘誤）共用同一套外框、標題列與內文 */
+  dialog.modal { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
+                 width:min(560px, 92vw); max-height:86vh; padding:0; overflow:hidden; }
+  dialog.modal::backdrop { background:var(--overlay); }
+  dialog.modal .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
+  dialog.modal .head h3 { margin:0; font-size:1.03rem; line-height:1.4; flex:1; }
+  dialog.modal .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
+  dialog.modal .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
+  dialog.modal .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(86vh - 4.6rem); font-size:.93rem; }
+  dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
+  /* 繼續做：選一個目標 → 複製 prompt */
+  #nextstep { width:min(640px, 94vw); }
   #nextstep ol.steps { list-style:none; margin:.2rem 0 1rem; padding:0; display:grid; gap:.15rem; }
   #nextstep ol.steps li { display:flex; align-items:center; gap:.5rem; font-size:.9rem; color:var(--muted); }
   #nextstep ol.steps li .m { width:1.2rem; text-align:center; }
@@ -110,64 +104,38 @@
   #nextstep .copy { background:var(--accent); color:#fff; border:none; border-radius:6px;
                     padding:.3rem .8rem; cursor:pointer; font:inherit; }
   .wp .terms { font-size:.78rem; color:var(--muted); }
-  /* 詳細：置中視窗 */
-  #wpinfo { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
-            width:min(560px, 92vw); max-height:82vh; padding:0; overflow:hidden; }
-  #wpinfo::backdrop { background:var(--overlay); }
-  #wpinfo .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
-  #wpinfo .head h3 { margin:0; font-size:1.05rem; line-height:1.4; flex:1; }
-  #wpinfo .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
-  #wpinfo .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
-  #wpinfo .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(82vh - 5rem); font-size:.93rem; }
-  #wpinfo .body ul { margin:.3rem 0; padding-left:1.2rem; }
+  /* 詳細 */
   #wpinfo .body .shot { display:block; margin:0 0 .7rem; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
   #wpinfo .body .shot img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
-  /* 地圖上的縮圖節點 */
-  .mm-wrap .node image { border-radius:6px; }
+  /* 勘誤：表格寬一點 */
+  #errinfo { width:min(760px, 94vw); }
   .routes { font-size:.85rem; margin-top:.3rem; }
   .routes .rt { display:inline-block; font-size:.7rem; font-weight:700; padding:0 .4rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
   .routes .via { color:var(--muted); }
 {% endblock %}
 {% block body %}
 <main>
-<h1>{{ S.atlas_h1 }}</h1>
-<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span>{{ S.f("n_route", n=routes|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span></p>
-
-{% if waypoints|length >= 2 %}
-<h2>{{ S.h_map }}</h2>
-<p class="route-legend">{{ S.route_legend | safe }}</p>
-<div class="mm-wrap" data-cap="{{ S.map_cap }}"><pre class="mermaid">
-{{ map_mermaid }}
-</pre></div>
+{% if has_listen or has_notes %}
+<p class="topnav">{% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}{% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}{% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}<a class="on" href="atlas.html">{{ S.nav_atlas }}</a></p>
 {% endif %}
+<h1>{{ S.atlas_h1 }}</h1>
+<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span></p>
 
-{# 勘誤圖示：八角形（danger）= 確定錯誤／已過時；三角形（warning）= 見仁見智。用 currentColor 才能跟著深淺色主題 #}
-{% macro ic_danger() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
-{% macro ic_warn() %}<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>{% endmacro %}
 
 <h2>{{ S.h_stations }}</h2>
-<p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic_danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic_warn() }}{{ S.lvl_debatable }}</span></p>
-<div class="search">
-  <div class="sbox" id="sbox">
-    <span class="ico">🔍</span>
-    <input id="sinput" type="text" placeholder="{{ S.search_ph }}" autocomplete="off"
-           aria-label="{{ S.search_ph }}" aria-expanded="false" role="combobox" aria-controls="ac">
-  </div>
-  <ul class="ac" id="ac" role="listbox" hidden></ul>
-</div>
-<p class="shint"><span id="count">{{ S.f("showing", n=waypoints|length, total=waypoints|length) }}</span><span>{{ S.search_hint }}</span><button id="clear" type="button" hidden>{{ S.clear_all }}</button></p>
-<p id="no-match" hidden>{{ S.no_match }}</p>
+<p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic.danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic.warn() }}{{ S.lvl_debatable }}</span></p>
+{{ search.bar(S, waypoints|length) }}
 
 {% macro card(w, color, cat) %}
 <article class="wp" data-id="{{ w.id }}" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}">
   <a class="thumb" href="{{ w.href }}">
-    {% if w.yt_thumb or w.thumb %}<img loading="lazy" src="{{ w.yt_thumb or w.thumb }}" data-fallback="{{ w.thumb or '' }}" alt="{{ w.title }}">
-    {% else %}<span class="ph">▶</span>{% endif %}
+    <span class="ph" aria-hidden="true"><span>{{ w.title }}</span></span>
+    {% if w.yt_thumb or w.thumb %}<img loading="lazy" src="{{ w.yt_thumb or w.thumb }}" data-fallback="{{ w.thumb if w.yt_thumb and w.thumb else '' }}" alt="{{ w.title }}">{% endif %}
     <span class="dur">{{ w.duration|dur }}</span>
   </a>
   <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
-  <div class="by">{{ w.channel }}{% if w.author %}{% if w.author.clean %}<span class="err ok" title="{{ w.author.tip }}">{{ S.err_ok }}</span>{% else %}{% if w.author.wrong %}<span class="err w" title="{{ w.author.tip }}">{{ ic_danger() }}{{ w.author.wrong }}</span>{% endif %}{% if w.author.debatable %}<span class="err d" title="{{ w.author.tip }}">{{ ic_warn() }}{{ w.author.debatable }}</span>{% endif %}{% endif %}{% endif %}</div>
-  <div class="sub">{% if w.upload_date %}<span title="{{ w.upload_date }}">{{ w.upload_days|ago }}</span> · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">YouTube</a></div>
+  <div class="by">{{ w.channel }}{% if w.err %}{% if w.err.clean %}<span class="err ok" title="{{ w.err.tip }}">{{ S.err_ok }}</span>{% else %}{% if w.err.wrong %}<button class="err w" type="button" data-err title="{{ w.err.tip }}">{{ ic.danger() }}{{ w.err.wrong }}</button>{% endif %}{% if w.err.debatable %}<button class="err d" type="button" data-err title="{{ w.err.tip }}">{{ ic.warn() }}{{ w.err.debatable }}</button>{% endif %}{% endif %}{% endif %}</div>
+  <div class="sub">{% if w.upload_date %}<span title="{{ w.upload_date }}">{{ w.upload_days|ago }}</span> · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">{{ S.blog_link if w.kind == 'blog' else 'YouTube' }}</a></div>
   <div class="cat"><i style="background:{{ color }}"></i>{{ cat }}</div>
   <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
     {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
@@ -183,12 +151,27 @@
     {% if w.terms %}<div class="terms">{{ S.terms }}{% for t in w.terms[:8] %}<code>{{ t }}</code>{{ ' ' }}{% endfor %}{% if w.terms|length > 8 %}{{ S.f("terms_total", n=w.terms|length) }}{% endif %}</div>{% endif %}
     {% if w.routes_in or w.routes_out %}
     <div class="routes">
-      {% for e in w.routes_in %}<div><span class="rt">{{ S.route(e.type) }} ←</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
-      {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} →</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+      {% for e in w.routes_in %}<div><span class="rt">{{ S.route(e.type) }} {{ '—' if e.type != 'next' else '←' }}</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
+      {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} {{ '—' if e.type != 'next' else '→' }}</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
     </div>
     {% endif %}
     <div><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
   </div>
+  {% if w.issues %}
+  <div class="wp-err">
+    <p class="err-legend"><span class="w">{{ ic.danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic.warn() }}{{ S.lvl_debatable_long }}</span></p>
+    <div style="overflow-x:auto"><table class="issues-sum">
+      <tr><th>{{ S.col_seg }}</th><th>{{ S.col_quote }}</th><th>{{ S.col_note }}</th></tr>
+      {% for iss in w.issues %}
+      <tr class="{{ iss.level }}">
+        <td><span class="lv">{{ ic.level(iss.level) }}</span><a href="{{ w.href }}#{{ w.id }}-s{{ iss.seg_id }}">{{ iss.seg_id }}. {{ iss.seg_title }}</a><br><span class="muted">{{ iss.t|ts }}</span></td>
+        <td class="q">「{{ iss.quote }}」</td>
+        <td>{{ iss.note }}{% if iss.evidence %}<br><span class="ev">{{ S.evidence }}: {{ iss.evidence }}</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table></div>
+  </div>
+  {% endif %}
 </article>
 {% endmacro %}
 {% for r in regions %}
@@ -205,7 +188,7 @@
   <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)', S.unplaced) }}{% endfor %}</div>
 </section>
 {% endif %}
-<dialog id="nextstep">
+<dialog id="nextstep" class="modal">
   <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
   <div class="body">
     <ol class="steps"></ol>
@@ -218,31 +201,21 @@
     </div>
   </div>
 </dialog>
-<dialog id="wpinfo">
+<dialog id="wpinfo" class="modal">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
+  <div class="body"></div>
+</dialog>
+<dialog id="errinfo" class="modal">
   <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
   <div class="body"></div>
 </dialog>
 </main>
 {% endblock %}
 {% block json %}
-<script id="nodes-data" type="application/json">{{ node_ids | tojson }}</script>
 <script id="steps-data" type="application/json">{{ steps_data | tojson }}</script>
-<script id="ui-data" type="application/json">{{ {"author": S.f_author, "category": S.f_category, "title": S.f_title, "any": S.f_any, "showing": S.showing} | tojson }}</script>
+{{ search.json(S) }}
 {% endblock %}
 {% block js %}
-  /* 地圖節點（帶縮圖）→ 點開該站的詳細視窗 */
-  const NODE_IDS = JSON.parse(document.getElementById("nodes-data").textContent);
-  document.querySelectorAll(".mermaid svg .node").forEach((g) => {
-    const mid = (g.id || "").match(/^flowchart-(.+)-\d+$/);   // 帶縮圖的節點文字可能對不上，優先用節點 id
-    const id = (mid && NODE_IDS[mid[1]]) || NODE_IDS[(g.textContent || "").replace(/\s+/g, "")];
-    if (!id) return;
-    g.style.cursor = "pointer";
-    g.addEventListener("click", (e) => {
-      e.stopPropagation();                       // 不要順便打開整張圖的全視窗 viewer
-      const wp = document.querySelector(`.wp[data-id="${id}"]`);
-      if (wp) showInfo(wp);
-    });
-  });
 
   /* 「更新於」在瀏覽當下算相對時間，隔天再打開也不會停在產生時的那一刻 */
   const AGO = {{ {"now": S.ago_now, "today": S.ago_today, "h": S.ago_h, "d": S.ago_d,
@@ -262,7 +235,7 @@
     img.addEventListener("error", () => {
       const fb = img.dataset.fallback;
       if (fb) { img.dataset.fallback = ""; img.src = fb; }
-      else { img.replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "▶" })); }
+      else { img.remove(); }
     });
   });
 
@@ -321,7 +294,7 @@
   NS.querySelector("[data-close]").addEventListener("click", () => NS.close());
   NS.addEventListener("click", (e) => { if (e.target === NS) NS.close(); });
 
-  /* 詳細 → 置中視窗（卡片的「詳細」與地圖節點共用） */
+  /* 詳細 → 置中視窗 */
   const DLG = document.getElementById("wpinfo");
   function showInfo(wp) {
     const h3 = DLG.querySelector(".head h3");
@@ -346,111 +319,21 @@
   });
   DLG.addEventListener("click", (e) => { if (e.target === DLG || e.target.closest("[data-close]")) DLG.close(); });
 
-  /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND ---------- */
-  const UI = JSON.parse(document.getElementById("ui-data").textContent);
-  const CARDS = [...document.querySelectorAll(".wp")].map((el) => ({
-    el, title: el.dataset.title || "", channel: el.dataset.channel || "", category: el.dataset.category || "",
-  }));
-  const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
-        acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
-        clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
-  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any };
-  const chips = [];
-  let acItems = [], acIdx = -1;
-
-  const uniq = (key) => {
-    const m = new Map();
-    CARDS.forEach((c) => { const v = c[key]; if (v) m.set(v, (m.get(v) || 0) + 1); });
-    return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  };
-  const AUTHORS = uniq("channel"), CATS = uniq("category");
-  const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
-  const match = (c, ch) => ch.kind === "author" ? has(c.channel, ch.value)
-    : ch.kind === "category" ? has(c.category, ch.value)
-    : ch.kind === "title" ? has(c.title, ch.value)
-    : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value);
-
-  const refilter = () => {
-    let shown = 0;
-    CARDS.forEach((c) => {
-      const ok = chips.every((ch) => match(c, ch));
-      c.el.hidden = !ok;
-      if (ok) shown++;
+  /* 勘誤膠囊 → 這支影片的勘誤表（同樣是置中視窗） */
+  const EDLG = document.getElementById("errinfo");
+  document.querySelectorAll(".wp button.err[data-err]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const wp = btn.closest(".wp"), tbl = wp.querySelector(".wp-err");
+      if (!tbl) return;
+      const h3 = EDLG.querySelector("h3");
+      h3.innerHTML = "";
+      h3.append({{ S.err_title | tojson }} + " · " + wp.dataset.title,
+        Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
+      EDLG.querySelector(".body").replaceChildren(...[...tbl.children].map((n) => n.cloneNode(true)));
+      EDLG.showModal();
     });
-    document.querySelectorAll("section.region").forEach((sec) => {
-      sec.hidden = ![...sec.querySelectorAll(".wp")].some((w) => !w.hidden);
-    });
-    countEl.textContent = UI.showing.replace("{n}", shown).replace("{total}", CARDS.length);
-    clearEl.hidden = chips.length === 0;
-    noMatch.hidden = shown > 0;
-  };
-
-  const drawChips = () => {
-    box.querySelectorAll(".chip").forEach((e) => e.remove());
-    chips.forEach((ch, i) => {
-      const el = document.createElement("span");
-      el.className = "chip";
-      el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
-      el.querySelector(".k").textContent = KIND[ch.kind] + "：";
-      el.querySelector(".v").textContent = ch.value;
-      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
-      box.insertBefore(el, input);
-    });
-  };
-  const addChip = (kind, value) => {
-    value = value.trim();
-    if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
-    chips.push({ kind, value });
-    input.value = "";
-    drawChips(); refilter(); hideAc();
-  };
-
-  const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
-  const drawAc = () => {
-    const q = input.value.trim();
-    acItems = [];
-    if (q) acItems.push({ kind: "any", value: q, n: null });
-    AUTHORS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "author", value: v, n }));
-    CATS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "category", value: v, n }));
-    if (!acItems.length) return hideAc();
-    acEl.replaceChildren(...acItems.map((it, i) => {
-      const li = document.createElement("li");
-      li.setAttribute("role", "option");
-      li.innerHTML = `<span class="k"></span><span class="v"></span>`;
-      li.querySelector(".k").textContent = KIND[it.kind];
-      li.querySelector(".v").textContent = it.value;
-      if (it.n !== null) { const n = document.createElement("span"); n.className = "n"; n.textContent = it.n; li.appendChild(n); }
-      li.addEventListener("mousedown", (e) => { e.preventDefault(); addChip(it.kind, it.value); });
-      li.addEventListener("mouseenter", () => { acIdx = i; paintAc(); });
-      return li;
-    }));
-    acIdx = q ? 0 : -1;
-    paintAc();
-    acEl.hidden = false;
-    input.setAttribute("aria-expanded", "true");
-  };
-  const paintAc = () => [...acEl.children].forEach((li, i) => li.classList.toggle("on", i === acIdx));
-  const commit = () => {
-    if (acIdx >= 0 && acItems[acIdx]) addChip(acItems[acIdx].kind, acItems[acIdx].value);
-    else if (input.value.trim()) addChip("any", input.value);
-  };
-
-  box.addEventListener("click", (e) => { if (!e.target.closest(".chip")) input.focus(); });
-  input.addEventListener("input", drawAc);
-  input.addEventListener("focus", drawAc);
-  input.addEventListener("blur", () => setTimeout(hideAc, 120));
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      if (acEl.hidden) return drawAc();
-      acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acItems.length) % acItems.length;
-      paintAc();
-    } else if (e.key === "Enter" || e.key === " ") {
-      if (e.key === " " && !input.value.trim() && acIdx < 0) return;
-      e.preventDefault(); commit();
-    } else if (e.key === "Escape") { hideAc(); }
-    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
   });
-  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
-  refilter();
+  EDLG.addEventListener("click", (e) => { if (e.target === EDLG || e.target.closest("[data-close]")) EDLG.close(); });
+
+{{ search.js(".wp", "section.region") }}
 {% endblock %}

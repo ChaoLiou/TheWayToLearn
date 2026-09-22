@@ -1,4 +1,4 @@
-"""/learn-atlas：學習地圖。workspace 下每個影片資料夾是一個 waypoint，atlas.json 記 route 與 region。
+"""/learn-atlas：文字說明列表（atlas.html）。workspace 下每個影片資料夾是一個 waypoint，atlas.json 記 route 與 region。
 
   uv run scripts/atlas.py --status      # 列出所有 waypoint、哪些還沒進 atlas.json、新站與既有站的共同術語
   uv run scripts/atlas.py               # 驗證 atlas.json 並 render workspace/atlas.html
@@ -17,12 +17,15 @@ import jsonschema
 from jinja2 import Environment, FileSystemLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from blog import IMG_EXT
 from common import (
     DEFAULT_WORKSPACE,
     SCHEMAS,
     STEP_CMD,
     STEPS,
     fmt_dur,
+    fmt_ts,
+    is_blog,
     load_json,
     locked,
     print_step,
@@ -31,9 +34,11 @@ from common import (
     write_text,
 )
 from i18n import Strings, norm_lang
-from render import PALETTE, Tips, mm_label
+from render import PALETTE
 
-ROUTE_ARROW = {"prerequisite": "-->", "deepens": "-->", "contrasts": "<-->", "applies": "-->", "related": "---"}
+# 舊的五種型態 → 現在的兩種（--migrate-routes 用）
+ROUTE_MIGRATE = {"prerequisite": "next", "deepens": "next", "applies": "next",
+                 "contrasts": "related", "related": "related"}
 
 
 def fmt_ymd(s: str | None) -> str:
@@ -51,12 +56,12 @@ def days_since(ymd: str | None) -> int | None:
 
 def thumb(d: Path) -> str | None:
     """離線用的備援縮圖：該站第一張截圖；沒截圖就回 None。前端主圖是 YouTube 縮圖。"""
-    frames = sorted((d / "frames").glob("*.jpg")) if (d / "frames").is_dir() else []
+    frames = sorted(p for p in (d / "frames").iterdir() if p.suffix.lower() in IMG_EXT) if (d / "frames").is_dir() else []
     return f"{quote(d.name)}/frames/{quote(frames[0].name)}" if frames else None
 
 
 def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
-    """這一站在八步 pipeline 上走到哪。state：done｜partial｜todo｜skip｜running。
+    """這一站在十步 pipeline 上走到哪。state：done｜partial｜todo｜skip｜running。
     partial 是「做過但缺一塊」——例如聽力版做了卻沒挑原聲片段、原聲沒翻譯、還沒做翻譯配音。"""
     seg = load_json(d / "segments.json") if (d / "segments.json").exists() else None
     lesson = load_json(d / "lesson.json") if (d / "lesson.json").exists() else None
@@ -86,15 +91,26 @@ def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
             return "partial", S.n_no_dub
         return "done", ""
 
+    def listen_state():
+        # podcast 頁是 workspace 層級的：這站沒有聽力版就沒東西可列；有的話要 listen.html 與這站的 captions.js 都在
+        if not lesson:
+            return "skip", S.n_no_lesson
+        ws = d.parent
+        if (ws / "listen.html").exists() and (d / "captions.js").exists():
+            return "done", ""
+        return "todo", ""
+
     raw = {
         "estimate": (("done", "") if (d / "estimate.json").exists() else ("todo", "")),
         "fetch": (("done", "") if (d / "transcript.json").exists() else ("todo", "")),
         "segment": (("done", "") if seg else ("todo", "")),
         "shot": shot_state(),
         "analyze": (("done", "") if (d / "analysis.json").exists() else ("todo", "")),
+        "digest": (("done", "") if (d / "digest.json").exists() else ("todo", "")),
         "render": (("done", "") if (d / "plan.html").exists() else ("todo", "")),
         "atlas": (("done", "") if in_atlas else ("todo", "")) if multi else ("skip", ""),
         "narrate": narrate_state(),
+        "listen": listen_state(),
     }
     return [{"key": k, "n": i, "name": getattr(S, f"stg_{k}"), "state": raw[k][0], "note": raw[k][1]}
             for i, (k, _) in enumerate(STEPS, 1)]
@@ -120,7 +136,7 @@ def next_actions(w: dict, stages: list[dict], S: Strings) -> list[dict]:
     if not acts:  # 全部做完了，還是給重跑最後兩步的入口
         acts = [{"label": S.f("np_redo", stage=x["name"]), "desc": S.np_redo_desc,
                  "prompt": f"{STEP_CMD[x['key']]} {w['id']} --force"}
-                for x in stages if x["key"] in ("analyze", "render", "narrate")]
+                for x in stages if x["key"] in ("analyze", "digest", "render", "narrate")]
     return acts
 
 
@@ -131,13 +147,15 @@ def load_waypoints(ws: Path) -> list[dict]:
             continue
         meta, ov, an = (load_json(d / f) for f in ("meta.json", "_overview.json", "analysis.json"))
         terms = [t["term"] for s in an["segments"] for t in s.get("terms", [])]
-        issues = [i for s in an["segments"] for i in s.get("issues", [])]
+        issues = [dict(i, seg_id=s["id"], seg_title=s["title"])
+                  for s in an["segments"] for i in s.get("issues", [])]
         wps.append({
             "id": meta["video_id"], "dir": d.name, "title": meta["title"], "channel": meta.get("channel"),
             "duration": meta.get("duration", 0), "url": meta.get("url"), "topic": ov["topic"],
             "takeaways": ov.get("takeaways", []), "summary": ov["summary"], "terms": terms,
             "prerequisites": [p["concept"] for p in ov.get("prerequisites", [])],
             "n_segments": len(an["segments"]), "has_plan": (d / "plan.html").exists(),
+            "issues": issues,
             "n_wrong": sum(1 for i in issues if i["level"] == "wrong"),
             "n_debatable": sum(1 for i in issues if i["level"] != "wrong"),
             "output_lang": norm_lang(meta.get("output_lang")),
@@ -145,26 +163,22 @@ def load_waypoints(ws: Path) -> list[dict]:
             "upload_date": fmt_ymd(meta.get("upload_date")),
             "upload_days": days_since(meta.get("upload_date")),
             "thumb": thumb(d),
-            "yt_thumb": f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
+            "kind": "blog" if is_blog(meta) else "youtube",
+            # 文章沒有 YouTube 縮圖：用 og:image，沒有就退回第一張文中圖片
+            "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
+            else f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
         })
     return wps
 
 
-def author_stats(wps: list[dict], S: Strings) -> dict[str, dict]:
-    """每位作者的勘誤數：把同一頻道所有站的 issues 加總。
-    wrong = 確定錯誤／已過時（紅）；debatable = 見仁見智（橘）。卡片上只顯示件數，細節放 tooltip。"""
-    out: dict[str, dict] = {}
-    for w in wps:
-        a = out.setdefault(w["channel"] or "", {"videos": 0, "segments": 0, "wrong": 0, "debatable": 0})
-        a["videos"] += 1
-        a["segments"] += w["n_segments"]
-        a["wrong"] += w["n_wrong"]
-        a["debatable"] += w["n_debatable"]
-    for ch, a in out.items():
-        a["clean"] = not (a["wrong"] or a["debatable"])
-        a["tip"] = S.f("err_tip_ok" if a["clean"] else "err_tip", ch=ch, v=a["videos"],
-                       seg=a["segments"], w=a["wrong"], d=a["debatable"])
-    return out
+def errata_stats(w: dict, S: Strings) -> dict:
+    """這一站（單支影片）的勘誤數：wrong = 確定錯誤／已過時（紅）；debatable = 見仁見智（橘）。
+    卡片上只顯示件數，點下去開視窗看整張表。"""
+    a = {"wrong": w["n_wrong"], "debatable": w["n_debatable"], "segments": w["n_segments"]}
+    a["clean"] = not (a["wrong"] or a["debatable"])
+    a["tip"] = S.f("err_tip_ok" if a["clean"] else "err_tip",
+                   seg=a["segments"], w=a["wrong"], d=a["debatable"])
+    return a
 
 
 def load_atlas(ws: Path) -> dict:
@@ -227,7 +241,7 @@ def status(ws: Path) -> None:
     linked = {w for r in atlas["regions"] for w in r["waypoints"]} | {x for e in atlas["routes"] for x in (e["from"], e["to"])}
     print(f"workspace: {ws}  ·  {len(wps)} 個 waypoint  ·  atlas.json {'存在' if (ws / 'atlas.json').exists() else '不存在'}")
     for w in wps:
-        mark = "已在地圖" if w["id"] in linked else "★ 新站，尚未連進地圖"
+        mark = "已連結" if w["id"] in linked else "★ 新站，尚未連結其他站"
         print(f"\n[{w['id']}] {w['title']}  —  {mark}")
         print(f"   topic: {w['topic']}")
         if w["takeaways"]:
@@ -236,10 +250,10 @@ def status(ws: Path) -> None:
             print("   !! _overview.json 沒有 takeaways，先補")
     new = [w for w in wps if w["id"] not in linked]
     if len(wps) < 2:
-        print("\n只有一站，還不需要地圖。")
+        print("\n只有一站，還不需要 route。")
         return
     if not new:
-        print("\n所有站都已在地圖上。")
+        print("\n所有站都已連結。")
     for w in new:
         print(f"\n== 新站 {w['id']} 與既有站的共同術語 ==")
         mine = {t.lower(): t for t in w["terms"]}
@@ -260,51 +274,6 @@ def status(ws: Path) -> None:
     print(f"\n規則在 rules/atlas.md；更新 {ws / 'atlas.json'} 後跑 uv run scripts/atlas.py")
 
 
-def map_mermaid(wps: list[dict], atlas: dict, tips: Tips, S: Strings) -> tuple[str, dict, list[dict]]:
-    """地圖節點用 mermaid 的 image shape（v11.3+）帶縮圖；回傳的 dict 是「節點文字 → waypoint id」，
-    前端靠它把點擊接到該站的詳細視窗。"""
-    by_id = {w["id"]: w for w in wps}
-    nid = {w["id"]: f"w{i}" for i, w in enumerate(wps)}
-    lines = ["%%{init: {'flowchart': {'curve': 'basis', 'nodeSpacing': 40, 'rankSpacing': 70}}}%%", "graph LR"]
-    node_ids: dict[str, str] = {}
-    placed = set()
-    legend = []
-
-    def node(w, indent="  "):
-        lab = tips.add(mm_label(w["title"], 34), f"{w['title']}\n{w['topic']}\n\n" + "\n".join("• " + t for t in w["takeaways"]))
-        # 兩種 key 都對到同一站：mermaid 的節點 id（svg 上是 flowchart-w9-3）與節點文字（舊的對照方式）
-        node_ids[nid[w["id"]]] = node_ids[lab.replace(" ", "")] = w["id"]
-        img = w["yt_thumb"] or w["thumb"]
-        if img:
-            lines.append(f'{indent}{nid[w["id"]]}@{{ img: "{img}", label: "{lab}", pos: "b", w: 176, h: 99, constraint: "on" }}')
-        else:
-            lines.append(f'{indent}{nid[w["id"]]}["{lab}"]')
-
-    for gi, r in enumerate(atlas["regions"]):
-        color = PALETTE[gi % len(PALETTE)]
-        legend.append({"name": r["name"], "color": color, "id": r["id"]})
-        lines.append(f'  subgraph {r["id"]}["{mm_label(r["name"], 30)}"]')
-        members = []
-        for wid in r["waypoints"]:
-            if wid in by_id:
-                node(by_id[wid], "    "); placed.add(wid); members.append(nid[wid])
-        lines.append("  end")
-        lines.append(f"  style {r['id']} fill:transparent,stroke:{color},stroke-width:2px,stroke-dasharray:6 3")
-        if members:
-            lines.append(f"  classDef {r['id']} fill:{color},fill-opacity:0.3,stroke:{color},stroke-width:2px")
-            lines.append(f"  class {','.join(members)} {r['id']}")
-    for w in wps:
-        if w["id"] not in placed:
-            node(w)
-    for e in atlas["routes"]:
-        if e["from"] not in nid or e["to"] not in nid:
-            continue
-        lab = tips.add(S.route(e["type"]), f"{S.route(e['type'])}: {by_id[e['from']]['title']} → {by_id[e['to']]['title']}\n{e['via']}")
-        lines.append(f'  {nid[e["from"]]} {ROUTE_ARROW[e["type"]]}|"{lab}"| {nid[e["to"]]}')
-    lines.append("  linkStyle default stroke-width:2px,stroke-opacity:0.8")
-    return "\n".join(lines), node_ids, legend
-
-
 def render(ws: Path) -> Path:
     wps, atlas = load_waypoints(ws), load_atlas(ws)
     errs = check_atlas(atlas, wps)
@@ -319,7 +288,7 @@ def render(ws: Path) -> Path:
     for gi, r in enumerate(atlas["regions"]):
         regions.append(dict(r, color=PALETTE[gi % len(PALETTE)], members=[by_id[x] for x in r["waypoints"] if x in by_id]))
     unplaced = [w for w in wps if w["region"] is None]
-    # 地圖語言：atlas.json 的 lang，否則取多數站的 output_lang
+    # 介面語言：atlas.json 的 lang，否則取多數站的 output_lang
     lang = atlas.get("lang") or (max({w["output_lang"] for w in wps}, key=[w["output_lang"] for w in wps].count) if wps else None)
     S = Strings(norm_lang(lang))
     # 每一站走到哪一步，以及「繼續做」要複製的 prompt
@@ -333,20 +302,20 @@ def render(ws: Path) -> Path:
         w["all_done"] = not [x for x in w["stages"] if x["state"] in ("todo", "partial")]
         w["note"] = (S.n_all_done if w["all_done"]
                      else next((x["note"] for x in live if x["note"]), ""))
-    authors = author_stats(wps, S)
     for w in wps:
-        w["author"] = authors[w["channel"] or ""]
-    tips = Tips()
-    mm, node_ids, legend = map_mermaid(wps, atlas, tips, S)
+        w["err"] = errata_stats(w, S)
     env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["dur"] = fmt_dur
+    env.filters["ts"] = fmt_ts
     env.filters["ago"] = lambda d: S.ago_days(d) if d is not None else ""
     now = datetime.now(UTC).astimezone()
     steps_data = {w["id"]: {k: w[k] for k in ("title", "stages", "actions", "n_done", "n_total")} for w in wps}
     html = env.get_template("atlas.html.j2").render(
         waypoints=wps, regions=regions, unplaced=unplaced, routes=atlas["routes"], by_id=by_id,
         steps_data=steps_data,
-        map_mermaid=mm, node_ids=node_ids, legend=legend, tips=tips, S=S,
+        has_listen=(ws / "listen.html").exists(), has_notes=(ws / "notes.html").exists(),
+        has_digest=(ws / "digest.html").exists(),
+        tips={}, S=S,
         generated=now.strftime("%Y-%m-%d %H:%M"), generated_iso=now.isoformat(timespec="seconds"),
     )
     out = ws / "atlas.html"
@@ -360,12 +329,23 @@ def main(argv=None):
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--merge", metavar="PATCH.JSON",
                     help="把新站的 route/region 併進 atlas.json（- = 讀 stdin），再驗證並 render")
+    ap.add_argument("--migrate-routes", action="store_true",
+                    help="把舊的五種 route 型態換成 next / related（via 不動），再 render")
     args = ap.parse_args(argv)
     if args.status:
         status(args.workspace)
         return
     ws = args.workspace
     with locked(ws / ".atlas.lock", "atlas.json"):  # 共用檔，一次只給一個流程寫
+        if args.migrate_routes:
+            atlas = load_atlas(ws)
+            n = 0
+            for e in atlas["routes"]:
+                new = ROUTE_MIGRATE.get(e["type"], e["type"])
+                n += new != e["type"]
+                e["type"] = new
+            save_json(ws / "atlas.json", atlas)
+            print(f"{len(atlas['routes'])} 條 route，其中 {n} 條換了型態 → {ws / 'atlas.json'}")
         if args.merge:
             patch = json.loads(sys.stdin.read()) if args.merge == "-" else load_json(Path(args.merge))
             atlas = merge_atlas(load_atlas(ws), patch)

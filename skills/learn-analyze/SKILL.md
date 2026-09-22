@@ -1,6 +1,6 @@
 ---
 name: learn-analyze
-description: [步驟 5/8·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
+description: [步驟 5/10·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
 ---
 
 # /learn-analyze（agent 自己做，沒有 script）　—　步驟 5/8 逐段分析
@@ -22,9 +22,27 @@ description: [步驟 5/8·逐段分析] 由 agent 逐段寫「承上／推理／
 3. 每段填 `builds_on`（若這段有明顯錯誤或過時內容，另填 `issues`：逐字引文 + level + note，見 rules/narrative.md 第 6 條）（回應上一段 leads_to）、`reasoning`、`explanation`、`terms`、`leads_to`。每個 term：`term` 原文、`zh` 中文、`definition` 一句話、`more` 更多說明、`related` 寫成 `[{"term": "B", "rel": "關係 ≤12 字"}]`（見 rules/narrative.md 第 5 條）。
 4. `vision_used` 填實際有沒有看圖；`frames` 填有看的圖路徑。
 5. 寫檔後跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py analysis workspace/<影片標題>/analysis.json`，不過就修。
-6. 把耗時寫進 `timings.json` 的 `analyze`。
+6. 把耗時寫進 `timings.json` 的 `analyze`，格式和其他階段一致——**值是物件不是數字**：
+   `{"analyze": {"sec": 780, "at": "2026-09-08T22:10:17+08:00"}}`（`at` 用當地時間 ISO 8601；用 `python -c` 讀進來改再寫回，不要覆蓋既有欄位）。
 
 已存在且沒有 `--force` 就跳過。`--vision true|false` 可覆蓋 segments.json 的設定。
+
+## 在 subagent 裡執行（`/learn` 走這條）
+
+`/learn` 的 [5/10] 一定把這支 skill 丟進 subagent，因為逐段分析會累積 150–200k context
+（transcript 片段 + 每張截圖約 1,200 tokens 且會常駐 + 每段寫好的 analysis），
+留在主對話會讓後面的 render / atlas / narrate 每一輪都重送。
+
+在 subagent 裡執行時：
+- 你是冷啟動，**自己**把要用的東西讀進來：`rules/narrative.md`（整份）、`schemas/analysis.schema.json`、
+  該資料夾的 `segments.json` 與 `meta.json`。不要向主對話要，也不要問使用者。
+- 一樣逐段生成、一樣只帶上一段的 analysis，硬規則不因為換到 subagent 就放寬。
+- 寫完自己跑 validate.py，**不過就自己修到過**再結束；修不好才回報錯誤。
+- **回傳只給三樣**：`progress.py analyze` 的兩行、一句話結果（幾段、看了幾張圖）、validate 最後狀態。
+  不要把 `analysis.json` 的內容貼回去 —— 主對話讀得到檔案，貼回去等於白付一次 token。
+
+## 來源是部落格文章時
+`meta.json` 有 `source: blog`：規則全同，指涉改用「文中」「〈小節〉一節」而不是「影片裡」；`issues[].t` 填該段落的 `start`（閱讀秒數），render 會顯示成 ¶段落編號。見 `rules/narrative.md` 最後一節。
 
 ## 開始前：確認參數
 
