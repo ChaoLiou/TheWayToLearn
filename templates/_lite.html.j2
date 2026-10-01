@@ -21,6 +21,16 @@
   .muted { color:var(--muted); font-size:.9rem; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
   a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
   code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
   .stats { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; margin:.2rem 0 1rem; }
 {% block css %}{% endblock %}

@@ -20,6 +20,16 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
   table { border-collapse:collapse; font-size:.9rem; } td,th { border:1px solid var(--line); padding:.2rem .6rem; }
   a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
   code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
   /* mermaid：可點開全視窗 */
   .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
@@ -108,15 +118,7 @@
 
   /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
   .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow-y:auto;
-          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line);
-          scrollbar-width:thin; scrollbar-color:transparent transparent; }
-  .side:hover { scrollbar-color:var(--line) transparent; }
-  .side::-webkit-scrollbar { width:8px; }
-  .side::-webkit-scrollbar-track { background:transparent; }
-  .side::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
-                                   border:2px solid transparent; background-clip:content-box; }
-  .side:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
-  .side::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
   .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
                           padding:.4rem .7rem; border-radius:8px; border:none; background:none;
                           color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
@@ -227,16 +229,16 @@
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
   .wp .wp-info { display:none; }
   /* 進度：十步各一格 */
-  .wp .prog { display:flex; gap:3px; margin:.1rem 0 0; }
-  .wp .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
-  .wp .prog span[data-s="done"] { background:var(--accent); }
-  .wp .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
-  .wp .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
-  .wp .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
+  .prog { display:flex; gap:3px; margin:.6rem 0 .3rem; }
+  .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
+  .prog span[data-s="done"] { background:var(--accent); }
+  .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
+  .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
+  .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
   @keyframes pulse { 50% { opacity:1; } }
-  .wp .stg { font-size:.78rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
-  .wp .stg b { color:var(--fg); font-weight:600; }
-  .wp .stg .warn { color:var(--accent); }
+  .stg { font-size:.82rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+  .stg b { color:var(--fg); font-weight:600; }
+  .stg .warn { color:var(--accent); }
   .wp .acts { display:flex; gap:.4rem; flex-wrap:wrap; }
   .wp .go { background:var(--accent); color:#fff; border:none; border-radius:999px;
             font:inherit; font-size:.78rem; padding:.1rem .7rem; cursor:pointer; }
@@ -246,12 +248,15 @@
   /* 置中視窗（繼續做／詳細／勘誤）共用同一套外框、標題列與內文 */
   dialog.modal { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
                  width:min(560px, 92vw); max-height:86vh; padding:0; overflow:hidden; }
+  /* 標題可能兩三行，用 calc 猜高度會把內文底部切掉；交給 flex 分配 */
+  dialog.modal[open] { display:flex; flex-direction:column; }
+  dialog.modal .head { flex:none; }
   dialog.modal::backdrop { background:var(--overlay); }
   dialog.modal .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
   dialog.modal .head h3 { margin:0; font-size:1.03rem; line-height:1.4; flex:1; }
   dialog.modal .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
   dialog.modal .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
-  dialog.modal .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(86vh - 4.6rem); font-size:.93rem; }
+  dialog.modal .body { flex:1 1 auto; min-height:0; padding:.9rem 1.1rem 1.4rem; overflow:auto; font-size:.93rem; }
   dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
   /* 繼續做：選一個目標 → 複製 prompt */
   #nextstep { width:min(640px, 94vw); }
@@ -292,7 +297,7 @@
 <header class="topbar">
   <div class="tl">
     <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
-    <a class="brand" href="atlas.html">📄 全部影片</a>
+    <a class="brand" href="atlas.html">PACER Learn</a>
   </div>
   
 <div class="search">
@@ -304,7 +309,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T21:16:38+08:00" title="2026-10-01 21:16">更新於 2026-10-01 21:16</span></div>
+  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T21:49:36+08:00" title="2026-10-01 21:49">更新於 2026-10-01 21:49</span></div>
 </header>
 
 
@@ -335,7 +340,6 @@
   <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
 </nav>
 <main>
-<h2>各站</h2>
 <p class="err-legend">勘誤件數（這支影片）：<span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span></p>
 
 <p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
@@ -355,10 +359,6 @@
   <div class="by">TED<button class="err d" type="button" data-err title="這支影片共 8 段，其中 0 處確定錯誤／已過時、2 處見仁見智，點看詳細"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>2</button></div>
   <div class="sub"><span title="2020-09-02">6 年前</span> · 8 段 · <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">YouTube</a></div>
   <button class="cat" type="button" data-cat="睡眠" title="分類：睡眠"><i style="background:#4e79a7"></i>睡眠</button>
-  <div class="prog" title="進度 7/9">
-    <span data-s="todo" title="1. 估成本 · 還沒做"></span><span data-s="done" title="2. 抓字幕 · 完成"></span><span data-s="done" title="3. 切段 · 完成"></span><span data-s="partial" title="4. 截圖 · 沒做完"></span><span data-s="done" title="5. 逐段分析 · 完成"></span><span data-s="done" title="6. 練習 · 完成"></span><span data-s="done" title="7. 文字解析 · 完成"></span><span data-s="skip" title="8. 連結各站 · 不需要"></span><span data-s="done" title="9. 語音解析 · 完成"></span><span data-s="done" title="10. podcast 頁 · 完成"></span>
-  </div>
-  <div class="stg"><b>7/9</b></div>
   <div class="acts">
     <button class="more-btn" type="button">詳細</button>
     <button class="go" type="button">▸ 繼續做</button>
@@ -368,6 +368,10 @@
     <ul><li>搞懂規律為什麼排第一：它配合的是體內那個約 24 小時的時鐘</li><li>知道入睡需要核心體溫下降，於是房間要涼、熱水澡要提早洗</li><li>學會把褪黑激素當報時訊號看，不再把它當安眠藥用</li><li>拿到一條反直覺的做法：睡不著就下床，切斷床與失眠的連結</li><li>分得出睡眠衛生與睡眠障礙的界線，知道什麼時候該看醫生</li></ul>
     <div class="terms">術語：<code>sleep hygiene</code> <code>RU-SATED</code> <code>circadian rhythm</code> <code>suprachiasmatic nucleus</code> <code>zeitgeber</code> <code>social jet lag</code> <code>core body temperature</code> <code>distal vasodilation</code> …共 21 個</div>
     
+    <div class="prog" title="進度 7/9">
+      <span data-s="todo" title="1. 估成本 · 還沒做"></span><span data-s="done" title="2. 抓字幕 · 完成"></span><span data-s="done" title="3. 切段 · 完成"></span><span data-s="partial" title="4. 截圖 · 沒做完"></span><span data-s="done" title="5. 逐段分析 · 完成"></span><span data-s="done" title="6. 練習 · 完成"></span><span data-s="done" title="7. 文字解析 · 完成"></span><span data-s="skip" title="8. 連結各站 · 不需要"></span><span data-s="done" title="9. 語音解析 · 完成"></span><span data-s="done" title="10. podcast 頁 · 完成"></span>
+    </div>
+    <div class="stg"><span>進度</span><b>7/9</b></div>
     <div><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">開啟文字解析 →</a></div>
   </div>
   

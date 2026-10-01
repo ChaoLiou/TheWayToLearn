@@ -90,7 +90,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "d_open_plan": "開啟文字解析", "d_seg": "第 {id} 段 →",
         "d_tag_hint": "點開看該做的練習",
         # atlas
-        "side_regions": "主題區", "side_filters": "篩選", "side_all": "全部影片", "menu": "選單",
+        "brand": "PACER Learn", "side_regions": "主題區", "side_filters": "篩選", "side_all": "全部影片", "menu": "選單",
         "only_err": "只看有勘誤的", "only_clean": "只看沒勘誤的", "side_jump": "快速跳到",
         "atlas_title": "全部影片", "atlas_h1": "📄 全部影片", "n_wp": "{n} 站", "n_region": "{n} 個主題區",
         "updated": "更新於 {t}",
@@ -210,7 +210,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "d_no_stations": "No worklist yet. Ask for a digest worklist on a station or run <code>/learn-digest &lt;id&gt;</code>.",
         "d_open_plan": "Open the write-up", "d_seg": "Segment {id} →",
         "d_tag_hint": "Open the digest worklist",
-        "side_regions": "Regions", "side_filters": "Filters", "side_all": "All write-ups", "menu": "Menu",
+        "brand": "PACER Learn", "side_regions": "Regions", "side_filters": "Filters", "side_all": "All write-ups", "menu": "Menu",
         "only_err": "Only with errata", "only_clean": "Only without errata", "side_jump": "Jump to",
         "atlas_title": "Write-ups", "atlas_h1": "📄 Write-ups", "n_wp": "{n} station(s)", "n_region": "{n} region(s)", "updated": "updated {t}", "h_stations": "Stations", "n_seg": "{n} segments", "terms": "Terms: ", "terms_total": "… {n} in total",
         "search_ph": "Search author, title, category…", "search_hint": "Press space or Enter to add another condition; conditions are ANDed",

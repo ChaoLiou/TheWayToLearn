@@ -20,9 +20,17 @@
   .muted { color:var(--muted); font-size:.9rem; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
   a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
   code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
-  .topnav { display:flex; gap:.4rem 1rem; flex-wrap:wrap; font-size:.9rem; margin:0 0 1rem; }
-  .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
   .stats { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; margin:.2rem 0 1rem; }
 
 
@@ -49,15 +57,7 @@
 
   /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
   .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow-y:auto;
-          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line);
-          scrollbar-width:thin; scrollbar-color:transparent transparent; }
-  .side:hover { scrollbar-color:var(--line) transparent; }
-  .side::-webkit-scrollbar { width:8px; }
-  .side::-webkit-scrollbar-track { background:transparent; }
-  .side::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
-                                   border:2px solid transparent; background-clip:content-box; }
-  .side:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
-  .side::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
   .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
                           padding:.4rem .7rem; border-radius:8px; border:none; background:none;
                           color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
@@ -188,7 +188,7 @@
 <header class="topbar">
   <div class="tl">
     <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
-    <a class="brand" href="listen.html">🎧 語音解析</a>
+    <a class="brand" href="listen.html">PACER Learn</a>
   </div>
   
 <div class="search">
@@ -200,7 +200,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 集</span><span>共 11m44s</span><span>更新於 2026-10-01 21:17</span></div>
+  <div class="tr"><span>1 集</span><span>共 11m44s</span><span>更新於 2026-10-01 21:49</span></div>
 </header>
 
 

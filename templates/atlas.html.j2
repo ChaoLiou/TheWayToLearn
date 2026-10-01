@@ -63,16 +63,16 @@
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
   .wp .wp-info { display:none; }
   /* 進度：十步各一格 */
-  .wp .prog { display:flex; gap:3px; margin:.1rem 0 0; }
-  .wp .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
-  .wp .prog span[data-s="done"] { background:var(--accent); }
-  .wp .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
-  .wp .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
-  .wp .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
+  .prog { display:flex; gap:3px; margin:.6rem 0 .3rem; }
+  .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
+  .prog span[data-s="done"] { background:var(--accent); }
+  .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
+  .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
+  .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
   @keyframes pulse { 50% { opacity:1; } }
-  .wp .stg { font-size:.78rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
-  .wp .stg b { color:var(--fg); font-weight:600; }
-  .wp .stg .warn { color:var(--accent); }
+  .stg { font-size:.82rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+  .stg b { color:var(--fg); font-weight:600; }
+  .stg .warn { color:var(--accent); }
   .wp .acts { display:flex; gap:.4rem; flex-wrap:wrap; }
   .wp .go { background:var(--accent); color:#fff; border:none; border-radius:999px;
             font:inherit; font-size:.78rem; padding:.1rem .7rem; cursor:pointer; }
@@ -82,12 +82,15 @@
   /* 置中視窗（繼續做／詳細／勘誤）共用同一套外框、標題列與內文 */
   dialog.modal { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
                  width:min(560px, 92vw); max-height:86vh; padding:0; overflow:hidden; }
+  /* 標題可能兩三行，用 calc 猜高度會把內文底部切掉；交給 flex 分配 */
+  dialog.modal[open] { display:flex; flex-direction:column; }
+  dialog.modal .head { flex:none; }
   dialog.modal::backdrop { background:var(--overlay); }
   dialog.modal .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
   dialog.modal .head h3 { margin:0; font-size:1.03rem; line-height:1.4; flex:1; }
   dialog.modal .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
   dialog.modal .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
-  dialog.modal .body { padding:.9rem 1.1rem 1.1rem; overflow:auto; max-height:calc(86vh - 4.6rem); font-size:.93rem; }
+  dialog.modal .body { flex:1 1 auto; min-height:0; padding:.9rem 1.1rem 1.4rem; overflow:auto; font-size:.93rem; }
   dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
   /* 繼續做：選一個目標 → 複製 prompt */
   #nextstep { width:min(640px, 94vw); }
@@ -136,7 +139,6 @@
   <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">{{ S.only_clean }}</span></button>
 </nav>
 <main>
-<h2>{{ S.h_stations }}</h2>
 <p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic.danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic.warn() }}{{ S.lvl_debatable }}</span></p>
 {{ search.hint(S, waypoints|length) }}
 
@@ -151,10 +153,6 @@
   <div class="by">{{ w.channel }}{% if w.err %}{% if w.err.clean %}<span class="err ok" title="{{ w.err.tip }}">{{ S.err_ok }}</span>{% else %}{% if w.err.wrong %}<button class="err w" type="button" data-err title="{{ w.err.tip }}">{{ ic.danger() }}{{ w.err.wrong }}</button>{% endif %}{% if w.err.debatable %}<button class="err d" type="button" data-err title="{{ w.err.tip }}">{{ ic.warn() }}{{ w.err.debatable }}</button>{% endif %}{% endif %}{% endif %}</div>
   <div class="sub">{% if w.upload_date %}<span title="{{ w.upload_date }}">{{ w.upload_days|ago }}</span> · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">{{ S.blog_link if w.kind == 'blog' else 'YouTube' }}</a></div>
   <button class="cat" type="button" data-cat="{{ cat }}" title="{{ S.f_category }}：{{ cat }}"><i style="background:{{ color }}"></i>{{ cat }}</button>
-  <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
-    {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
-  </div>
-  <div class="stg"><b>{{ w.n_done }}/{{ w.n_total }}</b>{% if w.note %}<span class="{{ '' if w.all_done else 'warn' }}">{{ w.note }}</span>{% endif %}</div>
   <div class="acts">
     <button class="more-btn" type="button">{{ S.more_info }}</button>
     <button class="go{{ ' done' if w.all_done }}" type="button">{{ S.next_step }}</button>
@@ -169,6 +167,10 @@
       {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} {{ '—' if e.type != 'next' else '→' }}</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
     </div>
     {% endif %}
+    <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
+      {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
+    </div>
+    <div class="stg"><span>{{ S.progress }}</span><b>{{ w.n_done }}/{{ w.n_total }}</b>{% if w.note %}<span class="{{ '' if w.all_done else 'warn' }}">{{ w.note }}</span>{% endif %}</div>
     <div><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
   </div>
   {% if w.issues %}
