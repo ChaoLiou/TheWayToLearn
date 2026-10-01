@@ -247,6 +247,8 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     hub = {}
     if len(videos) == 1:
         vid, vdir = videos[0]["id"], out.parent
+        if (ws / "atlas.html").exists():
+            hub["atlas"] = "../atlas.html"                   # 回到全部影片的列表，不篩
         if (ws / "listen.html").exists() and (vdir / "lesson.mp3").exists():
             hub["listen"] = f"../listen.html#{vid}"          # 播放器要能自動接下一集，不篩
         if (ws / "notes.html").exists() and (vdir / "notes.json").exists():

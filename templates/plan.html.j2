@@ -129,7 +129,9 @@
 <h1>{{ overview.topic }}</h1>
 <p class="muted">{{ S.f("plan_meta", n=videos|length, t=generated) }}</p>
 {% if hub %}
-<p class="hub">{% if hub.listen %}<a href="{{ hub.listen }}">{{ S.nav_listen }}</a>{% endif %}{% if hub.notes %}<a href="{{ hub.notes }}">{{ S.nav_notes }}</a>{% endif %}{% if hub.digest %}<a href="{{ hub.digest }}">{{ S.nav_digest }}</a>{% endif %}</p>
+{# 順序：全部影片 → 語音解析 →（只篩這一支的）筆記、練習 #}
+{% set one = videos[0] if videos|length == 1 else none %}
+<p class="hub">{% if hub.atlas %}<a href="{{ hub.atlas }}">{{ S.nav_atlas }}</a>{% endif %}{% if hub.listen %}<a href="{{ hub.listen }}">{{ S.nav_listen }}</a>{% endif %}{% if hub.notes %}<a href="{{ hub.notes }}">{{ S.hub_notes_blog if one and one.kind == 'blog' else S.hub_notes }}</a>{% endif %}{% if hub.digest %}<a href="{{ hub.digest }}">{{ S.hub_digest_blog if one and one.kind == 'blog' else S.hub_digest }}</a>{% endif %}</p>
 {% endif %}
 {% if videos|length == 1 and videos[0].lesson_status %}
 <div class="card lesson" id="lesson-pending" data-src="{{ videos[0].lesson_src }}"
@@ -145,7 +147,7 @@
 {% if videos|length == 1 and videos[0].lesson %}
 {% set L = videos[0].lesson %}
 <div class="card lesson">
-  <b>{{ S.listen }}</b> <span class="muted">{{ L.duration|dur }} · {{ S.listen_hint }}</span>
+  <span class="muted">{{ L.duration|dur }} · {{ S.listen_hint }}</span>
   <audio id="lesson" controls preload="metadata" src="{{ L.href }}"></audio>
   <div class="acts"><button id="kara-open">{{ S.open_script }}</button>
     {% if L.dub %}<span class="modes" title="{{ S.dub_hint }}">
