@@ -1,0 +1,151 @@
+{# 四頁共用的版面：置頂列（品牌 + 置中的全域搜尋 + 右側統計）＋ 左側導覽 + 內容區。
+   用法：
+     {% import "_shell.html.j2" as shell %}
+     {% block css %}{{ shell.css() }} …頁面自己的 css… {% endblock %}
+     {% block body %}
+     {% call shell.top(S, S.listen_h1, "listen.html") %}…右側統計…{% endcall %}
+     {{ shell.layout_open() }}
+     <nav class="side">{{ shell.nav(S, "listen", has_atlas, has_listen, has_notes, has_digest) }}
+       …頁面自己的側欄區塊…</nav>
+     <main>…內容…</main>
+     {{ shell.layout_close() }}
+     {% endblock %}
+     {% block js %}{{ shell.js() }} … {% endblock %}
+   內容區寬度由頁面設 `--content`（預設 64rem 置中；atlas 這種卡片牆設成 2000px）。
+   搜尋框要不要出現由 with_search 決定；js() 需要 #menu 與 #scrim 存在。 #}
+{% import "_search.html.j2" as search %}
+
+{% macro css() %}
+  :root { --top:3.6rem; --content:64rem; }
+  body { padding:0; }
+  /* 置頂列：三欄，左右等寬，搜尋框才會真的置中（右側在窄螢幕收起也不會偏） */
+  .topbar { position:sticky; top:0; z-index:40; display:grid; align-items:center; gap:.8rem;
+            grid-template-columns:minmax(0,1fr) minmax(0,46rem) minmax(0,1fr);
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .tl { display:flex; align-items:center; gap:.4rem; min-width:0; }
+  .topbar .tr { display:flex; align-items:center; justify-content:flex-end; gap:1rem;
+                color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .search { margin:0; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .layout main { max-width:var(--content); width:100%; margin:0 auto; padding:1.2rem 1.4rem 4rem; box-sizing:border-box; }
+  .layout main > :is(h1,h2):first-child { margin-top:0; }
+
+  /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow-y:auto;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line);
+          scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  .side:hover { scrollbar-color:var(--line) transparent; }
+  .side::-webkit-scrollbar { width:8px; }
+  .side::-webkit-scrollbar-track { background:transparent; }
+  .side::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                                   border:2px solid transparent; background-clip:content-box; }
+  .side:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  .side::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .tool { font-size:.85rem; color:var(--muted); }
+
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .topbar { grid-template-columns:auto minmax(0,1fr); }
+    .topbar .tr { display:none; }
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .layout main { padding:1rem .9rem 5rem; }
+    .menu-btn { display:block; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease;
+            max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
+{% endmacro %}
+
+{% macro top(S, title, home, with_search=true) %}
+<header class="topbar">
+  <div class="tl">
+    <button class="menu-btn" type="button" id="menu" aria-label="{{ S.menu }}" aria-expanded="false">☰</button>
+    <a class="brand" href="{{ home }}">{{ title }}</a>
+  </div>
+  {% if with_search %}{{ search.box(S) }}{% else %}<span></span>{% endif %}
+  <div class="tr">{{ caller() }}</div>
+</header>
+{% endmacro %}
+
+{% macro layout_open() %}
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+{% endmacro %}
+
+{% macro layout_close() %}
+</div>
+{% endmacro %}
+
+{% macro nav(S, cur, has_atlas, has_listen, has_notes, has_digest) %}
+  {% if has_atlas %}<a {% if cur == "atlas" %}class="on"{% endif %} href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
+  {% if has_listen %}<a {% if cur == "listen" %}class="on"{% endif %} href="listen.html">{{ S.nav_listen }}</a>{% endif %}
+  {% if has_notes %}<a {% if cur == "notes" %}class="on"{% endif %} href="notes.html">{{ S.nav_notes }}</a>{% endif %}
+  {% if has_digest %}<a {% if cur == "digest" %}class="on"{% endif %} href="digest.html">{{ S.nav_digest }}</a>{% endif %}
+{% endmacro %}
+
+{# 側欄的分類清單：按鈕會加一個「分類」搜尋條件（需要 search.js 的 addChip / chips / refilter）。 #}
+{% macro cats(S, items, total, all_label=none) %}
+  <p class="grp">{{ S.side_regions }}</p>
+  <button type="button" class="cat-all on" data-cat="">{{ all_label or S.side_all }}<span class="n">{{ total }}</span></button>
+  {% for it in items %}
+  <button type="button" class="cat-f" data-cat="{{ it.name }}"{% if it.tip %} title="{{ it.tip }}"{% endif %}><i style="background:{{ it.color or 'var(--line)' }}"></i><span class="lab">{{ it.name }}</span><span class="n">{{ it.n }}</span></button>
+  {% endfor %}
+{% endmacro %}
+
+{% macro js() %}
+  /* 窄螢幕：側欄變抽屜（templates/_shell.html.j2） */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    const si = document.getElementById("sinput");
+    if (e.key === "/" && !typing && si) { e.preventDefault(); si.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
+{% endmacro %}
+
+{# 側欄分類按鈕 ↔ 搜尋 chip 的雙向同步。放在 search.js() 之後。 #}
+{% macro cats_js() %}
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (b.dataset.cat) chips.push({ kind: "category", value: b.dataset.cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+  /* chip 從哪裡被加掉都要同步側欄：盯著 #sbox 的子節點變動最保險 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+{% endmacro %}

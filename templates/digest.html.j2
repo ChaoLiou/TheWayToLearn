@@ -1,7 +1,17 @@
 {% extends "_lite.html.j2" %}
 {% import "_search.html.j2" as search %}
+{% import "_shell.html.j2" as shell %}
 {% block title %}{{ S.digest_title }}{% endblock %}
 {% block css %}
+{{ shell.css() }}
+  :root { --content:66rem; }
+  /* 篩選搬進側欄：在那裡是直向的一排按鈕 */
+  .side .filters { display:block; margin:0; padding:0; position:static; border:none; background:none; }
+  .side .filters button { border:none; background:none; border-radius:8px; font-size:.92rem;
+                          padding:.4rem .7rem; width:100%; justify-content:flex-start; }
+  .side .filters button:hover { background:var(--card); }
+  .side .filters button.on { background:var(--accent); color:#fff; }
+  .side .filters .sp { display:none; }
   {{ search.css() }}
   .search { margin-bottom:0; }
   /* ---- 今天 ---- */
@@ -95,16 +105,33 @@
 {% endblock %}
 
 {% block body %}
+{% call shell.top(S, S.digest_h1, "digest.html") %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span id="n-items"></span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
+{{ shell.layout_open() }}
+<nav class="side">
+  {{ shell.nav(S, "digest", has_atlas, has_listen, has_notes, true) }}
+  {% if stations %}
+  <hr>
+  {% set cats = {} %}
+  {% for st in stations %}{% set k = st.category or S.unplaced %}{% set _ = cats.update({k: cats.get(k, 0) + 1}) %}{% endfor %}
+  {% set items = [] %}
+  {% for k, n in cats | dictsort %}{% set _ = items.append({"name": k, "n": n, "color": none}) %}{% endfor %}
+  {{ shell.cats(S, items, stations|length) }}
+  <hr>
+  <p class="grp">{{ S.side_filters }}</p>
+  <div class="filters" id="filters">
+    <button type="button" data-f="todo" class="on">{{ S.d_todo }}</button>
+    <button type="button" data-f="all">{{ S.d_all }}</button>
+    <button type="button" data-f="done">{{ S.d_done }}</button>
+    <span class="sp"></span>
+  </div>
+  <hr>
+  <button type="button" class="tool" id="export" title="{{ S.d_export_hint }}">{{ S.d_export }}</button>
+  <button type="button" class="tool" id="export-anki">{{ S.d_export_anki }}</button>
+  <button type="button" class="tool" id="reset">{{ S.d_reset }}</button>
+  {% endif %}
+</nav>
 <main>
-<p class="topnav">
-  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
-  {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
-  {% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}
-  <a class="on" href="digest.html">{{ S.nav_digest }}</a>
-</p>
-<h1>{{ S.digest_h1 }}</h1>
 <p class="muted">{{ S.digest_sub }}</p>
-<p class="stats"><span>{{ S.f("n_wp", n=stations|length) }}</span><span id="n-items"></span><span>{{ S.f("updated", t=generated) }}</span></p>
 
 {% if not stations %}
 <p class="card">{{ S.d_no_stations | safe }}</p>
@@ -125,16 +152,7 @@
   </div>
 </section>
 
-{{ search.bar(S, stations|length) }}
-<div class="filters" id="filters">
-  <button type="button" data-f="todo" class="on">{{ S.d_todo }}</button>
-  <button type="button" data-f="all">{{ S.d_all }}</button>
-  <button type="button" data-f="done">{{ S.d_done }}</button>
-  <span class="sp"></span>
-  <button type="button" class="tool" id="export" title="{{ S.d_export_hint }}">{{ S.d_export }}</button>
-  <button type="button" class="tool" id="export-anki">{{ S.d_export_anki }}</button>
-  <button type="button" class="tool" id="reset">{{ S.d_reset }}</button>
-</div>
+{{ search.hint(S, stations|length) }}
 
 {% for s in stations %}
 <section class="st" id="{{ s.id }}" data-id="{{ s.id }}" data-title="{{ s.title }}" data-channel="{{ s.channel or '' }}"
@@ -231,6 +249,7 @@
 </dialog>
 {% endif %}
 </main>
+{{ shell.layout_close() }}
 {% endblock %}
 
 {% block json %}
@@ -421,5 +440,7 @@
   document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); applyAll(); });
 
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+{{ shell.cats_js() }}
 })();
+{{ shell.js() }}
 {% endblock %}

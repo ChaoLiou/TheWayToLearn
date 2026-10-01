@@ -1,8 +1,11 @@
 {% extends "_lite.html.j2" %}
 {% import "_search.html.j2" as search %}
+{% import "_shell.html.j2" as shell %}
 {% block title %}{{ S.listen_title }}{% endblock %}
 {% block css %}
-  main { padding-bottom: 12rem; }   /* 留給置底播放器 */
+{{ shell.css() }}
+  :root { --content:68rem; }
+  .layout main { padding-bottom: 12rem; }   /* 留給置底播放器 */
   {{ search.css() }}
   .ep .cat { color:var(--accent); cursor:pointer; } .ep .cat:hover { text-decoration:underline; }
   .ep[hidden] { display:none; }
@@ -73,22 +76,27 @@
 {% endblock %}
 
 {% block body %}
+{% call shell.top(S, S.listen_h1, "listen.html") %}<span>{{ S.f("n_episode", n=episodes|length) }}</span><span>{{ S.f("total_len", t=total|dur) }}</span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
+{{ shell.layout_open() }}
+<nav class="side">
+  {{ shell.nav(S, "listen", has_atlas, true, has_notes, has_digest) }}
+  {% if episodes %}
+  <hr>
+  {% set cats = {} %}
+  {% for e in episodes %}{% set k = e.category or S.unplaced %}{% set _ = cats.update({k: cats.get(k, 0) + 1}) %}{% endfor %}
+  {% set items = [] %}
+  {% for k, n in cats | dictsort %}{% set _ = items.append({"name": k, "n": n, "color": none}) %}{% endfor %}
+  {{ shell.cats(S, items, episodes|length) }}
+  {% endif %}
+</nav>
 <main>
-<p class="topnav">
-  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
-  <a class="on" href="listen.html">{{ S.nav_listen }}</a>
-  {% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}
-  {% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}
-</p>
-<h1>{{ S.listen_h1 }}</h1>
 <p class="muted">{{ S.listen_sub }}</p>
-<p class="stats"><span>{{ S.f("n_episode", n=episodes|length) }}</span><span>{{ S.f("total_len", t=total|dur) }}</span><span>{{ S.f("updated", t=generated) }}</span></p>
 
 {% if not episodes %}
 <p class="card">{{ S.no_episodes | safe }}</p>
 {% endif %}
 
-{% if episodes %}{{ search.bar(S, episodes|length) }}{% endif %}
+{% if episodes %}{{ search.hint(S, episodes|length) }}{% endif %}
 <div id="list">
 {% for e in episodes %}
 <article class="ep" id="ep-{{ e.id }}" data-i="{{ loop.index0 }}" data-id="{{ e.id }}" data-title="{{ e.title }}" data-channel="{{ e.channel or '' }}" data-category="{{ e.category or S.unplaced }}">
@@ -119,6 +127,7 @@
 {% endfor %}
 </div>
 </main>
+{{ shell.layout_close() }}
 
 <div id="cc" hidden><div class="in"><div class="seg"></div><div class="body"></div></div></div>
 <div id="bar" hidden>
@@ -351,5 +360,7 @@ if (document.getElementById("sbox")) (() => {
 {{ search.js(".ep", none) }}
   // 點卡片上的分類 = 加一個分類條件
   document.querySelectorAll(".ep .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+{{ shell.cats_js() }}
 })();
+{{ shell.js() }}
 {% endblock %}

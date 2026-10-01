@@ -25,6 +25,76 @@
   .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
   .stats { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; margin:.2rem 0 1rem; }
 
+
+  :root { --top:3.6rem; --content:64rem; }
+  body { padding:0; }
+  /* 置頂列：三欄，左右等寬，搜尋框才會真的置中（右側在窄螢幕收起也不會偏） */
+  .topbar { position:sticky; top:0; z-index:40; display:grid; align-items:center; gap:.8rem;
+            grid-template-columns:minmax(0,1fr) minmax(0,46rem) minmax(0,1fr);
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .tl { display:flex; align-items:center; gap:.4rem; min-width:0; }
+  .topbar .tr { display:flex; align-items:center; justify-content:flex-end; gap:1rem;
+                color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .search { margin:0; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .layout main { max-width:var(--content); width:100%; margin:0 auto; padding:1.2rem 1.4rem 4rem; box-sizing:border-box; }
+  .layout main > :is(h1,h2):first-child { margin-top:0; }
+
+  /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow-y:auto;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line);
+          scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  .side:hover { scrollbar-color:var(--line) transparent; }
+  .side::-webkit-scrollbar { width:8px; }
+  .side::-webkit-scrollbar-track { background:transparent; }
+  .side::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                                   border:2px solid transparent; background-clip:content-box; }
+  .side:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  .side::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .tool { font-size:.85rem; color:var(--muted); }
+
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .topbar { grid-template-columns:auto minmax(0,1fr); }
+    .topbar .tr { display:none; }
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .layout main { padding:1rem .9rem 5rem; }
+    .menu-btn { display:block; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease;
+            max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
+
+  :root { --content:66rem; }
+  /* 篩選搬進側欄：在那裡是直向的一排按鈕 */
+  .side .filters { display:block; margin:0; padding:0; position:static; border:none; background:none; }
+  .side .filters button { border:none; background:none; border-radius:8px; font-size:.92rem;
+                          padding:.4rem .7rem; width:100%; justify-content:flex-start; }
+  .side .filters button:hover { background:var(--card); }
+  .side .filters button.on { background:var(--accent); color:#fff; }
+  .side .filters .sp { display:none; }
   
   /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
   .search { position:relative; margin:.6rem 0 .3rem; }
@@ -143,16 +213,65 @@
 </head>
 <body>
 
-<main>
-<p class="topnav">
-  <a href="atlas.html">📄 全部影片</a>
-  <a href="listen.html">🎧 語音解析</a>
-  <a href="notes.html">📝 筆記</a>
+
+<header class="topbar">
+  <div class="tl">
+    <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
+    <a class="brand" href="digest.html">✍️ 練習</a>
+  </div>
+  
+<div class="search">
+  <div class="sbox" id="sbox">
+    <span class="ico">🔍</span>
+    <input id="sinput" type="text" placeholder="搜尋作者、標題、分類…" autocomplete="off"
+           aria-label="搜尋作者、標題、分類…" aria-expanded="false" role="combobox" aria-controls="ac">
+  </div>
+  <ul class="ac" id="ac" role="listbox" hidden></ul>
+</div>
+
+  <div class="tr"><span>1 站</span><span id="n-items"></span><span>更新於 2026-10-01 21:18</span></div>
+</header>
+
+
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+
+<nav class="side">
+  
+  <a  href="atlas.html">📄 全部影片</a>
+  <a  href="listen.html">🎧 語音解析</a>
+  <a  href="notes.html">📝 筆記</a>
   <a class="on" href="digest.html">✍️ 練習</a>
-</p>
-<h1>✍️ 練習</h1>
+
+  
+  <hr>
+  
+  
+  
+  
+  
+  <p class="grp">主題區</p>
+  <button type="button" class="cat-all on" data-cat="">全部影片<span class="n">1</span></button>
+  
+  <button type="button" class="cat-f" data-cat="睡眠"><i style="background:var(--line)"></i><span class="lab">睡眠</span><span class="n">1</span></button>
+  
+
+  <hr>
+  <p class="grp">篩選</p>
+  <div class="filters" id="filters">
+    <button type="button" data-f="todo" class="on">只看未做</button>
+    <button type="button" data-f="all">全部</button>
+    <button type="button" data-f="done">已做</button>
+    <span class="sp"></span>
+  </div>
+  <hr>
+  <button type="button" class="tool" id="export" title="下載 digest.state.json，放到 workspace/ 後重跑 digest.py 就會記住；/learn 也靠它算積欠">⬇ 匯出進度</button>
+  <button type="button" class="tool" id="export-anki">⬇ 匯出 Anki (tsv)</button>
+  <button type="button" class="tool" id="reset">清掉本機狀態</button>
+  
+</nav>
+<main>
 <p class="muted">讀完只是消費，留下來的靠消化。每筆資訊已標好類別與該做的練習，做完就灰掉。</p>
-<p class="stats"><span>1 站</span><span id="n-items"></span><span>更新於 2026-10-01 20:40</span></p>
 
 
 <div class="card today" id="today">
@@ -172,27 +291,9 @@
 </section>
 
 
-<div class="search">
-  <div class="sbox" id="sbox">
-    <span class="ico">🔍</span>
-    <input id="sinput" type="text" placeholder="搜尋作者、標題、分類…" autocomplete="off"
-           aria-label="搜尋作者、標題、分類…" aria-expanded="false" role="combobox" aria-controls="ac">
-  </div>
-  <ul class="ac" id="ac" role="listbox" hidden></ul>
-</div>
-
 <p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
 <p id="no-match" hidden>沒有符合條件的站。</p>
 
-<div class="filters" id="filters">
-  <button type="button" data-f="todo" class="on">只看未做</button>
-  <button type="button" data-f="all">全部</button>
-  <button type="button" data-f="done">已做</button>
-  <span class="sp"></span>
-  <button type="button" class="tool" id="export" title="下載 digest.state.json，放到 workspace/ 後重跑 digest.py 就會記住；/learn 也靠它算積欠">⬇ 匯出進度</button>
-  <button type="button" class="tool" id="export-anki">⬇ 匯出 Anki (tsv)</button>
-  <button type="button" class="tool" id="reset">清掉本機狀態</button>
-</div>
 
 
 <section class="st" id="t0kACis_dJE" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED"
@@ -917,6 +1018,9 @@
 
 </main>
 
+</div>
+
+
 
 
 <script id="ui-data" type="application/json">{"any": "\u4efb\u610f", "author": "\u4f5c\u8005", "category": "\u5206\u985e", "showing": "\u986f\u793a {n} / {total} \u7ad9", "title": "\u6a19\u984c", "video": "\u5f71\u7247"}</script>
@@ -1225,7 +1329,40 @@
   document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); applyAll(); });
 
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (b.dataset.cat) chips.push({ kind: "category", value: b.dataset.cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+  /* chip 從哪裡被加掉都要同步側欄：盯著 #sbox 的子節點變動最保險 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+
 })();
+
+  /* 窄螢幕：側欄變抽屜（templates/_shell.html.j2） */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    const si = document.getElementById("sinput");
+    if (e.key === "/" && !typing && si) { e.preventDefault(); si.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
+
 
 </script>
 </body>

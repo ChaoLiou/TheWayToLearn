@@ -1,9 +1,19 @@
 {% extends "_lite.html.j2" %}
 {% import "_search.html.j2" as search %}
+{% import "_shell.html.j2" as shell %}
 {% block title %}{{ S.notes_title }}{% endblock %}
 {% block css %}
+{{ shell.css() }}
+  :root { --content:62rem; }
   {{ search.css() }}
   .search { margin-bottom:0; }
+  /* 留／刪的篩選搬進側欄：在那裡是直向的一排按鈕 */
+  .side .filters { display:block; margin:0; padding:0; position:static; border:none; background:none; }
+  .side .filters button { border:none; background:none; border-radius:8px; font-size:.92rem;
+                          padding:.4rem .7rem; width:100%; justify-content:flex-start; }
+  .side .filters button:hover { background:var(--card); }
+  .side .filters button.on { background:var(--accent); color:#fff; }
+  .side .filters .sp { display:none; }
   .filters { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.4rem 0 1.2rem; position:sticky; top:0;
              background:var(--bg); padding:.5rem 0; z-index:5; border-bottom:1px solid var(--line); }
   .filters button { font:inherit; font-size:.85rem; padding:.2rem .7rem; border-radius:999px; border:1px solid var(--line);
@@ -44,30 +54,38 @@
 {% endblock %}
 
 {% block body %}
+{% call shell.top(S, S.notes_h1, "notes.html") %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span>{{ S.f("n_notes", n=n_notes) }}</span><span id="kept"></span>{% endcall %}
+{{ shell.layout_open() }}
+<nav class="side">
+  {{ shell.nav(S, "notes", has_atlas, has_listen, true, has_digest) }}
+  {% if stations %}
+  <hr>
+  {% set cats = {} %}
+  {% for st in stations %}{% set k = st.category or S.unplaced %}{% set _ = cats.update({k: cats.get(k, 0) + 1}) %}{% endfor %}
+  {% set items = [] %}
+  {% for k, n in cats | dictsort %}{% set _ = items.append({"name": k, "n": n, "color": none}) %}{% endfor %}
+  {{ shell.cats(S, items, stations|length) }}
+  <hr>
+  <p class="grp">{{ S.side_filters }}</p>
+  <div class="filters" id="filters">
+    <button type="button" class="on" data-f="all">{{ S.notes_all }}</button>
+    <button type="button" data-f="keep">{{ S.notes_kept }}</button>
+    <button type="button" data-f="undecided">{{ S.notes_undecided }}</button>
+    <button type="button" data-f="drop">{{ S.notes_dropped }}</button>
+    <span class="sp"></span>
+  </div>
+  <hr>
+  <button type="button" class="tool" id="export" title="{{ S.notes_export_hint }}">{{ S.notes_export }}</button>
+  <button type="button" class="tool" id="reset">{{ S.notes_reset }}</button>
+  {% endif %}
+</nav>
 <main>
-<p class="topnav">
-  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
-  {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
-  <a class="on" href="notes.html">{{ S.nav_notes }}</a>
-  {% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}
-</p>
-<h1>{{ S.notes_h1 }}</h1>
 <p class="muted">{{ S.notes_sub }}</p>
-<p class="stats"><span>{{ S.f("n_wp", n=stations|length) }}</span><span>{{ S.f("n_notes", n=n_notes) }}</span><span id="kept"></span><span>{{ S.f("updated", t=generated) }}</span></p>
 
 {% if not stations %}
 <p class="card">{{ S.no_notes | safe }}</p>
 {% else %}
-{{ search.bar(S, stations|length) }}
-<div class="filters" id="filters">
-  <button type="button" class="on" data-f="all">{{ S.notes_all }}</button>
-  <button type="button" data-f="keep">{{ S.notes_kept }}</button>
-  <button type="button" data-f="undecided">{{ S.notes_undecided }}</button>
-  <button type="button" data-f="drop">{{ S.notes_dropped }}</button>
-  <span class="sp"></span>
-  <button type="button" class="tool" id="export" title="{{ S.notes_export_hint }}">{{ S.notes_export }}</button>
-  <button type="button" class="tool" id="reset">{{ S.notes_reset }}</button>
-</div>
+{{ search.hint(S, stations|length) }}
 
 {% for s in stations %}
 <section class="st" id="{{ s.id }}" data-id="{{ s.id }}" data-title="{{ s.title }}" data-channel="{{ s.channel or '' }}"
@@ -107,6 +125,7 @@
 {% endfor %}
 {% endif %}
 </main>
+{{ shell.layout_close() }}
 {% endblock %}
 
 {% block json %}
@@ -176,5 +195,7 @@
 
   // 從 listen.html / plan.html 帶 #<vid> 進來：捲到那一站
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+{{ shell.cats_js() }}
 })();
+{{ shell.js() }}
 {% endblock %}
