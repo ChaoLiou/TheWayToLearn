@@ -2,6 +2,13 @@
 {% import "_icons.html.j2" as ic %}
 {% block title %}{{ overview.topic }} — {{ S.plan_title_suffix }}{% endblock %}
 {% block css %}
+  /* 1. Outline：段落清單 */
+  .lead { color:var(--muted); margin:.2rem 0 .6rem; }
+  ol.outline { padding-left:1.4rem; }
+  ol.outline li { margin:.15rem 0; }
+  ol.outline li a { text-decoration:none; }
+  ol.outline li a:hover { text-decoration:underline; }
+  ol.outline .t { color:var(--muted); font-size:.85rem; margin-left:.5rem; font-variant-numeric:tabular-nums; }
   .seg { border-left:3px solid var(--accent); padding-left:1rem; margin:2rem 0; }
   .bridge { background:var(--card); border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
   .bridge b { color:var(--accent); }
@@ -153,12 +160,18 @@
 
 <!-- 1 -->
 <h2>{{ S.h_prereq }}</h2>
-<ol>
-{% for o in overview.outline %}
-  {% set v = (videos | selectattr('id', 'equalto', o.video_id) | list | first) %}
-  <li><b>{{ o.role }}</b> · {% if v %}<a href="#v-{{ o.video_id }}">{{ v.meta.title }}</a>{% else %}{{ o.video_id }}{% endif %}<br>{{ o.line }}</li>
+{# overview.outline 是「每支影片一條」，單支影片的 plan.html 就只有一條，當不成大綱。
+   這裡把那一條當前言，真正的大綱是這支影片自己的段落清單（點了跳到該段）。 #}
+{% for v in videos %}
+  {% if videos|length > 1 %}<h3><a href="#v-{{ v.id }}">{{ v.meta.title }}</a></h3>{% endif %}
+  {% set o = (overview.outline | selectattr('video_id', 'equalto', v.id) | list | first) %}
+  {% if o %}<p class="lead"><b>{{ o.role }}</b> · {{ o.line }}</p>{% endif %}
+  <ol class="outline">
+  {% for s in v.analysis.segments %}
+    <li><a href="#{{ v.id }}-s{{ s.id }}">{{ s.title }}</a><span class="t">{{ s.start_label }}</span></li>
+  {% endfor %}
+  </ol>
 {% endfor %}
-</ol>
 
 <!-- 2 -->
 <h2>{{ h_reasoning }}</h2>
@@ -484,8 +497,8 @@
 
     const openK = () => { K.el.hidden = false; document.body.style.overflow = "hidden"; K.idx = -1; paint(); };
     const closeK = () => { K.el.hidden = true; document.body.style.overflow = ""; };
+    /* 只有按「開啟字幕」才開全視窗；按播放不會自己跳出來（擋住整頁很擾人） */
     document.getElementById("kara-open").addEventListener("click", () => { openK(); if (lesson.paused) lesson.play(); });
-    lesson.addEventListener("play", () => { if (K.el.hidden && !lesson.dataset.opened) { lesson.dataset.opened = "1"; openK(); } });
     K.el.addEventListener("click", (e) => {
       const a = e.target.closest("[data-k]")?.dataset.k;
       if (a === "close") closeK();

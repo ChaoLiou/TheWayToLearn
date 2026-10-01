@@ -94,6 +94,13 @@
   table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
 
 
+  /* 1. Outline：段落清單 */
+  .lead { color:var(--muted); margin:.2rem 0 .6rem; }
+  ol.outline { padding-left:1.4rem; }
+  ol.outline li { margin:.15rem 0; }
+  ol.outline li a { text-decoration:none; }
+  ol.outline li a:hover { text-decoration:underline; }
+  ol.outline .t { color:var(--muted); font-size:.85rem; margin-left:.5rem; font-variant-numeric:tabular-nums; }
   .seg { border-left:3px solid var(--accent); padding-left:1rem; margin:2rem 0; }
   .bridge { background:var(--card); border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
   .bridge b { color:var(--accent); }
@@ -215,7 +222,7 @@
 </div>
 <main>
 <h1>睡得更好的六條科學建議，以及它們管用的邊界</h1>
-<p class="muted">文字解析 · 1 支影片 · 產生於 2026-10-01 21:49</p>
+<p class="muted">文字解析 · 1 支影片 · 產生於 2026-10-01 21:58</p>
 
 <p class="hub"><a href="../listen.html#t0kACis_dJE">🎧 語音解析</a><a href="../notes.html?only=t0kACis_dJE#t0kACis_dJE">📝 筆記</a><a href="../digest.html?only=t0kACis_dJE#t0kACis_dJE">✍️ 練習</a></p>
 
@@ -225,11 +232,11 @@
 <div class="card lesson">
   <b>🎧 語音解析</b> <span class="muted">11m44s · TTS 講解與作者原聲交錯；點章節可跳。</span>
   <audio id="lesson" controls preload="metadata" src="lesson.mp3"></audio>
-  <div class="acts"><button id="kara-open">🎤 開啟講稿</button>
+  <div class="acts"><button id="kara-open">💬 開啟字幕</button>
     <span class="modes" title="切換原聲片段：作者原音／另一個聲音唸翻譯（快捷鍵 D）">
       <button data-mode="orig" class="on">🎙 原聲</button><button data-mode="dub">🗣 翻譯</button>
     </span>
-    <span class="muted">邊聽邊看逐句講稿，點任一句從那裡開始</span></div>
+    <span class="muted">邊聽邊看逐句字幕，點任一句從那裡開始</span></div>
   <details class="desc"><summary>章節（8）</summary><div>
     <ol><li><button data-at="0.0"><span class="t">0:00</span>睡不好很正常，但可以改善</button></li><li><button data-at="67.58"><span class="t">1:07</span>一：規律，連假日也一樣</button></li><li><button data-at="170.12"><span class="t">2:50</span>二：溫度，涼一點才睡得著</button></li><li><button data-at="231.51"><span class="t">3:51</span>三：暗，傍晚就要開始</button></li><li><button data-at="303.82"><span class="t">5:03</span>四：睡不著就下床</button></li><li><button data-at="408.4"><span class="t">6:48</span>五：酒精與咖啡因</button></li><li><button data-at="484.5"><span class="t">8:04</span>六：睡前慣例，睡覺像降落不像關燈</button></li><li><button data-at="592.92"><span class="t">9:52</span>但這些祕訣治不了睡眠障礙</button></li></ol>
   </div></details>
@@ -238,12 +245,31 @@
 
 <!-- 1 -->
 <h2>1. Outline</h2>
-<ol>
+
 
   
-  <li><b>起點</b> · <a href="#v-t0kACis_dJE">6 tips for better sleep | Sleeping with Science, a TED series</a><br>睡眠科學家 Matt Walker 用五分半給出六條有研究支持的助眠做法，從體內的時鐘講到房間的溫度與光，再講到躺上床之後的行為，最後自己畫出這些建議管不到的範圍。</li>
+  
+  <p class="lead"><b>起點</b> · 睡眠科學家 Matt Walker 用五分半給出六條有研究支持的助眠做法，從體內的時鐘講到房間的溫度與光，再講到躺上床之後的行為，最後自己畫出這些建議管不到的範圍。</p>
+  <ol class="outline">
+  
+    <li><a href="#t0kACis_dJE-s1">睡不好很正常，但可以改善</a><span class="t">0:00</span></li>
+  
+    <li><a href="#t0kACis_dJE-s2">一：規律，連假日也一樣</a><span class="t">0:21</span></li>
+  
+    <li><a href="#t0kACis_dJE-s3">二：溫度，涼一點才睡得著</a><span class="t">1:04</span></li>
+  
+    <li><a href="#t0kACis_dJE-s4">三：暗，傍晚就要開始</a><span class="t">1:44</span></li>
+  
+    <li><a href="#t0kACis_dJE-s5">四：睡不著就下床</a><span class="t">2:28</span></li>
+  
+    <li><a href="#t0kACis_dJE-s6">五：酒精與咖啡因</a><span class="t">3:21</span></li>
+  
+    <li><a href="#t0kACis_dJE-s7">六：睡前慣例，睡覺像降落不像關燈</a><span class="t">3:39</span></li>
+  
+    <li><a href="#t0kACis_dJE-s8">但這些祕訣治不了睡眠障礙</a><span class="t">4:33</span></li>
+  
+  </ol>
 
-</ol>
 
 <!-- 2 -->
 <h2>2. YouTuber 的思維推導</h2>
@@ -1096,8 +1122,8 @@
 
     const openK = () => { K.el.hidden = false; document.body.style.overflow = "hidden"; K.idx = -1; paint(); };
     const closeK = () => { K.el.hidden = true; document.body.style.overflow = ""; };
+    /* 只有按「開啟字幕」才開全視窗；按播放不會自己跳出來（擋住整頁很擾人） */
     document.getElementById("kara-open").addEventListener("click", () => { openK(); if (lesson.paused) lesson.play(); });
-    lesson.addEventListener("play", () => { if (K.el.hidden && !lesson.dataset.opened) { lesson.dataset.opened = "1"; openK(); } });
     K.el.addEventListener("click", (e) => {
       const a = e.target.closest("[data-k]")?.dataset.k;
       if (a === "close") closeK();
