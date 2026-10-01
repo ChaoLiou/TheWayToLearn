@@ -23,12 +23,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas import fmt_ymd, thumb
 from common import (
     DEFAULT_WORKSPACE,
+    default_output_lang,
     fmt_dur,
     fmt_ts,
     is_blog,
     load_json,
     locked,
     print_step,
+    sibling_pages,
     template_dirs,
     write_text,
 )
@@ -110,7 +112,7 @@ def load_episodes(ws: Path) -> list[dict]:
             "thumb": thumb(d),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang")),
+            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
         })
     eps.sort(key=lambda e: e["created"], reverse=True)
     return eps
@@ -123,7 +125,7 @@ def ui_lang(items: list[dict], ws: Path) -> str:
         if forced:
             return norm_lang(forced)
     langs = [e["output_lang"] for e in items]
-    return max(set(langs), key=langs.count) if langs else norm_lang(None)
+    return max(set(langs), key=langs.count) if langs else norm_lang(default_output_lang(ws))
 
 
 def render(ws: Path) -> Path:
@@ -136,8 +138,7 @@ def render(ws: Path) -> Path:
     player = [{k: e[k] for k in ("id", "title", "channel", "url", "mp3", "dub", "cap", "plan", "yt_thumb", "thumb", "duration", "dub_duration")} for e in eps]
     html = env.get_template("listen.html.j2").render(
         episodes=eps, player=player, S=S, total=sum(e["duration"] for e in eps),
-        has_notes=(ws / "notes.html").exists(), has_atlas=(ws / "atlas.html").exists(),
-        has_digest=(ws / "digest.html").exists(),
+        **sibling_pages(ws),
         generated=now.strftime("%Y-%m-%d %H:%M"),
     )
     out = ws / "listen.html"

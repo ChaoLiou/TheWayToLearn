@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -16,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
     DEFAULT_WORKSPACE,
+    default_output_lang,
     find_video_dir,
     is_blog,
     load_json,
@@ -73,10 +75,32 @@ def fetch(url: str, langs: list[str], vdir: Path, output_lang: str = "zh-TW") ->
         "yt-dlp", "--skip-download", "--no-playlist",
         "--write-subs", "--write-auto-subs",
         "--sub-langs", ",".join(langs), "--sub-format", "json3",
+        "--retries", "10", "--extractor-retries", "5", "--no-overwrites",
         "--write-info-json", "-o", str(vdir / "subs"), "-o", f"infojson:{vdir / 'info'}",
-        url,
     ]
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    # 2025 起 yt-dlp 抽 YouTube 需要 JS runtime；預設只找 deno，有 node 就指給它，
+    # 不然會少掉一些 format、也更容易被擋。
+    if shutil.which("node"):
+        cmd += ["--js-runtimes", "node"]
+    # 字幕網址被 429 擋住時，換 player client 常常就過了（預設的 web client 最常被擋）。
+    fallbacks = [[], ["--extractor-args", "youtube:player_client=android"]]
+    # YouTube 偶爾對字幕網址回 429（yt-dlp 自己不重試這一段），隔幾秒整個指令重來；
+    # 已經抓到的檔案 yt-dlp 會跳過，所以重跑很便宜。
+    def done() -> bool:
+        return bool(list(vdir.glob("subs.*.json3")) or list(vdir.glob("subs.*.vtt"))) \
+            and (vdir / "info.info.json").exists()
+
+    err = None
+    for attempt in range(5):
+        extra = fallbacks[min(attempt, len(fallbacks) - 1)]
+        r = subprocess.run(cmd + extra + [url], check=False, capture_output=True, text=True)
+        if r.returncode == 0 or done():
+            break
+        err = r.stderr
+        if attempt < 4:
+            time.sleep(15)
+    else:
+        raise SystemExit(f"yt-dlp 抓字幕失敗（重試 5 次）：\n{err}")
 
     files = sorted(vdir.glob("subs.*.json3")) or sorted(vdir.glob("subs.*.vtt"))
     if not files:
@@ -140,7 +164,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("url")
     ap.add_argument("--lang", default="zh-TW,zh,en", help="字幕語言優先序")
-    ap.add_argument("--output-lang", default="zh-TW", help="產出文件的語言（zh-TW / en …），跟著使用者的對話語言")
+    ap.add_argument("--output-lang", default=None,
+                    help="產出文件的語言（zh-TW / en …）；預設讀 workspace/settings.json 的 output_lang，"
+                         "再退到 $LEARN_LANG，最後 zh-TW")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args(argv)
@@ -165,8 +191,9 @@ def main(argv=None):
     tmp = args.workspace / f".tmp-{vid}"
     tmp.mkdir(parents=True, exist_ok=True)
     t0 = time.monotonic()
-    meta = (fetch_blog(url, vid, tmp, args.output_lang) if blog_src
-            else fetch(url, args.lang.split(","), tmp, args.output_lang))
+    out_lang = args.output_lang or default_output_lang(args.workspace)
+    meta = (fetch_blog(url, vid, tmp, out_lang) if blog_src
+            else fetch(url, args.lang.split(","), tmp, out_lang))
     vdir = video_dir(vid, args.workspace, title=meta["title"])
     for f in tmp.iterdir():
         f.replace(vdir / f.name)

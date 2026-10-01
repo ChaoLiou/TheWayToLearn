@@ -51,7 +51,67 @@ def test_publish_collects_only_shippable_files(tmp_path):
     (ws / "A vid" / "frames" / "s01_1.jpg").write_text("x")
     (ws / "_overview.json").write_text("{}")
     dist = tmp_path / "dist"
-    rels = {str(rel) for _, rel in publish.build(ws, dist)}
+    site, _ = publish.build(ws, dist)
+    rels = {str(rel) for _, rel in site}
     assert rels == {"atlas.html", "index.html", "A vid/plan.html", "A vid/lesson.mp3", "A vid/frames/s01_1.jpg"}
     assert not (dist / "A vid" / "audio.mp3").exists()
     assert not (dist / "A vid" / "lesson_parts").exists()
+
+
+# ---------- gc：回收中間檔 ----------
+
+def _prune_ws(tmp_path, narrated=True):
+    import json
+    ws = tmp_path / "ws"
+    d = ws / "A vid"
+    (d / "frames").mkdir(parents=True)
+    (d / "lesson_parts").mkdir()
+    (d / "lesson_parts" / "001_say_x.mp3").write_text("part")
+    (d / ".tmp-abc").mkdir()
+    (d / ".tmp-abc" / "junk").write_text("junk")
+    (d / "meta.json").write_text(json.dumps({"video_id": "aaaaaaaaaaa", "title": "A vid"}))
+    for n in ("audio.mp3", "subs.en.json3", "transcript.json", "analysis.json",
+              "segments.json", "digest.json", "narration.json", "plan.html"):
+        (d / n).write_text("x")
+    (d / "frames" / "s01_1.jpg").write_text("img")
+    if narrated:
+        (d / "lesson.mp3").write_text("mp3")
+        (d / "lesson.json").write_text("{}")
+    return ws, d
+
+
+def test_prune_lists_only_regenerable_files(tmp_path):
+    import prune
+    _, d = _prune_ws(tmp_path)
+    got = {p.name: kind for p, kind in prune.reclaimable(d)}
+    assert got == {"audio.mp3": "refetch", "subs.en.json3": "refetch",
+                   ".tmp-abc": "refetch", "lesson_parts": "cache"}
+    # LLM 產出、成品、截圖一律不動
+    for keep in ("analysis.json", "segments.json", "digest.json", "narration.json",
+                 "transcript.json", "plan.html", "lesson.mp3", "lesson.json", "frames"):
+        assert keep not in got
+
+
+def test_prune_keeps_audio_and_cache_until_narrated(tmp_path):
+    """還沒產出 lesson.mp3 的站 = narrate 可能正在跑，audio.mp3 與快取都不能碰。"""
+    import prune
+    _, d = _prune_ws(tmp_path, narrated=False)
+    got = {p.name: kind for p, kind in prune.reclaimable(d)}
+    assert "audio.mp3" not in got and "lesson_parts" not in got
+    assert got == {"subs.en.json3": "refetch", ".tmp-abc": "refetch"}
+
+
+def test_prune_keep_cache_and_actual_delete(tmp_path):
+    import prune
+    ws, d = _prune_ws(tmp_path)
+    assert {p.name for p, _ in prune.reclaimable(d, keep_cache=True)} == {
+        "audio.mp3", "subs.en.json3", ".tmp-abc"}
+    prune.main(["--workspace", str(ws)])                 # 只列出，不刪
+    assert (d / "audio.mp3").exists() and (d / "lesson_parts").exists()
+    prune.main(["--workspace", str(ws), "--delete"])
+    assert not (d / "audio.mp3").exists() and not (d / "lesson_parts").exists()
+    assert not (d / ".tmp-abc").exists() and not (d / "subs.en.json3").exists()
+    # 成品全部還在
+    for keep in ("lesson.mp3", "plan.html", "analysis.json", "frames/s01_1.jpg"):
+        assert (d / keep).exists()
+    prune.main(["--workspace", str(ws), "--delete"])     # 再跑一次不會爆

@@ -56,7 +56,7 @@ def station_md(ws: Path, s: dict, state: dict) -> str:
         "tags: [station]",
         "---",
         f"# {s['title']}",
-        f"[原始來源]({s['url']}) · [文字說明]({plan})" if s["url"] else f"[文字說明]({plan})",
+        f"[原始來源]({s['url']}) · [文字解析]({plan})" if s["url"] else f"[文字解析]({plan})",
         "",
     ]
     for k in KINDS:

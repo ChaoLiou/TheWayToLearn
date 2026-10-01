@@ -4,6 +4,7 @@
   uv run scripts/options.py learn                       # /learn 會用到的全部參數
   uv run scripts/options.py learn-shot                  # 單一階段
   uv run scripts/options.py learn --set shots=none      # 標記已指定，其餘顯示預設
+  uv run scripts/options.py learn --save output_lang=en # 記進 workspace/settings.json，往後都用這個
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import DEFAULT_WORKSPACE, config_file, load_yaml
+from common import DEFAULT_WORKSPACE, config_file, load_settings, load_yaml, save_setting
 
 # name -> (flag, 預設, 一句話意義, [(值, 說明)])
 PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
@@ -44,24 +45,24 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
         ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
     ]),
-    "narrate": ("--narrate", "true", "要不要順便產出聽力版（第 8 步）", [
+    "narrate": ("--narrate", "true", "要不要順便產出語音解析（第 8 步）", [
         ("true", "產出 lesson.mp3：TTS 講解與作者原聲交錯，plan.html 有播放器與講稿（預設）"),
         ("false", "只產出網頁版，不做聲音；之後想要再跑 /learn-narrate 也可以"),
     ]),
-    "digest": ("--digest", "true", "要不要做 PACER 消化工作單（第 6 步）", [
+    "digest": ("--digest", "true", "要不要做 PACER 練習（第 6 步）", [
         ("true", "agent 把每筆資訊標 P/A/C/E/R 並寫消化動作成 digest.json，彙整進 digest.html；plan.html 每段有標籤（預設）"),
         ("false", "不做；之後想要再跑 /learn-digest 也可以"),
     ]),
     "listen": ("--listen", "true", "要不要重產 podcast 頁 listen.html（第 10 步）", [
-        ("true", "把所有聽力版列成一集一集，並連到這站的 digest / notes（預設）"),
+        ("true", "把所有語音解析列成一集一集，並連到這站的 digest / notes（預設）"),
         ("false", "不重產；之後想要再跑 /learn-listen 也可以"),
     ]),
-    "clips": ("clips（在 segments.json）", "整段", "聽力版要播多長的作者原聲", [
+    "clips": ("clips（在 segments.json）", "整段", "語音解析要播多長的作者原聲", [
         ("整段", "段落完整播出（預設）；超過 150 秒的段落取其中核心 60–120 秒"),
-        ("精華", "只播 20–40 秒的關鍵句，聽力版較短但脈絡較少"),
+        ("精華", "只播 20–40 秒的關鍵句，語音解析較短但脈絡較少"),
         ("不放", "全部用 TTS 講解，不播原聲"),
     ]),
-    "voice": ("--voice", "依語言自動選", "聽力版的 TTS 語音", [
+    "voice": ("--voice", "依語言自動選", "語音解析的 TTS 語音", [
         ("zh-TW-HsiaoChenNeural", "中文女聲，語氣友善（中文預設）"),
         ("zh-TW-YunJheNeural", "中文男聲"),
         ("en-US-AriaNeural", "英文女聲（英文預設）"),
@@ -75,7 +76,7 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
         ("zh-TW-HsiaoChenNeural", "中文女聲"),
         ("en-US-GuyNeural", "英文男聲"),
     ]),
-    "rate": ("--rate", "+0%", "聽力版語速", [
+    "rate": ("--rate", "+0%", "語音解析語速", [
         ("+0%", "原速（預設）"), ("+15%", "快一點，通勤聽適合"), ("-10%", "慢一點"),
     ]),
     "project_name": ("--project-name", "atlas-of-knowledge", "Cloudflare Pages 的專案名（決定網址）", []),
@@ -84,6 +85,10 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     ]),
     "max_height": ("config: download.max_height", "720", "下載影片的畫質上限（影響截圖清晰度與下載量）", []),
 }
+
+# --save 能寫進 workspace/settings.json 的參數：只放「整個 workspace 一致、改一次就該一直有效」的。
+# 其餘（shots / vision / force …）是逐支影片的決定，留在 input.yaml 或指令旗標。
+SAVABLE = ("output_lang",)
 
 SKILL_PARAMS: dict[str, list[str]] = {
     "learn": ["shots", "vision", "max_shots", "digest", "narrate", "listen", "output_lang", "lang"],
@@ -133,11 +138,21 @@ def effective(name: str, workspace: Path) -> str | None:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("skill", choices=list(SKILL_PARAMS))
-    ap.add_argument("--set", action="append", default=[], metavar="k=v", help="使用者已指定的參數")
+    ap.add_argument("--set", action="append", default=[], metavar="k=v", help="使用者已指定的參數（只影響這一次）")
+    ap.add_argument("--save", action="append", default=[], metavar="k=v",
+                    help="記進 workspace/settings.json，往後每次都用（目前支援 output_lang）")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
     args = ap.parse_args(argv)
 
+    for kv in args.save:
+        if "=" not in kv:
+            continue
+        k, v = kv.split("=", 1)
+        if k not in SAVABLE:
+            raise SystemExit(f"--save 目前只支援 {'、'.join(SAVABLE)}，收到 {k}")
+        print(f"已記住 {k} = {v} → {save_setting(k, v, args.workspace)}")
     given = dict(kv.split("=", 1) for kv in args.set if "=" in kv)
+    saved = load_settings(args.workspace)
     names = SKILL_PARAMS[args.skill]
     if not names:
         print(f"/{args.skill} 沒有可調參數，直接執行。")
@@ -146,8 +161,9 @@ def main(argv=None):
     ask = []
     for n in names:
         flag, default, meaning, choices = PARAMS[n]
-        cur = given.get(n) or effective(n, args.workspace)
-        mark = "（你已指定）" if n in given else ("（沿用 input.yaml）" if cur else "（預設）")
+        cur = given.get(n) or effective(n, args.workspace) or saved.get(n)
+        mark = ("（你已指定）" if n in given else "（沿用 input.yaml）" if effective(n, args.workspace)
+                else "（記在 settings.json）" if saved.get(n) else "（預設）")
         print(f"\n  {flag}  = {cur or default} {mark}")
         print(f"      {meaning}")
         for val, desc in choices:

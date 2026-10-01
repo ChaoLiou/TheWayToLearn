@@ -1,15 +1,15 @@
 ---
 name: learn
-description: 使用者貼 YouTube 連結或部落格文章網址並要求學習、整理、做筆記、做學習規劃時使用。總指揮：先估時間成本與消化積欠，再依序跑 fetch → segment → shot → analyze → digest → render 產出 plan.html 與 PACER 消化工作單。
+description: 使用者貼 YouTube 連結或部落格文章網址並要求學習、整理、做筆記、做文字解析時使用。總指揮：先估時間成本與消化積欠，再依序跑 fetch → segment → shot → analyze → digest → render 產出 plan.html 與 PACER 練習。
 ---
 
 # /learn — 總指揮（10 個步驟）
 
 ```
-[1/10] estimate  估成本＋消化積欠   [6/10] digest   消化工作單（--digest，預設開）
+[1/10] estimate  估成本＋消化積欠   [6/10] digest   練習（--digest，預設開）
 [2/10] fetch     抓字幕             [7/10] render   產出 plan.html
 [3/10] segment   切段               [8/10] atlas    連結各站（≥ 2 站才需要）
-[4/10] shot      截圖               [9/10] narrate  產出聽力版（--narrate，預設開）
+[4/10] shot      截圖               [9/10] narrate  產出語音解析（--narrate，預設開）
 [5/10] analyze   逐段分析          [10/10] listen   podcast 頁（--listen，預設開）
 ```
 依賴其實是一棵樹：fetch → segment → (shot) → analyze 是主幹；analyze 之後 digest / render / atlas / narrate 只依賴 analyze（digest 排在 render 前是為了讓 plan.html 第一次就有 PACER 標籤；listen 依賴 narrate）。順序固定是為了進度條好讀，多支影片時 atlas / narrate 可以跟 render 平行派 subagent。
@@ -91,16 +91,20 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 **準備**（不算步驟）：
 - 跑 `paths.py` 確認規則檔實際路徑。
-- **判定輸出語言**：看使用者這次下指令用的語言——中文 → `zh-TW`，英文 → `en`（其他語言用 BCP-47 碼）。寫進 `workspace/input.yaml` 的 `output_lang`，`/learn-fetch` 時帶 `--output-lang`（存進該站 `meta.json`，之後所有階段與 HTML 介面都跟著它）。使用者明說要哪種語言就照他說的。
+- **判定輸出語言**：順序是**使用者這次明說的 > `workspace/settings.json` 的 `output_lang` > 這次下指令用的語言**（中文 → `zh-TW`，英文 → `en`，其他語言用 BCP-47 碼）。寫進 `workspace/input.yaml` 的 `output_lang`，`/learn-fetch` 時帶 `--output-lang`（存進該站 `meta.json`，之後所有階段與 HTML 介面都跟著它）。
+  - **`settings.json` 還沒有 `output_lang`（第一次用）時，在「確認參數」那一步順便問一次**：選項給「跟著我的對話語言（推薦）」／「English」／「繁體中文」。使用者選了就跑
+    `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn --save output_lang=<值>`
+    記起來，以後這個 workspace 都不用再問。使用者說「以後都用英文」之類的話也是跑這行。
+  - 已經產好的站不受影響（各站以自己 `meta.json` 的 `output_lang` 為準）；要整份換語言就改 `settings.json` 後把各站 `meta.json` 的 `output_lang` 一起改，再重跑 render / atlas / listen / digest / notes。
 - 沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）；**已經有就先讀進來、依 `url` 去重後合併再寫回**，不要整份覆蓋（同一個 workspace 可能有另一個 /learn 正在跑）。
 
 **選項**
 - `--shots`：`auto`（預設，只截看了才懂的畫面）｜`none`（完全不截圖，也不下載影片，步驟 4 直接跳過）｜`many`（投影片型影片，每段至少一張）。使用者說「畫面沒什麼東西」「重點都在講的內容」「不用截圖」就用 `none`。
 - `--vision`：AI 要不要逐張讀截圖，預設 `true`；`--shots none` 時自動失效。
-- `--narrate`：要不要順便產出聽力版（第 8 步），**預設 `true`**。使用者說「不用聲音」「只要網頁」就用 `false`。
-- `--digest`：要不要做 PACER 消化工作單（第 6 步），**預設 `true`**。使用者說「只要規劃」「不用工作單」就用 `false`。
+- `--narrate`：要不要順便產出語音解析（第 8 步），**預設 `true`**。使用者說「不用聲音」「只要網頁」就用 `false`。
+- `--digest`：要不要做 PACER 練習（第 6 步），**預設 `true`**。使用者說「只要規劃」「不用工作單」就用 `false`。
 - `--force`：消化積欠超過 `config/estimate.yaml` 的 `balance.max_backlog` 時 estimate 會警告並建議先消化；使用者堅持就加 `--force` 往下跑。
-- `--listen`：要不要重產 podcast 頁 listen.html（第 10 步），**預設 `true`**。`--narrate false` 且 workspace 裡還沒有任何聽力版時自動跳過。
+- `--listen`：要不要重產 podcast 頁 listen.html（第 10 步），**預設 `true`**。`--narrate false` 且 workspace 裡還沒有任何語音解析時自動跳過。
 - `--shots` / `--vision` 寫進 `workspace/input.yaml` 該支影片底下，並由 `/learn-segment` 寫進 `segments.json` 的 `shots_mode` / `vision`。
 
 **[1/10] estimate**：跑 `/learn-estimate`（帶上 `--shots` / `--vision`），把分階段 + 總和的表格原樣給使用者看。`--shots none` 會明顯降低時間與 token，值得在確認時指出。使用者未明說「直接跑」時，等確認再繼續。
@@ -133,16 +137,16 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 **[7/10] render**：
 - 若 `--narrate true`，**render 之前**先跑一次
   `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> --mark-pending`，
-  這樣產出的 `plan.html` 會顯示「🎧 聽力版產生中…」，並在完成後自動偵測、自動重新整理。
+  這樣產出的 `plan.html` 會顯示「🎧 語音解析產生中…」，並在完成後自動偵測、自動重新整理。
 - 每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
-- **render 完成後立刻把 `plan.html` 路徑給使用者**，告訴他可以先開始讀，聽力版還在做。
+- **render 完成後立刻把 `plan.html` 路徑給使用者**，告訴他可以先開始讀，語音解析還在做。
 
 **[8/10] atlas**：workspace 下有 ≥ 2 支影片時跑 `/learn-atlas`，把新站跟既有站連起來（route / region）。只有一站就說「[8/10] atlas 跳過：只有一站」。
 
 **[9/10] narrate**：`--narrate true`（預設）就跑 `/learn-narrate`；`false` 則跳過，並提一句「想用聽的可以跑 /pacer:learn-narrate」。
 完成後**再跑一次 `/learn-render`**，讓 `plan.html` 換成正式的播放器與講稿（使用者若還開著頁面，它也會自己重新整理）。
 
-**[10/10] listen**：`--listen true`（預設）就跑 `/learn-listen`（`listen.py`，把新的聽力版列進 podcast 頁並掛上 digest / notes 連結）。跳過的情形：`--listen false`，或 `--narrate false` 且 workspace 裡沒有任何 `lesson.mp3`（說「[10/10] listen 跳過：沒有聽力版」）。
+**[10/10] listen**：`--listen true`（預設）就跑 `/learn-listen`（`listen.py`，把新的語音解析列進 podcast 頁並掛上 digest / notes 連結）。跳過的情形：`--listen false`，或 `--narrate false` 且 workspace 裡沒有任何 `lesson.mp3`（說「[10/10] listen 跳過：沒有語音解析」）。
 
 **收尾回報**：`plan.html` 路徑、每支影片 vision 模式、estimate vs 實際耗時（`timings.json`）、atlas 上的新 route、工作單五類各幾筆與 `digest.html` / `listen.html` 路徑（有做才列）。提醒一句：**讀完（或聽完）再到 digest.html 按這站的「📖 讀完了」**，工作單才開始算積欠。最後一句固定是**現在就能做的一件事**：第一筆 P 的 `practice_task`——讀完只是消費，做了才算。
 
@@ -158,9 +162,9 @@ workspace/<影片標題>/               # 一站（waypoint）
   digest.json                      # [6/10] PACER 工作單：每筆資訊的類別與消化動作（/learn-digest）
   _overview.json  plan.html        # 每支影片各自一份
 workspace/atlas.json               # 站與站的 route、主題區（agent 維護）
-workspace/listen.html              # [10/10] podcast 頁：所有聽力版新到舊，置底播放器（/learn-listen）
-workspace/digest.html              # [6/10] 消化工作單：今天到期、每站五類、做完灰掉（digest.py）
+workspace/listen.html              # [10/10] podcast 頁：所有語音解析新到舊，置底播放器（/learn-listen）
+workspace/digest.html              # [6/10] 練習：今天到期、每站五類、做完灰掉（digest.py）
 workspace/digest.state.json        # 消化進度（網頁匯出或 /learn-digest do 寫入）
-workspace/notes.html               # 工具：成長筆記（/learn-notes，不在必經步驟裡）
-workspace/atlas.html               # 文字說明列表：所有站的卡片、分類、搜尋、相鄰站
+workspace/notes.html               # 工具：筆記（/learn-notes，不在必經步驟裡）
+workspace/atlas.html               # 影片解析：所有站的卡片、分類、搜尋、相鄰站
 ```

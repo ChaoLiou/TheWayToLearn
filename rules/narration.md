@@ -1,4 +1,4 @@
-# 聽力版講稿規則（narration.json）
+# 語音解析講稿規則（narration.json）
 
 改這個檔案就是改 `/learn-narrate` 產出的聲音內容。目標：**閉著眼睛通勤時聽也學得會**。
 

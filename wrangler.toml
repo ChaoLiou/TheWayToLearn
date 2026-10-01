@@ -1,0 +1,9 @@
+# Cloudflare Pages 專案設定。dist/_worker.js（由 scripts/publish.py --r2-binding 產生）
+# 靠這裡的 binding 讀 R2，所以 HTML 與 mp3 同一個 origin、同一套 Access。
+name = "the-way-to-learn"
+compatibility_date = "2026-09-30"
+pages_build_output_dir = "dist"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "the-way-to-learn"

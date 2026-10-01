@@ -1,4 +1,4 @@
-# 消化工作單規則（/learn-digest）
+# 練習規則（/learn-digest）
 
 改這個檔案就是改 `/learn-digest` 產 `digest.json` 的行為。目的：讀完（消費期）之後，把這一站的每一筆資訊標上 **PACER** 類別，並寫下該類專屬的消化動作，讓使用者去做——而不是再讀一次。硬規則由 `scripts/validate.py check_digest` 執行。
 

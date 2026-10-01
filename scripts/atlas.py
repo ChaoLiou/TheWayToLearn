@@ -1,4 +1,4 @@
-"""/learn-atlas：文字說明列表（atlas.html）。workspace 下每個影片資料夾是一個 waypoint，atlas.json 記 route 與 region。
+"""/learn-atlas：影片解析（atlas.html）。workspace 下每個影片資料夾是一個 waypoint，atlas.json 記 route 與 region。
 
   uv run scripts/atlas.py --status      # 列出所有 waypoint、哪些還沒進 atlas.json、新站與既有站的共同術語
   uv run scripts/atlas.py               # 驗證 atlas.json 並 render workspace/atlas.html
@@ -23,6 +23,7 @@ from common import (
     SCHEMAS,
     STEP_CMD,
     STEPS,
+    default_output_lang,
     fmt_dur,
     fmt_ts,
     is_blog,
@@ -30,13 +31,15 @@ from common import (
     locked,
     print_step,
     save_json,
+    sibling_pages,
     template_dirs,
     write_text,
 )
 from i18n import Strings, norm_lang
-from render import PALETTE
 
 # 舊的五種型態 → 現在的兩種（--migrate-routes 用）
+PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"]
+
 ROUTE_MIGRATE = {"prerequisite": "next", "deepens": "next", "applies": "next",
                  "contrasts": "related", "related": "related"}
 
@@ -62,7 +65,7 @@ def thumb(d: Path) -> str | None:
 
 def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
     """這一站在十步 pipeline 上走到哪。state：done｜partial｜todo｜skip｜running。
-    partial 是「做過但缺一塊」——例如聽力版做了卻沒挑原聲片段、原聲沒翻譯、還沒做翻譯配音。"""
+    partial 是「做過但缺一塊」——例如語音解析做了卻沒挑原聲片段、原聲沒翻譯、還沒做翻譯配音。"""
     seg = load_json(d / "segments.json") if (d / "segments.json").exists() else None
     lesson = load_json(d / "lesson.json") if (d / "lesson.json").exists() else None
     segs = seg["segments"] if seg else []
@@ -92,7 +95,7 @@ def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
         return "done", ""
 
     def listen_state():
-        # podcast 頁是 workspace 層級的：這站沒有聽力版就沒東西可列；有的話要 listen.html 與這站的 captions.js 都在
+        # podcast 頁是 workspace 層級的：這站沒有語音解析就沒東西可列；有的話要 listen.html 與這站的 captions.js 都在
         if not lesson:
             return "skip", S.n_no_lesson
         ws = d.parent
@@ -140,6 +143,17 @@ def next_actions(w: dict, stages: list[dict], S: Strings) -> list[dict]:
     return acts
 
 
+def made_at(d: Path) -> float:
+    """這一站什麼時候做好的（新到舊排序用）。看 analysis.json 而不是 plan.html：
+    plan.html 每次 render 都會重寫，51 站一起重產就會全部同一個時間、排序整個失效。
+    analysis.json 是 analyze 階段寫一次就不再動的，重新分析過才會變新——語意也剛好對。"""
+    for n in ("analysis.json", "meta.json"):
+        f = d / n
+        if f.exists():
+            return f.stat().st_mtime
+    return 0.0
+
+
 def load_waypoints(ws: Path) -> list[dict]:
     wps = []
     for d in sorted(p for p in ws.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))):
@@ -155,10 +169,11 @@ def load_waypoints(ws: Path) -> list[dict]:
             "takeaways": ov.get("takeaways", []), "summary": ov["summary"], "terms": terms,
             "prerequisites": [p["concept"] for p in ov.get("prerequisites", [])],
             "n_segments": len(an["segments"]), "has_plan": (d / "plan.html").exists(),
+            "made": made_at(d),
             "issues": issues,
             "n_wrong": sum(1 for i in issues if i["level"] == "wrong"),
             "n_debatable": sum(1 for i in issues if i["level"] != "wrong"),
-            "output_lang": norm_lang(meta.get("output_lang")),
+            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
             "href": f"{quote(d.name)}/plan.html",
             "upload_date": fmt_ymd(meta.get("upload_date")),
             "upload_days": days_since(meta.get("upload_date")),
@@ -288,9 +303,10 @@ def render(ws: Path) -> Path:
     for gi, r in enumerate(atlas["regions"]):
         regions.append(dict(r, color=PALETTE[gi % len(PALETTE)], members=[by_id[x] for x in r["waypoints"] if x in by_id]))
     unplaced = [w for w in wps if w["region"] is None]
+    color_of = {r["id"]: r["color"] for r in regions}
     # 介面語言：atlas.json 的 lang，否則取多數站的 output_lang
     lang = atlas.get("lang") or (max({w["output_lang"] for w in wps}, key=[w["output_lang"] for w in wps].count) if wps else None)
-    S = Strings(norm_lang(lang))
+    S = Strings(norm_lang(lang or default_output_lang(ws)))
     # 每一站走到哪一步，以及「繼續做」要複製的 prompt
     linked = {x for r in atlas["regions"] for x in r["waypoints"]} | {x for e in atlas["routes"] for x in (e["from"], e["to"])}
     for w in wps:
@@ -304,6 +320,11 @@ def render(ws: Path) -> Path:
                      else next((x["note"] for x in live if x["note"]), ""))
     for w in wps:
         w["err"] = errata_stats(w, S)
+    # 攤平成一份清單、新到舊（不再依 region 分組；分類仍在卡片上，點了就加一個篩選條件）
+    for w in wps:
+        w["cat"] = w["region"]["name"] if w["region"] else S.unplaced
+        w["cat_color"] = color_of.get(w["region"]["id"]) if w["region"] else "var(--line)"
+    wps.sort(key=lambda w: w["made"], reverse=True)
     env = Environment(loader=FileSystemLoader(template_dirs()), autoescape=True)
     env.filters["dur"] = fmt_dur
     env.filters["ts"] = fmt_ts
@@ -313,8 +334,7 @@ def render(ws: Path) -> Path:
     html = env.get_template("atlas.html.j2").render(
         waypoints=wps, regions=regions, unplaced=unplaced, routes=atlas["routes"], by_id=by_id,
         steps_data=steps_data,
-        has_listen=(ws / "listen.html").exists(), has_notes=(ws / "notes.html").exists(),
-        has_digest=(ws / "digest.html").exists(),
+        **sibling_pages(ws),
         tips={}, S=S,
         generated=now.strftime("%Y-%m-%d %H:%M"), generated_iso=now.isoformat(timespec="seconds"),
     )

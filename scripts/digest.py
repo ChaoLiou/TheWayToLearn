@@ -1,4 +1,4 @@
-"""消化工作單：把各站的 digest.json（agent 依 rules/digest.md 標的 PACER 資訊）彙整成 workspace/digest.html。
+"""練習：把各站的 digest.json（agent 依 rules/digest.md 標的 PACER 資訊）彙整成 workspace/digest.html。
 每筆資訊顯示類別與該做的消化動作；P/A/C 做完按「做完了」、E 有「演練」、R 是 flashcard（SM-2 間隔重複）。
 進度存瀏覽器；「匯出進度」下載 digest.state.json，放到 workspace/ 後這裡把它當預設狀態，
 `backlog()` 也讀同一份給 /learn 算「消化積欠」。
@@ -25,11 +25,13 @@ from atlas import fmt_ymd
 from common import (
     DEFAULT_WORKSPACE,
     STEP_CMD,
+    default_output_lang,
     fmt_dur,
     is_blog,
     load_json,
     locked,
     print_step,
+    sibling_pages,
     template_dirs,
     write_text,
 )
@@ -96,7 +98,7 @@ def load_stations(ws: Path) -> list[dict]:
             "plan": plan, "has_lesson": (d / "lesson.mp3").exists(),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang")),
+            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
             "items": items,
             "by_kind": {k: [n for n in items if n["kind"] == k] for k in KINDS},
         })
@@ -218,7 +220,7 @@ def mark(ws: Path, key: str, action: str, value: str = "") -> dict:
 
 def backlog_line(ws: Path, S: Strings | None = None) -> str:
     b = backlog(ws)
-    S = S or Strings(norm_lang(None))
+    S = S or Strings(norm_lang(default_output_lang()))
     line = (f"{S.f('d_backlog', p=b['P'], a=b['A'], c=b['C'])} · {S.f('d_due_rehearse', n=b['E'])}"
             f" · {S.f('d_due_cards', n=b['R'])}")
     if b["unread"]:
@@ -236,8 +238,7 @@ def render(ws: Path) -> Path:
     n_items = sum(len(s["items"]) for s in stations)
     html = env.get_template("digest.html.j2").render(
         stations=stations, state=state, S=S, n_items=n_items, kinds=KINDS,
-        has_listen=(ws / "listen.html").exists(), has_atlas=(ws / "atlas.html").exists(),
-        has_notes=(ws / "notes.html").exists(), cmd=STEP_CMD["digest"],
+        **sibling_pages(ws), cmd=STEP_CMD["digest"],
         generated=now.strftime("%Y-%m-%d %H:%M"),
     )
     out = ws / "digest.html"

@@ -184,12 +184,12 @@ def test_pipeline_and_next_actions(tmp_path):
     assert st["fetch"]["state"] == "done" and st["segment"]["state"] == "done"
     assert st["analyze"]["state"] == "done" and st["atlas"]["state"] == "done"
     assert st["estimate"]["state"] == "todo"          # fixture 沒有 estimate.json
-    assert st["narrate"]["state"] == "todo"           # 也還沒做聽力版
-    assert st["listen"]["state"] == "skip"            # 沒聽力版就沒東西可列
+    assert st["narrate"]["state"] == "todo"           # 也還沒做語音解析
+    assert st["listen"]["state"] == "skip"            # 沒語音解析就沒東西可列
     assert st["digest"]["state"] == "todo"            # 測試影片 A 沒有 digest.json
     assert atlas.pipeline(d, False, False, S)[7]["state"] == "skip"   # 只有一站時不需要連結
 
-    # 做了聽力版但沒挑原聲片段 → 沒做完，而且說得出缺什麼
+    # 做了語音解析但沒挑原聲片段 → 沒做完，而且說得出缺什麼
     (d / "lesson.json").write_text(json.dumps({"duration": 1, "dub": None}), encoding="utf-8")
     nar = {x["key"]: x for x in atlas.pipeline(d, True, True, S)}["narrate"]
     assert nar["state"] == "partial" and nar["note"] == S.n_no_clips
@@ -239,3 +239,42 @@ def test_errata_dialog_table(tmp_path):
     assert 'class="issues-sum"' in body and "plan.html#" in body   # 每列連到該段
 
 
+
+
+def test_atlas_is_flat_and_newest_first(tmp_path):
+    """全部影片：不依 region 分組、一份 grid、新到舊（依 analysis.json 而不是 plan.html）。"""
+    import os
+    import time
+    ws = _ws(tmp_path)
+    a, c = ws / "測試影片 A: B", ws / "測試影片 C"
+    now = time.time()
+    os.utime(a / "analysis.json", (now - 86400, now - 86400))   # A 舊
+    os.utime(c / "analysis.json", (now, now))                   # C 新
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert 'class="region"' not in html                 # 沒有分組區塊
+    assert html.count('class="wps"') == 1               # 只有一份 grid
+    ids = re.findall(r'<article class="wp" data-id="([^"]+)"', html)
+    assert ids == ["zzzzzzzzzzz", "abcdefghijk"]        # C（新）在前
+    # 反轉時間就該反轉順序
+    os.utime(c / "analysis.json", (now - 172800, now - 172800))
+    os.utime(a / "analysis.json", (now, now))
+    ids = re.findall(r'<article class="wp" data-id="([^"]+)"',
+                     atlas.render(ws).read_text(encoding="utf-8"))
+    assert ids == ["abcdefghijk", "zzzzzzzzzzz"]
+    # plan.html 一起重寫也不能影響排序（這是舊做法的 bug）
+    same = time.time()
+    for d in (a, c):
+        (d / "plan.html").write_text("x", encoding="utf-8")
+        os.utime(d / "plan.html", (same, same))
+    ids = re.findall(r'<article class="wp" data-id="([^"]+)"',
+                     atlas.render(ws).read_text(encoding="utf-8"))
+    assert ids == ["abcdefghijk", "zzzzzzzzzzz"]
+
+
+def test_atlas_category_is_a_filter_chip(tmp_path):
+    """分類不再是分組標題，變成卡片上可點的篩選條件。"""
+    ws = _ws(tmp_path)
+    html = atlas.render(ws).read_text(encoding="utf-8")
+    assert 'class="cat" type="button" data-cat=' in html
+    assert 'addChip("category", el.dataset.cat)' in html
+    assert 'data-category="A 與 B"' in html              # 仍然可搜尋

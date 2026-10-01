@@ -1,4 +1,4 @@
-"""成長筆記：把各站的 notes.json（agent 依 rules/notes.md 擷取的觀念／技巧）彙整成 workspace/notes.html。
+"""筆記：把各站的 notes.json（agent 依 rules/notes.md 擷取的觀念／技巧）彙整成 workspace/notes.html。
 新產出的站在上面；每條筆記連回 plan.html 的那一段；每條可按「留／刪」（存瀏覽器），
 「匯出」下載 notes.keep.json，放到 workspace/ 後這裡會把它當預設狀態。
 
@@ -18,9 +18,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas import fmt_ymd
 from common import (
     DEFAULT_WORKSPACE,
+    default_output_lang,
     fmt_dur,
     is_blog,
     load_json,
+    sibling_pages,
     template_dirs,
     write_text,
 )
@@ -57,7 +59,7 @@ def load_stations(ws: Path) -> list[dict]:
             "has_lesson": (d / "lesson.mp3").exists(),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang")),
+            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
             "notes": [dict(n, key=f"{vid}:{n['id']}", seg_title=seg_titles.get(n["seg_id"], ""),
                            href=f"{quote(d.name)}/plan.html#{vid}-s{n['seg_id']}") for n in notes["notes"]],
         })
@@ -84,8 +86,7 @@ def render(ws: Path) -> Path:
     n_notes = sum(len(s["notes"]) for s in stations)
     html = env.get_template("notes.html.j2").render(
         stations=stations, keep=keep, S=S, n_notes=n_notes,
-        has_listen=(ws / "listen.html").exists(), has_atlas=(ws / "atlas.html").exists(),
-        has_digest=(ws / "digest.html").exists(),
+        **sibling_pages(ws),
         generated=now.strftime("%Y-%m-%d %H:%M"),
     )
     out = ws / "notes.html"

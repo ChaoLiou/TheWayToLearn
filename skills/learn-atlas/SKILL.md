@@ -1,6 +1,6 @@
 ---
 name: learn-atlas
-description: [步驟 8/10·連結各站] 文字說明列表（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字說明的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。
+description: [步驟 8/10·連結各站] 影片解析（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字解析的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。
 ---
 
 # /learn-atlas　—　步驟 7/8 連結各站
@@ -22,7 +22,7 @@ description: [步驟 8/10·連結各站] 文字說明列表（atlas.html）：�
 3. `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/atlas.py --merge <patch.json>`
    → 併進 `atlas.json`、驗證、產出 `workspace/atlas.html`（整段有檔案鎖，兩支影片同時跑也不會互相蓋掉 route；驗證沒過就不寫入）。
    - 要重整全部關係（改區、刪 route）才直接改 `atlas.json`，然後跑不帶參數的 `atlas.py` 驗證 + render。
-4. 重跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py`（不帶參數）讓每站的 `plan.html` 頂部「文字說明列表」區塊更新為最新 route。
+4. 重跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py`（不帶參數）讓每站的 `plan.html` 頂部「影片解析」區塊更新為最新 route。
 5. 回報：atlas.html 路徑、新站連到了哪些站、進了哪個 region。
 
 ## 各站的 pipeline 進度（自動，不用做事）

@@ -158,7 +158,7 @@ def clip_lines(events: list[dict], start: float, end: float, offset: float) -> l
 
 
 def mark(vdir: Path, state: str, **extra) -> None:
-    """寫 lesson.status.json，讓步驟 6 產出的 plan.html 知道聽力版正在做。"""
+    """寫 lesson.status.json，讓步驟 6 產出的 plan.html 知道語音解析正在做。"""
     if state == "done":
         (vdir / "lesson.status.json").unlink(missing_ok=True)
         return
@@ -363,7 +363,7 @@ def main(argv=None):
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-cache", action="store_true", help="不重用 lesson_parts/ 裡的舊片段，全部重做")
     ap.add_argument("--mark-pending", action="store_true",
-                    help="只標記「聽力版產生中」就結束；步驟 6 render 前先呼叫，plan.html 才會顯示處理中")
+                    help="只標記「語音解析產生中」就結束；步驟 6 render 前先呼叫，plan.html 才會顯示處理中")
     args = ap.parse_args(argv)
 
     if not shutil.which("ffmpeg"):
@@ -372,7 +372,7 @@ def main(argv=None):
     vdir = video_dir(vid, args.workspace)
     if args.mark_pending:
         mark(vdir, "building")
-        print(f"已標記聽力版產生中 → {vdir / 'lesson.status.json'}")
+        print(f"已標記語音解析產生中 → {vdir / 'lesson.status.json'}")
         return
     if not (vdir / "narration.json").exists():
         raise SystemExit(f"缺 {vdir / 'narration.json'}：先由 agent 依 rules/narration.md 產生")
@@ -398,11 +398,11 @@ def main(argv=None):
         n_dub = sum(1 for e in lesson["dub"]["timeline"] if e["kind"] == "dub")
         print(f"   翻譯版 {fmt_dur(lesson['dub']['duration'])}（{n_dub} 段配音，{lesson['dub']['voice']}）→ {vdir / 'lesson.dub.mp3'}")
     refresh_listen(args.workspace)
-    print_step("narrate", f"{fmt_dur(lesson['duration'])} 聽力版")
+    print_step("narrate", f"{fmt_dur(lesson['duration'])} 語音解析")
 
 
 def refresh_listen(ws: Path) -> None:
-    """多了一集就重產 podcast 頁（listen.html）；失敗不影響聽力版本身。"""
+    """多了一集就重產 podcast 頁（listen.html）；失敗不影響語音解析本身。"""
     try:
         from listen import render as render_listen
         with locked(ws / ".listen.lock", "listen.html"):

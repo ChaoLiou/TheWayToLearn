@@ -13,18 +13,53 @@ def test_render_produces_html(tmp_path):
     shutil.copytree(FX, ws)
     render.main(["--workspace", str(ws)])
     html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
-    for h in ["1. 前情提要", "2. YouTuber", "3. 逐段說明", "4. 總結", "5. 推薦三個下一步"]:
+    for h in ["1. Outline", "2. YouTuber", "3. 逐段說明", "4. 總結", "5. 推薦三個下一步"]:
         assert h in html
-    assert html.index("1. 前情提要") < html.index("2. YouTuber") < html.index("3. 逐段說明") \
+    assert html.index("1. Outline") < html.index("2. YouTuber") < html.index("3. 逐段說明") \
         < html.index("4. 總結") < html.index("5. 推薦三個下一步")
-    assert "flowchart TD" in html and "mindmap" in html and "graph TD" in html
     assert 'src="frames/s01_30.jpg"' in html
     assert "承上" in html and "留給下一段" in html
 
 
-def test_mermaid_label_sanitized():
-    assert '"' not in render.mm_label('a "b" [c]')
-    assert len(render.mm_label("x" * 100)) == 24
+def test_no_mermaid_diagrams(tmp_path):
+    """推理鏈本來就是一條線、mindmap 與術語關聯圖沒人看 → plan.html 不再畫任何圖。"""
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert 'class="mermaid"' not in html
+    for gone in ["flowchart TD", "mindmap\n", "graph TD", "看之前需要先懂", "作者說"]:
+        assert gone not in html
+
+
+def test_reasoning_split_into_paragraphs(tmp_path):
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    body = html[html.index("2. YouTuber"):html.index("3. 逐段說明")]
+    assert body.count("<p>") >= 1
+    assert render.paras("一。二。三。四。五。六。七。") == ["一。二。三。", "四。五。六。", "七。"]
+    assert render.paras("A\n\nB") == ["A", "B"]
+    assert render.paras("") == []
+
+
+def test_terms_marked_inline(tmp_path):
+    """術語就地標在文章第一次出現的地方，不再另外列一份 dl。"""
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert '<dl class="terms"' not in html
+    # 每個術語都還有 ⓘ 與 dialog（文中沒出現的收在 .terms-extra 那一行）
+    assert html.count("<dialog id=\"term-") == html.count('class="info" data-term=')
+    texts = {"summary": "先講 X 再說別的", "reasoning": "X 又出現一次，還有 Y"}
+    terms = [{"term": "X", "zh": "X 中文", "tid": "t1"}, {"term": "Y", "zh": "Y 中文", "tid": "t2"},
+             {"term": "Z", "zh": "Z 中文", "tid": "t3"}]
+    marked, extra = render.mark_terms(texts, terms, "更多")
+    assert marked["summary"].count('class="term"') == 1      # X 只標第一次
+    assert marked["reasoning"].count('class="term"') == 1    # 只有 Y
+    assert [t["term"] for t in extra] == ["Z"]               # 文中沒出現
 
 
 def test_interactive_features_present(tmp_path):
@@ -43,10 +78,29 @@ def test_diagram_descriptions_collapsed(tmp_path):
     shutil.copytree(FX, ws)
     render.main(["--workspace", str(ws)])
     html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
-    assert html.count('<details class="desc">') == 3
+    assert html.count('<details class="desc">') == 1   # 推理鏈文字（這份 fixture 沒有耗時、沒有語音解析）
     assert "<details class=\"desc\" open" not in html
     assert '<span class="tag r">推理</span>' in html
     assert "<b>定義</b>" not in html
+
+
+def test_atlas_nav_at_bottom_and_chapters_collapsed(tmp_path):
+    """相鄰站的列表擺在文件最後（開頭要直接是內容）；語音解析只留播放器，章節收合。"""
+    import json
+    ws = tmp_path / "ws"
+    shutil.copytree(FX, ws)
+    (ws / "atlas.json").write_text(json.dumps({
+        "regions": [{"id": "r1", "name": "區", "waypoints": ["vid"]}],
+        "routes": [{"from": "vid", "to": "vid2", "type": "next", "via": "接著看"}],
+    }, ensure_ascii=False), encoding="utf-8")
+    (ws / "測試影片 A: B" / "lesson.json").write_text(
+        json.dumps(_lesson_fixture(), ensure_ascii=False), encoding="utf-8")
+    render.main(["--workspace", str(ws)])
+    html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+    assert html.index("5. 推薦三個下一步") < html.index('class="card atlas-nav"') < html.index("</main>")
+    # 章節在收合的 details 裡，播放器不在
+    assert '<summary>章節（1）</summary>' in html
+    assert html.index('<audio id="lesson"') < html.index("<summary>章節（1）</summary>")
 
 
 def test_combined_render_uses_dir_prefix(tmp_path):
@@ -76,7 +130,7 @@ def test_english_output_lang_switches_ui(tmp_path):
     m = json.loads(mp.read_text()); m["output_lang"] = "en"; mp.write_text(json.dumps(m))
     render.main(["--workspace", str(ws)])
     html = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
-    assert "1. Prerequisites &amp; Outline" in html and "Builds on" in html and 'lang="en"' in html
+    assert "1. Outline" in html and "Builds on" in html and 'lang="en"' in html
     assert "承上" not in html and "留給下一段" not in html
 
 

@@ -1,9 +1,9 @@
 ---
 name: learn-digest
-description: "[步驟 6/10·消化工作單] PACER：把某一站每一筆資訊標成 P/A/C/E/R 並寫下該做的消化動作（digest.json → workspace/digest.html）；或用對話帶使用者做練習、批判類比、畫地圖、演練證據、回想參考，做完寫進 digest.state.json。使用者說「做消化工作單」「幫我消化這支」「我要練習／演練／回想」「今天該做什麼」時使用。"
+description: "[步驟 6/10·練習] PACER：把某一站每一筆資訊標成 P/A/C/E/R 並寫下該做的消化動作（digest.json → workspace/digest.html）；或用對話帶使用者做練習、批判類比、畫地圖、演練證據、回想參考，做完寫進 digest.state.json。使用者說「做練習」「幫我消化這支」「我要練習／演練／回想」「今天該做什麼」時使用。"
 ---
 
-# /learn-digest　—　消化工作單（第 6 步；`/learn --digest false` 可跳過。`do` / `today` 模式是工具，隨時可用）
+# /learn-digest　—　練習（第 6 步；`/learn --digest false` 可跳過。`do` / `today` 模式是工具，隨時可用）
 
 ```
 /learn-digest <video_id|url|all> [--force]        # 產工作單：標類別、寫動作、產 digest.html

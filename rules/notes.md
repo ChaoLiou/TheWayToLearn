@@ -1,4 +1,4 @@
-# 成長筆記規則（/learn-notes）
+# 筆記規則（/learn-notes）
 
 改這個檔案就是改 `/learn-notes` 的行為。目的：把一支影片／一篇文章**留給我的東西**擷取成幾條筆記，彙整在 `workspace/notes.html`，每條都連回 `plan.html` 的那一段。
 

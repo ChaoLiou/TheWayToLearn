@@ -27,6 +27,38 @@ def _workspace() -> Path:
 DEFAULT_WORKSPACE = _workspace()
 
 
+def settings_file(ws: Path | None = None) -> Path:
+    """workspace 層級的使用者設定（目前只有 output_lang）。跟著 workspace 走，
+    所以「睡眠/ 用中文、cooking/ 用英文」各自記住。"""
+    return (ws or DEFAULT_WORKSPACE) / "settings.json"
+
+
+def load_settings(ws: Path | None = None) -> dict:
+    f = settings_file(ws)
+    if not f.exists():
+        return {}
+    try:
+        return load_json(f)
+    except (OSError, ValueError):  # 手改壞了就當作沒設定，不要讓整條流程停住
+        return {}
+
+
+def save_setting(key: str, value, ws: Path | None = None) -> Path:
+    f = settings_file(ws)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    d = load_settings(ws)
+    d[key] = value
+    f.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return f
+
+
+def default_output_lang(ws: Path | None = None) -> str:
+    """產出文件與介面的語言。順序：workspace/settings.json > $LEARN_LANG > zh-TW。
+    個別站以自己 meta.json 的 output_lang 為準（已經產好的站不會因為改設定而變）。"""
+    v = load_settings(ws).get("output_lang") or os.environ.get("LEARN_LANG")
+    return str(v).strip() if v else "zh-TW"
+
+
 def override_dir() -> Path:
     """使用者自己的規則覆寫目錄：$LEARN_RULES > 目前目錄的 ./learn.rules。
     plugin 模式下 rules/ config/ templates/ 會被更新覆蓋，要客製就複製到這裡改。"""
@@ -207,7 +239,7 @@ def load_input(p: Path) -> dict:
     data = load_yaml(p)
     data.setdefault("lang", ["zh-TW", "zh", "en"])
     data.setdefault("out", str(DEFAULT_WORKSPACE))
-    data.setdefault("output_lang", "zh-TW")  # /learn 依對話語言填
+    data.setdefault("output_lang", default_output_lang())  # /learn 依對話語言填
     if any(playlist_id(str(v.get("url", ""))) for v in data["videos"]):
         # 只有真的有清單時才載（展不展開由 expand_videos 依該筆的 playlist 決定）
         from playlist import expand_videos
@@ -240,16 +272,34 @@ class Timer:
 
 
 # ---- 流程步驟：每個階段跑完都印同一種進度行，讓使用者知道走到哪 ----
+def sibling_pages(ws: Path) -> dict[str, bool]:
+    """topnav 要不要顯示某一頁：看「資料在不在」而不是「那個 html 這一刻產了沒」。
+    四頁互相連結，但產生順序不固定（listen 是第 10 步、notes 是工具 skill），用 html 是否存在判斷
+    會讓先產的那一頁少一個頁籤，而且要等它下次重產才補得回來。資料在 = 那頁遲早會有。"""
+    stations = [d for d in ws.iterdir()
+                if d.is_dir() and not d.name.startswith((".", "_")) and (d / "meta.json").exists()]
+
+    def any_of(name: str) -> bool:
+        return any((d / name).exists() for d in stations)
+
+    return {
+        "has_listen": (ws / "listen.html").exists() or any_of("lesson.mp3"),
+        "has_notes": (ws / "notes.html").exists() or any_of("notes.json"),
+        "has_digest": (ws / "digest.html").exists() or any_of("digest.json"),
+        "has_atlas": (ws / "atlas.html").exists() or (ws / "atlas.json").exists(),
+    }
+
+
 STEPS: list[tuple[str, str]] = [
     ("estimate", "估成本"),
     ("fetch", "抓字幕"),
     ("segment", "切段"),
     ("shot", "截圖"),
     ("analyze", "逐段分析"),
-    ("digest", "消化工作單"),
+    ("digest", "練習"),
     ("render", "產出 plan.html"),
     ("atlas", "連結各站"),
-    ("narrate", "產出聽力版"),
+    ("narrate", "產出語音解析"),
     ("listen", "podcast 頁"),
 ]
 STEP_CMD = {k: f"/atlas:learn-{k}" for k, _ in STEPS}

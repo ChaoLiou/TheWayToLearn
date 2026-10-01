@@ -23,21 +23,25 @@ uv run scripts/screenshot.py <id>         # 下載 + ffmpeg 抽幀（讀 segment
 uv run scripts/validate.py <segments|analysis|overview> <file.json>
 uv run scripts/render.py                  # 每支影片各自產 plan.html
 uv run scripts/atlas.py --status          # 列新站與各站共同術語（決定 route 用）
-uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html（文字說明列表）
+uv run scripts/atlas.py                   # 驗證 atlas.json、產 workspace/atlas.html（影片解析）
 uv run scripts/atlas.py --merge p.json    # 併入新站的 route/region（不整份覆寫）再 render
 uv run scripts/atlas.py --migrate-routes  # 舊的五種 route 型態換成 next / related
 uv run scripts/listen.py                  # podcast 頁：workspace/listen.html + 各站 captions.js
-uv run scripts/notes.py                   # 成長筆記（工具）：彙整各站 notes.json → workspace/notes.html
+uv run scripts/notes.py                   # 筆記（工具）：彙整各站 notes.json → workspace/notes.html
 uv run scripts/digest.py [--backlog|--pending [id]|--mark id:n 動作 [值]]   # PACER 工作單：digest.html + brain/ + 積欠
 uv run scripts/brain.py [--out DIR]       # 只匯 Obsidian vault
 uv run scripts/paths.py                   # 印出 workspace / 規則檔實際路徑
-uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudflare Pages（index.html = listen.html）
+uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudflare Pages（index.html = atlas.html）
+uv run scripts/publish.py --media-base <url>   # 混合式：mp3 與截圖分到 dist-media/ 上 object storage，HTML 留 Pages
+uv run scripts/publish.py --media-base /media --r2-binding MEDIA   # 同上，但 mp3 走 R2（產 dist/_worker.js）
+# 專案名預設讀 wrangler.toml 的 name（別依賴寫死的預設值，漏了會蓋掉別的 Pages 專案）
+uv run scripts/prune.py [--delete]        # 回收中間檔（audio.mp3、lesson_parts/、字幕原始檔），不給 --delete 只列出
 ```
 測試不碰網路：`tests/fixtures/ws/` 是一組完整的 workspace 樣本，改 schema / template / validator 後跑 pytest 就能驗。
 
 ## 專案目標
 
-使用者給一串 YouTube 連結（或部落格文章網址）→ 程式抓取 transcript 與重要時間點的截圖 → 產出一份「學習規劃」文件。
+使用者給一串 YouTube 連結（或部落格文章網址）→ 程式抓取 transcript 與重要時間點的截圖 → 產出一份「文字解析」文件。
 最終交付形式是一個 **skill**（給 AI agent 使用），加上 agent 執行該 skill 所需的全部程式。
 
 ## 來源也可以是播放清單
@@ -62,12 +66,12 @@ uv run scripts/publish.py [--deploy]      # 整理 dist/ 並可部署到 Cloudfl
 
 ## 產出文件的固定結構（順序不可變）
 
-1. **前情提要 & Outline** — 看這支影片前需要的背景，以及影片大綱
+1. **Outline** — 影片大綱（`_overview.json` 的 prerequisites 仍要產，atlas 判 route 用，但不顯示）
 2. **YouTuber 的思維推導** — 作者如何一步步推出結論
 3. **逐段說明** — 依影片分段，每段包含：
    - 該段內容摘要（附時間戳、對應截圖）
    - AI 補充說明
-   - **該段出現的術語** 就地解釋（不集中到文末的 glossary）
+   - **該段出現的術語** 就地標在內文裡（底線 + ⓘ dialog），不集中到文末的 glossary
 4. **總結**
 5. **推薦三個下一步** — 三個方向，各附建議在 YouTube 搜尋的關鍵字
 
@@ -85,10 +89,9 @@ URL 列表
 
 ## 輸出格式
 
-- `plan.html`：單一 HTML 檔，Mermaid 走 CDN。固定產三張圖：
-  - `flowchart LR` 推理鏈：每段一節點，邊上寫該段留給下一段的線索
-  - `mindmap`：主題 → 各段 → 術語
-  - `graph` 術語關聯圖：術語間的依賴/對比
+- `plan.html`：單一 HTML 檔。**沒有 Mermaid 圖**（2026-09 拿掉：推理鏈本來就是一條線，mindmap 與術語關聯圖沒人看）——推理鏈改成收合的文字列表（每段 → 留給下一段的線索）
+- 術語就地標在文章裡：`summary` / `reasoning` / `explanation` 第一次出現處加底線 + 小 ⓘ（`render.mark_terms()`），文中沒出現的才收在段末一行；不再有文末的術語 dl
+- `author_reasoning` 由 `render.paras()` 自動切段（每三句一段），耗時表與語音解析章節都收在 `<details>`，相鄰站（atlas nav）擺在文件最底下
 - 每支影片開頭註明使用的 vision 模式（見下）
 
 ## 線性推進（核心規則）
@@ -110,15 +113,17 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 `input.yaml` 每個 URL 有 `vision: true | false | auto`（**預設 true**），決定 analyze 階段 agent 是否逐張讀截圖。`auto` 由 agent 在 segment 階段判斷並寫回 `segments.json`。
 
-## 文字說明列表（atlas.html）
+## 影片解析（atlas.html）
 
-**沒有地圖了**（2026-09 拿掉：mermaid 大圖對 50 站沒幫助）。atlas.html 的定位是「所有文字說明（plan.html）的列表」：依 region 分組的縮圖卡、搜尋列、每站的相鄰站與勘誤。名詞不變：workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯只有兩種：`next` = 看完 from 接著看 to，有方向；`related` = 相關但沒先後，不標方向；都含 via 說明為什麼）與 **region**（主題區）。`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到列表與相鄰站的連結。
+**沒有地圖了**（2026-09 拿掉：mermaid 大圖對 50 站沒幫助）。atlas.html 的定位是「所有文字解析（plan.html）的列表」：依 region 分組的縮圖卡、搜尋列、每站的相鄰站與勘誤。名詞不變：workspace 下每個影片資料夾是一個 **waypoint**；`workspace/atlas.json` 記 **route**（兩站關聯只有兩種：`next` = 看完 from 接著看 to，有方向；`related` = 相關但沒先後，不標方向；都含 via 說明為什麼）與 **region**（主題區）。`scripts/atlas.py` 產 `workspace/atlas.html`，各站 `plan.html` 頂部有回到列表與相鄰站的連結。
 「各站」是 YouTube 式縮圖卡（縮圖用該站第一張截圖，沒有就退回 i.ytimg.com；標題／作者／上傳日期／時長），上方搜尋列是 `templates/_search.html.j2` 的共用 macro（條件做成 chip：作者／分類／標題／任意，作者與分類有 autocomplete，空白或 Enter 加下一個條件，條件之間是 AND；listen.html 用同一份）。作者名旁邊有**這支影片的勘誤件數**膠囊（紅八角 danger = 確定錯誤／已過時、橘三角 warning = 見仁見智，只算這一站，0 就不顯示該顆；`errata_stats()`），hover 看摘要、點下去開置中視窗看該影片的勘誤表（段落／原話／說明，每列連到 plan.html 的該段）。「詳細」開置中視窗（`showInfo()`）看摘要、takeaways、相鄰站。≥ 2 站時每新增一站由 agent 依 `rules/atlas.md` 寫 patch，跑 `atlas.py --merge <patch.json>` 併進 atlas.json（有檔案鎖、驗證沒過不寫入，多支同時跑不會互蓋）。模板共用 `templates/_base.html.j2`（viewer、mermaid（只在頁面有 `.mermaid` 時才從 CDN 載，載不到不影響其他 JS）、tooltip、勘誤樣式）與 `templates/_icons.html.j2`（勘誤圖示 `ic.danger()` / `ic.warn()` / `ic.level()`）；atlas 的三個置中視窗共用 `dialog.modal` 一套樣式。
-每張卡片下方有 **pipeline 進度**：十步各一格（`atlas.py` 的 `pipeline()` 直接看檔案判定 done / partial / todo / skip），加一行白話狀態（例如「還沒處理原音：沒有挑原聲片段」——聽力版做了但 `segments.json` 沒有 clips / clips 沒 translation / 還沒有 dub 軌都算 partial）。「▸ 繼續做」開視窗列出十步狀態，選「做到哪一步」後把對應的 prompt 複製到剪貼簿，使用者自己貼進 Claude Code 跑（`next_actions()` 產生；prompt 用 `common.STEP_CMD`，缺原聲／缺翻譯會自動附上該怎麼補的說明）。
+每張卡片下方有 **pipeline 進度**：十步各一格（`atlas.py` 的 `pipeline()` 直接看檔案判定 done / partial / todo / skip），加一行白話狀態（例如「還沒處理原音：沒有挑原聲片段」——語音解析做了但 `segments.json` 沒有 clips / clips 沒 translation / 還沒有 dub 軌都算 partial）。「▸ 繼續做」開視窗列出十步狀態，選「做到哪一步」後把對應的 prompt 複製到剪貼簿，使用者自己貼進 Claude Code 跑（`next_actions()` 產生；prompt 用 `common.STEP_CMD`，缺原聲／缺翻譯會自動附上該怎麼補的說明）。
 
 ## 輸出語言
 
-跟著使用者下指令的語言：`/learn` 判定後寫進 `input.yaml` 的 `output_lang` 與各站 `meta.json`；agent 產的所有內文用它，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（新語言只需加一組字串）。
+解析順序：**指令旗標 `--output-lang` > 該站 `meta.json` 的 `output_lang` > `workspace/settings.json` 的 `output_lang` > `$LEARN_LANG` > `zh-TW`**（`common.default_output_lang()` 一處決定，所有 script 共用）。
+`/learn` 第一次跑時問一次並用 `options.py learn --save output_lang=<值>` 記進 `workspace/settings.json`（`--save` 只收 `options.SAVABLE` 裡的鍵），之後整個 workspace 都不用再問；一個主題一個資料夾時，各自的語言各自記。
+agent 產的所有內文用該站的 `output_lang`，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（zh-TW 與 en 兩套字串都是完整的 274 條，新語言只需加一組）。
 
 ## 參數確認
 
@@ -135,21 +140,46 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 - 線性推進與 AI 說明風格 → `rules/narrative.md`（硬規則由 `scripts/validate.py check_analysis` 執行，新增硬規則要同步加檢查 + 測試）
 - 彙整、takeaways、三個下一步 → `rules/overview.md`
 - 站與站的 route / region 判斷 → `rules/atlas.md`
-- 聽力版講稿與原聲片段長度 → `rules/narration.md`
-- 成長筆記挑什麼、幾條、怎麼寫 → `rules/notes.md`（硬規則由 `validate.py check_notes` 執行）
-- PACER 消化工作單怎麼分類、每類要寫什麼 → `rules/digest.md`（硬規則由 `validate.py check_digest` 執行）
+- 語音解析講稿與原聲片段長度 → `rules/narration.md`
+- 筆記挑什麼、幾條、怎麼寫 → `rules/notes.md`（硬規則由 `validate.py check_notes` 執行）
+- PACER 練習怎麼分類、每類要寫什麼 → `rules/digest.md`（硬規則由 `validate.py check_digest` 執行）
 
-## 聽力版（lesson.mp3）
+## 語音解析（lesson.mp3）
 
 `narrate.py` 把 `narration.json` 的 `say`（edge-tts）與 `clip`（yt-dlp 音訊 + ffmpeg）串成 `lesson.mp3`：
 - clip 的起訖自動對齊 transcript 句子邊界（`snap`），逐句字幕併成順口長度（`clip_lines`）寫進 `lesson.json`
 - 片段以內容雜湊命名快取在 `lesson_parts/`，改字幕合併或章節不必重跑 TTS
-- `lesson.status.json` 讓步驟 6 產出的 `plan.html` 顯示「聽力版產生中」，完成後頁面自己偵測並重新整理（`--mark-pending` 可提前標記）
+- `lesson.status.json` 讓步驟 6 產出的 `plan.html` 顯示「語音解析產生中」，完成後頁面自己偵測並重新整理（`--mark-pending` 可提前標記）
 - `plan.html` 有播放器、章節，以及 karaoke 講稿視窗（已唸過=一般色、目前=強調、未唸=灰、原聲=斜體，點任一句從那裡播）
 - clip 有 `translation` 就多產一軌 `lesson.dub.mp3`：原聲換成另一個聲音（`--dub-voice`，預設同語言不同性別）唸翻譯，講解部分兩軌共用同一批 TTS 檔。翻譯逐句合成，長度即 KTV 高亮節奏。網頁上「🎙 原聲 / 🗣 翻譯」切換（快捷鍵 D），兩軌 block 一一對應所以切換後停在同一個位置，章節與講稿一起換；`--no-dub` 關掉
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
 - agent 輸出格式 → `schemas/*.json`
+
+## 發佈：混合式（HTML 一個家、mp3 另一個家）
+
+`publish.py` 預設把所有東西放進 `dist/` 一起上 Cloudflare Pages。加 `--media-base <公開網址前綴>` 就切成兩份：
+- `dist/`：HTML 與 `captions.js` —— 小（51 站約 33 MB）、常改，每次部署全量重傳沒差
+- `dist-media/`：`lesson.mp3`、`lesson.dub.mp3`、`frames/` —— 大（51 站約 1.03 GB）、幾乎不改，用 `rclone sync` 增量上 R2 / B2 / S3
+
+理由：容量 98% 是 mp3 與截圖，但會反覆重新部署的是 HTML。分開之後 Pages 每次只傳幾十 MB，而且 object storage 沒有單檔上限——**超過 72 分鐘的影片不會再撞到 Pages 的 25 MiB**（`MAX_FILE`，只對留在 `dist/` 的檔檢查）。
+實作只動 `publish.py`（`is_media()` 決定哪些檔分出去）：`rewrite_media()` 用 `MEDIA_REF` 改寫**被引號完整夾住**的媒體路徑（`plan.html` 是裸的 `lesson.mp3` / `frames/x.jpg`，要補回站名；`listen.html` / `atlas.html` 本來就帶站名前綴）。`[^"':]*` 排掉 `https://…`，所以外部縮圖（`i.ytimg.com`）與勘誤散文裡提到的 `frames/x.jpg` 都不會被動到。workspace 裡的檔案不動，`file://` 直接開還是能播。
+跨網域的 `<audio>` 不需要 CORS，但那個 bucket 一定要支援 **Range 請求**，不然進度條拖不動。
+
+### mp3 走 R2 但仍在同一個 origin（`--r2-binding`）
+
+`--media-base` 給**站內路徑**（`/media`）再加 `--r2-binding MEDIA`，`publish.py` 會產一份 `dist/_worker.js`（Pages advanced mode）：`/media/…` 的請求去讀 R2，其餘丟回 `env.ASSETS`。
+好處：HTML 與 mp3 同一個 origin，**Cloudflare Access 一設就同時保護兩者**（原聲是他人著作，不該公開），也避開 `r2.dev` 的速率限制與「繞過 Access」。
+`_worker.js` 自己處理 **Range**（`bytes=a-b` / `a-` / `-b` 三種都要，回 206 + `content-range`），不然拖進度條與跳章節會失效；`content-type` 缺的時候依副檔名補（iOS Safari 對 mp3 的 type 很挑）。
+binding 宣告在 repo 根的 `wrangler.toml`（`[[r2_buckets]] binding = "MEDIA"`）——**還沒用 R2 時它叫 `wrangler.toml.r2-example`**，因為宣告一個不存在的 bucket 會讓部署失敗。`--media-base` 給絕對網址時不能用這個旗標（那是 R2 自己接了自訂網域的情況），publish.py 會擋。
+
+## 回收中間檔（prune.py）
+
+`scripts/prune.py` 把「重跑就會再有」的東西清掉，**預設只列出不刪**，加 `--delete` 才動手。分三類：
+- `refetch`：`audio.mp3`（`narrate.py` 的 `ensure_audio()` 會自己重抓）、`subs.*.json3` / `.vtt`（`transcript.json` 已經是成品）、`.tmp-*` 殘骸
+- `cache`：`lesson_parts/`（TTS 與原聲切片快取）。刪了 `lesson.mp3` 還在，只有改講稿要重產時才要重跑一次 TTS；`--keep-cache` 可以留著
+- 其他一律不動，特別是 **LLM 產出**（`analysis` / `segments` / `digest` / `notes` / `narration` / `_overview`）與成品（`plan.html`、`lesson.mp3`、`frames/`、`captions.js`）
+安全閥：一站只有在 `lesson.mp3` 已經產出時才回收它的 `audio.mp3` 與 `lesson_parts/`，免得清掉正在跑 narrate 的站。
 
 ## Podcast 頁（listen.html）
 
@@ -158,28 +188,28 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 - 字幕 = 講稿 karaoke，資料不內嵌在頁面（42 站會到 3.5 MB），而是每站一個 `captions.js`（`listen.captions()` 的精簡格式：`o`/`d` 逐句、`ob`/`db` 每個 block 的 [at,dur] 供切軌對位、`ch`/`segs` 章節），播到才用 `<script>` 動態載入——所以 `file://` 直接開也有字幕，不靠 fetch。
 - 模板 `templates/listen.html.j2` 繼承 `templates/_lite.html.j2`（跟 `_base` 同配色但**不載 mermaid CDN**，離線／手機能開）；`notes.html.j2` 也用它。
 - 每集顯示分類（= `atlas.json` 的 region 名，沒進 atlas 的顯示「未分區」，點分類就加一個篩選條件）與原始網址；搜尋列跟 atlas.html 同一份（`templates/_search.html.j2` 的 `css()` / `bar()` / `json()` / `js(card_sel, group_sel)` macro，卡片要有 `data-title` / `data-channel` / `data-category`），改搜尋行為只改那一個檔。
-- 每集連到 `plan.html`、有 notes 就連到 `notes.html#<vid>`；`plan.html` 頂部有 `.hub` 連回 `listen.html#<vid>` / `notes.html#<vid>`；`atlas.html` 頂部有 topnav。發佈時 `index.html` = `listen.html`（沒有才退回 `atlas.html`）。
+- 每集連到 `plan.html`、有 notes 就連到 `notes.html#<vid>`；`plan.html` 頂部有 `.hub` 連回 `listen.html#<vid>` / `notes.html#<vid>`；`atlas.html` 頂部有 topnav。發佈時 `index.html` = `atlas.html`（沒有才依序退到 listen / digest / notes）。
 
-## 消化工作單（digest.json → digest.html，第 6 步）
+## 練習（digest.json → digest.html，第 6 步）
 
 依「How to Remember Everything You Read」的 PACER 法：讀完之後把每**一筆資訊**（不是一段、不是一支）標 `kind ∈ P/A/C/E/R`，並寫下該類專屬的消化動作，讓使用者去做而不是再讀一次。
 - **資料**：`<站>/digest.json`（`schemas/digest.schema.json` 用 if/then 擋每類必填：P `procedure`+`practice_task`、A `new`+`known`（`critique_key` 選填答案卷）、C `concept`+`relations`（答案卷，頁面預設不顯示）、E `detail`+`supports`+`rehearse_q`、R `q`+`a`）。`validate.py digest` 另外查 `seg_id` 存在、C 一站 ≤ `MAX_C`=10 筆（地圖畫得動的上限，其餘降 R）、C concept 同站唯一、`relations[].to` 指向同站 C 或 analysis term、`supports` 只能指 C。規則在 `rules/digest.md`。
 - **頁面**：`scripts/digest.py` → `workspace/digest.html`（`templates/digest.html.j2`，繼承 `_lite`）。頂部「今天」= 到期 R 卡數／待演練 E 數／P·A·C 未做數 + 「開始回想」；每站依五類分區，每筆是該類的動作 UI：P 步驟＋今天就做＋做完了、A 三格（像／不像／失效）＋對照 AI 版、C 已畫進地圖＋對答案、E 演練（第一下展開作答、第二下記錄）、R flashcard（SM-2：忘了／難／會，快捷鍵 1/2/3、空白翻面）。預設篩「只看未做」。
 - **狀態**：瀏覽器 localStorage（key `digest-state`），「匯出進度」下載 `digest.state.json`（`{"<vid>:<id>": {...}}`：P/A/C `done`、E `rehearsed`、R `ef/reps/interval/due`；另有整站的 `"<vid>:read": {"read": ISO}`），放到 `workspace/` 後 `digest.py` 內嵌成預設；`digest.backlog(ws)` / `--backlog` 讀同一份算積欠，給 `/learn` 平衡閥用。「匯出 Anki」下載 R 卡 tsv。
 - **消費 vs 消化**：產出工作單不算讀過。每站有「📖 讀完了」（`digest.py --mark <vid> read|unread`，`read_key()`）；**沒標讀完的站不算積欠、不進 `--pending`、頁面上收起不計入「今天」**，積欠行末印「未讀 N 站不計」。E 的「隔一天」從讀完那天起算（`rehearse_from`）。
-- **plan.html**：每段「推理」下方列這段的 PACER 標籤（`.pacer`，字母＋一句＋該做的動作，hover 看為什麼），點了跳 `digest.html#<vid>-d<id>`；頂部 hub 多「🍽 消化」。listen / notes / atlas 的 topnav 有 digest.html 就連。發佈時 `index.html` 順位：listen > digest > notes > atlas。
+- **plan.html**：每段「推理」下方列這段的 PACER 標籤（`.pacer`，字母＋一句＋該做的動作，hover 看為什麼），點了跳 `digest.html#<vid>-d<id>`；頂部 hub 多「✍️ 練習」。四頁的 topnav 一律把「📄 全部影片」放最左邊，其餘由 `common.sibling_pages()` 依**資料**（不是 html 產了沒）決定要不要連。發佈時 `index.html` 順位：atlas > listen > digest > notes。
 - **skill `/learn-digest`**（`skills/learn-digest/SKILL.md`）：`<id|all>` 產工作單（agent 依 rules 寫 digest.json → validate → digest.py → render.py）；`do [<id>|due] [P|A|C|E|R]` 對話式消化——`digest.py --pending` 取未做的筆（含答案卷，agent 不先貼），使用者答完 agent 對照回饋，`digest.py --mark <vid>:<id> done|undo|rehearsed|grade|<欄位>=<值> [值]` 寫 `digest.state.json`（`.digest.lock` 檔案鎖）並重產頁；`today` = `--backlog`。SM-2 在 Python（`sm2()`）與 JS 各一份，要一起改。
 - **second brain**：`scripts/brain.py`（`digest.py` 跑完自動呼叫）把所有站的 digest.json + digest.state.json 匯成 `workspace/brain/`（Obsidian vault）：`stations/<站>.md`（五類分區、做完打勾、心得／回答／下次到期）、`concepts/<概念>.md`（同名概念跨站合併：analysis term 定義、各站說法、—rel→ `[[to]]`、E 證據、來源）、`README.md` 索引。檔名過 `safe()`（`/:*?"<>|#^[]` → `-`），`wl()` 產 `[[檔名|原名]]`。
 - **tldraw 先畫再對答案**：`/learn-canvas map <id>` 只把 C 概念當節點散在畫布上、不畫線；使用者連完說「對答案」→ `/learn-digest do <id> C` 讀 arrow 綁定對照 `relations`（多畫／漏畫／方向不同），再用另一色補答案線。
 
-## 成長筆記（notes.html）
+## 筆記（notes.html）
 
 `/learn-notes <id|all>`（第 9 步，`/learn --notes false` 可跳過）：agent 依 `rules/notes.md` 從 `analysis.json` + `_overview.json` 擷取每站 3–8 條「看完才知道的」觀念（`concept`）／技巧（`skill`）／體悟（`insight`），寫 `<站>/notes.json`（`schemas/notes.schema.json`；`text` ≤ 80 字、每條必有 `seg_id`），`validate.py notes` 檢查 schema 與 `seg_id` 存在於 `analysis.json`。`scripts/notes.py` 彙整成 `workspace/notes.html`：站依產出時間新到舊，每條連回 `plan.html#<vid>-s<seg_id>`；頂部搜尋列跟 atlas / listen 同一份（`_search.html.j2`，卡片 = `.st` 站，`data-category` 來自 atlas region，「任意」條件另會搜 `data-text` = 該站所有筆記內文），留／刪篩選透過 `extra_ok(el)` 併進搜尋（全站筆記被篩掉就整站隱藏）。
 混合式取捨：agent 擷取候選，使用者在頁面上按「留／刪」（localStorage，key = `<vid>:<note id>`）、篩選「只看留下的」；「匯出」下載 `notes.keep.json`，放到 `workspace/` 後 `notes.py` 把它當預設狀態（`data-st`），瀏覽器裡的操作再蓋上去。使用者要改內容就改 `notes.json` 重跑 `notes.py`。
 
 ## Skill 拆分
 
-`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 十個階段 skill + 工具 skill `/learn-publish`（發佈到 Cloudflare Pages）、`/learn-digest`（PACER 消化工作單與對話式消化）、`/learn-canvas`（把 analysis.json 逐段畫成 tldraw 白板，需另裝 `tldraw-offline` skill）
+`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 十個階段 skill + 工具 skill `/learn-publish`（發佈到 Cloudflare Pages）、`/learn-digest`（PACER 練習與對話式消化）、`/learn-canvas`（把 analysis.json 逐段畫成 tldraw 白板，需另裝 `tldraw-offline` skill）
 十個階段：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`、`/learn-narrate`、`/learn-notes`、`/learn-listen`。
 **analyze 一定在 subagent 裡跑**（`/learn` 用 Agent tool 派出去）：逐段分析會累積 150–200k context，留在主對話會讓 render / atlas / narrate 每輪重送。subagent 只回進度兩行與一句摘要，不回 analysis 內容。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
