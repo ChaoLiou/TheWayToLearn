@@ -36,15 +36,21 @@
   <p class="note">Redirecting to your browser's language in a moment…</p>
 </main>
 <script>
-  /* 以英文為基底：瀏覽器偏好中文才送去 zh-TW，其餘一律 en。
-     ?lang= 可以強制，#hash 原樣帶過去（例如 #<video_id> 直接開那一集）。 */
+  /* 以英文為基底：只有偏好中文的人送去 zh-TW。
+     ?lang=en|zh-TW 可以強制，#hash 原樣帶過去（例如 #<video_id> 直接開那一集）。 */
   (() => {
     const forced = new URLSearchParams(location.search).get("lang");
-    const prefers = (navigator.languages || [navigator.language || "en"])
-      .some((l) => /^zh\b/i.test(l) && !/^zh-(hans|cn|sg)/i.test(l));
-    const to = forced === "zh-TW" || forced === "zh" ? "zh-TW/"
-             : forced === "en" ? "en/"
-             : prefers ? "zh-TW/" : "en/";
+    if (forced === "en" || forced === "zh-TW") return location.replace(forced + "/" + location.hash);
+    /* navigator.languages 是照偏好排序的，所以取「第一個看得懂的」而不是掃整份清單——
+       用 some() 的話，主語言是英文、清單後面剛好有 zh 的人也會被送去中文。
+       zh-CN / zh-Hans 也送 zh-TW：讀繁體的障礙遠小於讀英文。 */
+    const langs = navigator.languages && navigator.languages.length
+      ? navigator.languages : [navigator.language || "en"];
+    let to = "en/";
+    for (const l of langs) {
+      if (/^zh/i.test(l)) { to = "zh-TW/"; break; }
+      if (/^en/i.test(l)) { to = "en/"; break; }
+    }
     location.replace(to + location.hash);
   })();
 </script>

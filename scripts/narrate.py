@@ -450,18 +450,32 @@ def main(argv=None):
     if lesson["dub"]:
         n_dub = sum(1 for e in lesson["dub"]["timeline"] if e["kind"] == "dub")
         print(f"   翻譯版 {fmt_dur(lesson['dub']['duration'])}（{n_dub} 段配音，{lesson['dub']['voice']}）→ {vdir / 'lesson.dub.mp3'}")
-    refresh_listen(args.workspace)
+    refresh_pages(args.workspace)
     print_step("narrate", f"{fmt_dur(lesson['duration'])} 語音解析")
 
 
-def refresh_listen(ws: Path) -> None:
-    """多了一集就重產 podcast 頁（listen.html）；失敗不影響語音解析本身。"""
-    try:
-        from listen import render as render_listen
-        with locked(ws / ".listen.lock", "listen.html"):
-            render_listen(ws)
-    except Exception as e:  # noqa: BLE001
-        print(f"（listen.html 沒更新：{e}；手動跑 scripts/listen.py）")
+def refresh_pages(ws: Path) -> None:
+    """語音解析是第 10 步才產出的，但 digest(6) / notes(7) / atlas(9) 都在它之前產，
+    那時 `lesson.mp3` 還不存在 → `common.sibling_pages()` 判定 has_listen=False，
+    於是那幾頁的 topnav 永遠少一個「🎧 語音解析」，要等下次重產才補得回來。
+    所以這裡把**已經存在的**兄弟頁都重產一次（沒產過的不要無中生有，
+    使用者可能是 --digest false 刻意不要）。任何一頁失敗都不影響語音解析本身。"""
+    jobs = [("listen.html", "listen", ".listen.lock"),
+            ("atlas.html", "atlas", ".atlas.lock"),
+            ("digest.html", "digest", ".digest.lock"),
+            ("notes.html", "notes", None)]
+    for page, mod, lock in jobs:
+        if not (ws / page).exists():
+            continue
+        try:
+            render_page = __import__(mod).render
+            if lock:
+                with locked(ws / lock, page):
+                    render_page(ws)
+            else:
+                render_page(ws)
+        except Exception as e:  # noqa: BLE001
+            print(f"（{page} 沒更新：{e}；手動跑 scripts/{mod}.py）")
 
 
 if __name__ == "__main__":

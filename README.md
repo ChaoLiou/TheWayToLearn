@@ -2,9 +2,11 @@
 
 **English** · [繁體中文](docs/README.zh-TW.md)
 
-### 🔗 [See it for yourself](https://chaoliou.github.io/TheWayToLearn/demo/)
+### 🔗 [See it for yourself](https://chaoliou.github.io/TheWayToLearn/demo/en/)
 
-A real run on a TED talk about sleep — read the explainer, press play on the audio version, flip through the practice cards. Nothing to install.
+A real run on a TED talk about sleep — read the explainer, press play on the 12-minute audio version, flip through the practice cards. Nothing to install.
+Everything you see there was produced from the talk's English transcript: the write-up, the notes, the practice sheet and the narration.
+<sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)</sub>
 
 **This is a [Claude Code](https://claude.com/claude-code) plugin.** Once installed, hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
 

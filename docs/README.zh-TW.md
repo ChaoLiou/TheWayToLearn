@@ -2,9 +2,11 @@
 
 [English](../README.md) · **繁體中文**
 
-### 🔗 [先看看成品長什麼樣](https://chaoliou.github.io/TheWayToLearn/demo/)
+### 🔗 [先看看成品長什麼樣](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)
 
-拿一支 TED 的睡眠影片真的跑出來的結果：文字解析可以讀、語音解析可以按下去聽、練習可以點。什麼都不用裝。
+拿一支 TED 的睡眠影片真的跑出來的結果：文字解析可以讀、12 分鐘的語音解析可以按下去聽、練習可以點。什麼都不用裝。
+你看到的每一樣都是從那支影片的字幕產出來的：解析、筆記、練習、講稿。
+<sub>想看英文的？同一支演講、以英文字幕分析的版本：[English demo](https://chaoliou.github.io/TheWayToLearn/demo/en/)</sub>
 
 **這是一個 [Claude Code](https://claude.com/claude-code) plugin。** 安裝上去之後，你只要使用此 skill 接著一支 YouTube 影片（或一篇部落格文章）的網址，它幫你把內容整理成讀得懂、能複習、也能用聽的學習資源。
 

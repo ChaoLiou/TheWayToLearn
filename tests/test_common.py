@@ -180,3 +180,26 @@ def test_ui_lang_switches_every_page(tmp_path):
         assert "測試影片" in h           # 內文（標題）沒有被翻譯
     finally:
         common.set_ui_lang(None)
+
+
+def test_narrate_refreshes_sibling_pages(tmp_path, monkeypatch):
+    """語音解析是第 10 步才有的，但 digest/notes/atlas 在它之前產——那時 has_listen 還是 False。
+    narrate 跑完要把「已經存在的」兄弟頁重產，否則它們的 topnav 永遠少一個語音解析。"""
+    import narrate
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    for n in ("listen.html", "atlas.html", "digest.html"):   # notes.html 故意不存在
+        (ws / n).write_text("old", encoding="utf-8")
+    called = []
+    for mod in ("listen", "atlas", "digest", "notes"):
+        m = __import__(mod)
+        monkeypatch.setattr(m, "render", lambda _w, _m=mod: called.append(_m))
+    narrate.refresh_pages(ws)
+    assert called == ["listen", "atlas", "digest"]           # 沒產過的不要無中生有
+
+    # 單一頁失敗不能拖垮其他頁，也不能讓語音解析本身失敗
+    called.clear()
+    boom = __import__("atlas")
+    monkeypatch.setattr(boom, "render", lambda _w: (_ for _ in ()).throw(RuntimeError("bad atlas.json")))
+    narrate.refresh_pages(ws)
+    assert called == ["listen", "digest"]
