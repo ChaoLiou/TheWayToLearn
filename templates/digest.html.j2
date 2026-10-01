@@ -97,10 +97,10 @@
 {% block body %}
 <main>
 <p class="topnav">
+  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
   {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
   {% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}
   <a class="on" href="digest.html">{{ S.nav_digest }}</a>
-  {% if has_atlas %}<a href="atlas.html">{{ S.nav_atlas }}</a>{% endif %}
 </p>
 <h1>{{ S.digest_h1 }}</h1>
 <p class="muted">{{ S.digest_sub }}</p>

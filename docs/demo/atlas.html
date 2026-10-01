@@ -84,10 +84,49 @@
   table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
 
 
-  /* 卡片一列幾個由 grid 的 auto-fill 決定，所以容器不要卡在窄寬度 */
-  main { max-width: min(2000px, 100%); }
-  .topnav { display:flex; gap:.4rem 1rem; flex-wrap:wrap; font-size:.9rem; margin:-.6rem 0 1rem; }
-  .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
+  /* ---- 版面：置頂搜尋列 + 左側導覽（YouTube 式）---- */
+  :root { --top:3.6rem; }
+  body { padding:0; }
+  main { max-width: min(2000px, 100%); padding:1.2rem 1.4rem 3rem; }
+  main > h2:first-child { margin-top:0; }
+  .topbar { position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:.8rem;
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; }
+  .topbar .search { flex:1; max-width:46rem; margin:0; }
+  .topbar .stats { display:flex; gap:1rem; color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow:auto;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .err-f svg { width:.95rem; height:.95rem; flex:none; color:var(--wrong); }
+  .side .err-f.on svg { color:#fff; }
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .menu-btn { display:block; }
+    .topbar .stats { display:none; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease; max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
   .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
   
   /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
@@ -224,17 +263,10 @@
 </head>
 <body>
 
-<main>
-
-<p class="topnav"><a class="on" href="atlas.html">📄 全部影片</a><a href="listen.html">🎧 語音解析</a><a href="notes.html">📝 筆記</a><a href="digest.html">✍️ 練習</a></p>
-
-<h1>📄 全部影片</h1>
-<p class="stats"><span>1 站</span><span>1 個主題區</span><span id="updated" data-ts="2026-10-01T18:45:50+08:00" title="2026-10-01 18:45">更新於 2026-10-01 18:45</span></p>
-
-
-<h2>各站</h2>
-<p class="err-legend">勘誤件數（這支影片）：<span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span></p>
-
+<header class="topbar">
+  <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
+  <a class="brand" href="atlas.html">📄 全部影片</a>
+  
 <div class="search">
   <div class="sbox" id="sbox">
     <span class="ico">🔍</span>
@@ -243,6 +275,32 @@
   </div>
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
+
+  <span class="stats"><span>1 站</span><span id="updated" data-ts="2026-10-01T20:40:17+08:00" title="2026-10-01 20:40">更新於 2026-10-01 20:40</span></span>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+<nav class="side">
+  <a class="on" href="atlas.html">📄 全部影片</a>
+  <a href="listen.html">🎧 語音解析</a>
+  <a href="notes.html">📝 筆記</a>
+  <a href="digest.html">✍️ 練習</a>
+  <hr>
+  <p class="grp">主題區</p>
+  <button type="button" class="cat-all on" data-cat="">全部影片<span class="n">1</span></button>
+  
+  <button type="button" class="cat-f" data-cat="睡眠" title="睡眠怎麼運作，以及怎麼在不看醫生的前提下把它調好。從體內時鐘、房間環境，一路到躺上床之後的行為。"><i style="background:#4e79a7"></i><span class="lab">睡眠</span><span class="n">1</span></button>
+  
+  
+  <hr>
+  <p class="grp">篩選</p>
+  <button type="button" class="err-f" data-err-filter="err"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg><span class="lab">只看有勘誤的</span></button>
+  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
+</nav>
+<main>
+<h2>各站</h2>
+<p class="err-legend">勘誤件數（這支影片）：<span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span></p>
+
 <p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
 <p id="no-match" hidden>沒有符合條件的站。</p>
 
@@ -250,7 +308,7 @@
 
 
 <div class="wps">
-<article class="wp" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED" data-category="睡眠">
+<article class="wp" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED" data-category="睡眠" data-err="2">
   <a class="thumb" href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">
     <span class="ph" aria-hidden="true"><span>6 tips for better sleep | Sleeping with Science, a TED series</span></span>
     <img loading="lazy" src="https://i.ytimg.com/vi/t0kACis_dJE/mqdefault.jpg" data-fallback="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/frames/s03_72.jpg" alt="6 tips for better sleep | Sleeping with Science, a TED series">
@@ -320,6 +378,7 @@
   <div class="body"></div>
 </dialog>
 </main>
+</div>
 
 
 <!-- 全視窗 viewer -->
@@ -597,6 +656,15 @@
   });
   EDLG.addEventListener("click", (e) => { if (e.target === EDLG || e.target.closest("[data-close]")) EDLG.close(); });
 
+  /* 側欄的勘誤篩選：透過 extra_ok 併進搜尋條件（跟 chip 條件 AND）。
+     必須在 search.js() 之前宣告，它會在初始化時抓這個函式。 */
+  let errFilter = "";
+  function extra_ok(el) {
+    if (!errFilter) return true;
+    const n = +(el.dataset.err || 0);
+    return errFilter === "err" ? n > 0 : n === 0;
+  }
+
 
   /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND（templates/_search.html.j2） ---------- */
   const card_sel = ".wp", group_sel = null;
@@ -723,6 +791,50 @@
   /* 分類可點：加一個篩選條件（跟 listen.html 一樣的行為） */
   document.querySelectorAll(".wp .cat").forEach((el) =>
     el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+
+  /* ---- 側欄 ---- */
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    const cat = b.dataset.cat;
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (cat) chips.push({ kind: "category", value: cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+
+  side.querySelectorAll("[data-err-filter]").forEach((b) => b.addEventListener("click", () => {
+    const want = b.dataset.errFilter;
+    errFilter = errFilter === want ? "" : want;
+    side.querySelectorAll("[data-err-filter]").forEach((x) =>
+      x.classList.toggle("on", x.dataset.errFilter === errFilter));
+    refilter(); closeNav();
+  }));
+
+  /* chip 從哪裡被加掉都要同步側欄的選取狀態：盯著 #sbox 的子節點變動最保險，
+     不必在每個會改 chips 的地方各補一次呼叫。 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+
+  /* 窄螢幕：側欄變成抽屜 */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+
+  /* 按 / 直接跳到搜尋框（跟 YouTube 一樣）；Esc 收起抽屜 */
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if (e.key === "/" && !typing) { e.preventDefault(); input.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
 
 </script>
 </body>

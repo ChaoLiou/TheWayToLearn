@@ -1,6 +1,7 @@
 {# 搜尋列：條件做成 chip、作者／分類 autocomplete、條件之間 AND。atlas.html、listen.html、notes.html 共用。
    卡片要有 data-title / data-channel / data-category（選填 data-text：「任意」也會搜這裡，例如筆記內文）；
    group_sel 是「裡面全被濾掉就整組隱藏」的容器（沒有就傳 null）。
+   網址帶 ?only=<video_id> 時自動加一個「影片」條件，只留那一支（從 plan.html 的 hub 點過來會帶）。
    頁面可在引用 js() 之前宣告 function extra_ok(el)：回 false 的卡片一律隱藏（跟 chip 條件 AND），
    頁面自己的篩選（例如 notes 的留／刪）改變時呼叫 refilter() 重算。 #}
 {% macro css() %}
@@ -28,7 +29,9 @@
   #no-match { color:var(--muted); }
 {% endmacro %}
 
-{% macro bar(S, total) %}
+{# box() 與 hint() 分開，是為了讓 atlas.html 把搜尋框放進置頂列、把筆數與「清掉全部」留在內容區；
+   其他頁面照常用 bar() 一次出兩塊。js() 需要 #count / #clear / #no-match 存在，所以兩個都要放。 #}
+{% macro box(S) %}
 <div class="search">
   <div class="sbox" id="sbox">
     <span class="ico">🔍</span>
@@ -37,12 +40,17 @@
   </div>
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
+{% endmacro %}
+
+{% macro hint(S, total) %}
 <p class="shint"><span id="count">{{ S.f("showing", n=total, total=total) }}</span><span>{{ S.search_hint }}</span><button id="clear" type="button" hidden>{{ S.clear_all }}</button></p>
 <p id="no-match" hidden>{{ S.no_match }}</p>
 {% endmacro %}
 
+{% macro bar(S, total) %}{{ box(S) }}{{ hint(S, total) }}{% endmacro %}
+
 {% macro json(S) %}
-<script id="ui-data" type="application/json">{{ {"author": S.f_author, "category": S.f_category, "title": S.f_title, "any": S.f_any, "showing": S.showing} | tojson }}</script>
+<script id="ui-data" type="application/json">{{ {"author": S.f_author, "category": S.f_category, "title": S.f_title, "any": S.f_any, "video": S.f_video, "showing": S.showing} | tojson }}</script>
 {% endmacro %}
 
 {% macro js(card_sel, group_sel) %}
@@ -50,14 +58,15 @@
   const card_sel = {{ card_sel | tojson }}, group_sel = {{ group_sel | tojson }};
   const UI = JSON.parse(document.getElementById("ui-data").textContent);
   const CARDS = [...document.querySelectorAll(card_sel)].map((el) => ({
-    el, title: el.dataset.title || "", channel: el.dataset.channel || "", category: el.dataset.category || "",
+    el, id: el.dataset.id || "", title: el.dataset.title || "",
+    channel: el.dataset.channel || "", category: el.dataset.category || "",
     text: el.dataset.text || "",
   }));
   const extraOk = typeof extra_ok === "function" ? extra_ok : () => true;
   const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
         acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
         clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
-  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any };
+  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any, vid: UI.video };
   const chips = [];
   let acItems = [], acIdx = -1;
 
@@ -68,7 +77,8 @@
   };
   const AUTHORS = uniq("channel"), CATS = uniq("category");
   const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
-  const match = (c, ch) => ch.kind === "author" ? has(c.channel, ch.value)
+  const match = (c, ch) => ch.kind === "vid" ? c.id === ch.value
+    : ch.kind === "author" ? has(c.channel, ch.value)
     : ch.kind === "category" ? has(c.category, ch.value)
     : ch.kind === "title" ? has(c.title, ch.value)
     : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value) || has(c.text, ch.value);
@@ -95,15 +105,15 @@
       el.className = "chip";
       el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
       el.querySelector(".k").textContent = KIND[ch.kind] + "：";
-      el.querySelector(".v").textContent = ch.value;
+      el.querySelector(".v").textContent = ch.label || ch.value;
       el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
       box.insertBefore(el, input);
     });
   };
-  const addChip = (kind, value) => {
+  const addChip = (kind, value, label) => {
     value = value.trim();
     if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
-    chips.push({ kind, value });
+    chips.push({ kind, value, label });
     input.value = "";
     drawChips(); refilter(); hideAc();
   };
@@ -155,5 +165,14 @@
     else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
   });
   clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+
+  /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
+     autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
+  const only = new URLSearchParams(location.search).get("only");
+  if (only) {
+    const c = CARDS.find((x) => x.id === only);
+    chips.push({ kind: "vid", value: only, label: c ? c.title : only });
+    drawChips();
+  }
   refilter();
 {% endmacro %}

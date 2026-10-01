@@ -18,7 +18,7 @@ PACER Learn turns that hour into something that stays with you.
 
 | You get a… | Which is really… | Good for |
 | --- | --- | --- |
-| 📄 **Written explainer** | A web page. How the speaker reasons their way to each conclusion, what every section says, screenshots of the moments that matter, unfamiliar terms explained right where they appear | Going back over a video you watched — or skipping the video entirely |
+| 📄 **Written explainer** | A web page. How the speaker reasons their way to each conclusion, what every section says, screenshots of the moments that matter, unfamiliar terms explained and errors flagged right where they appear | Going back over a video you watched — or skipping the video entirely |
 | 🎧 **Audio version** | An mp3. A spoken walkthrough, cut with clips of the speaker's own voice, with chapters and captions | Commuting, walking, doing the dishes |
 | ✍️ **Practice** | A web page. Every piece of information in the video turned into something to *do*: run through the steps, come up with your own example, draw the concept map, drill the flashcard | Actually remembering it, instead of having "seen it" |
 | 📝 **Notes** | A web page. 3–8 one-line takeaways per video — the things you only know after watching. Click one to jump back to the part that said it; keep or delete each one yourself | Keeping just the conclusions, or moving them into your own note app |
@@ -36,7 +36,17 @@ A summary hands you bullet points — but have you ever wondered how the speaker
 **2. Any line takes you back to that second of the video.**
 Every section is stamped with a timecode and paired with a screenshot from that moment. If something reads oddly, one click takes you back to hear exactly how they said it.
 
-**3. Watching isn't learning, so it makes you do something.**
+**3. It tells you where the video is wrong.**
+This is the biggest departure from a summary: a summary assumes the video is correct and just condenses it. PACER Learn checks as it goes and flags problems right where they occur, at two levels:
+
+- 🔺 **Wrong or outdated** — true when recorded but no longer, or simply mistaken.
+- 🔸 **Debatable** — the direction is right, but it's stated too strongly, depends on context, or the field hasn't settled.
+
+Each flag carries the speaker's exact words, what's off about them, and the basis for saying so (a specific study, say). On the index page, every card shows that video's correction count next to the author's name; click it for the full table. So before you spend an hour on a video, you already know how much of it to trust.
+
+> The TED sleep talk in the demo picks up two "debatable" flags: "stay away from screens before bed" treats screens as the main culprit when the overhead light usually delivers far more light to your eyes, and the "get up after 25 minutes" rule uses a number most clinical manuals put at 15 to 20.
+
+**4. Watching isn't learning, so it makes you do something.**
 Seeing or hearing an idea only gets it in the door. To keep it, you have to digest it — and knowledge comes in types, each digested a different way. Use the wrong method and no amount of time will make it stick.
 
 That's where the name comes from. The method is the PACER framework from *How to Remember Everything You Read*: sort every piece of information into one of five types, then digest it the way that type calls for. PACER is the five initials.
@@ -55,10 +65,10 @@ The sorting, and what to do with each item, is written for you. You just do it. 
 
 It also keeps score: if too much piles up undigested (20 items by default), the next time you paste a new video it stops you and tells you to clear the backlog first.
 
-**4. It reads it aloud, with the speaker's own voice mixed in.**
+**5. It reads it aloud, with the speaker's own voice mixed in.**
 A summary is something you read. This becomes an mp3: a spoken walkthrough that cuts to the speaker's original audio at the moments that matter, like listening to a podcast episode. Chapters to skip between, line-by-line captions on screen, and it works while you walk, drive or wash up. If the original is in another language, those clips can be dubbed instead.
 
-**5. It leaves you a set of notes you curated yourself.**
+**6. It leaves you a set of notes you curated yourself.**
 A summary gets closed and forgotten. Here, each video yields 3–8 one-line takeaways; you keep or delete each one, and what you delete stays gone. Everything you keep links back to the part of the video that said it, and the whole set exports into your own note app.
 
 ---

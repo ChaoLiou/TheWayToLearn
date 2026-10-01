@@ -77,10 +77,8 @@
   .frames figure { margin:0; max-width:280px; }
   .frames img { width:100%; border:1px solid var(--line); border-radius:4px; cursor:zoom-in; }
   .frames figcaption { font-size:.8rem; color:var(--muted); }
-  /* 術語：原文 + hover 中文 + ⓘ */
-  dl.terms dt { font-weight:600; margin-top:.5rem; display:flex; align-items:center; gap:.4rem; }
-  dl.terms dd { margin:0 0 0 1rem; }
-  .term { position:relative; border-bottom:1px dotted var(--muted); cursor:help; }
+  /* 術語：就地標在文章裡（原文 + hover 中文 + ⓘ） */
+  .term { position:relative; border-bottom:1px dotted var(--accent); cursor:help; font-weight:600; }
   .term::after { content:attr(data-zh); position:absolute; left:0; bottom:calc(100% + 4px); white-space:nowrap;
                  background:var(--fg); color:var(--bg); font-size:.8rem; font-weight:400; padding:.15rem .5rem;
                  border-radius:4px; opacity:0; pointer-events:none; transition:opacity .12s; z-index:5; }
@@ -89,6 +87,10 @@
           border-radius:50%; border:1px solid var(--accent); color:var(--accent); background:none;
           font:700 .75rem/1 system-ui; cursor:pointer; padding:0; }
   .info:hover { background:var(--accent); color:#fff; }
+  p .info { margin:0 .15rem 0 .1rem; vertical-align:.05em; transform:scale(.8); }
+  /* 文中沒出現的術語：收在段末一行，仍可點 ⓘ 看定義 */
+  .terms-extra { font-size:.88rem; margin:.3rem 0; }
+  .terms-extra .term { margin-left:.3rem; }
   dialog { border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--fg);
            max-width:560px; width:calc(100% - 2rem); padding:1.2rem 1.5rem; }
   dialog::backdrop { background:rgba(0,0,0,.5); }
@@ -122,16 +124,6 @@
 {% if hub %}
 <p class="hub">{% if hub.listen %}<a href="{{ hub.listen }}">{{ S.nav_listen }}</a>{% endif %}{% if hub.notes %}<a href="{{ hub.notes }}">{{ S.nav_notes }}</a>{% endif %}{% if hub.digest %}<a href="{{ hub.digest }}">{{ S.nav_digest }}</a>{% endif %}</p>
 {% endif %}
-{% if atlas %}
-<div class="card atlas-nav">
-  <b>📄 <a href="{{ atlas.atlas_href }}">{{ S.atlas }}</a></b>
-  {% if atlas.region %} · {{ S.region }}: <b>{{ atlas.region.name }}</b>{% endif %}
-  {% if atlas.links %}
-  <ul>{% for l in atlas.links %}<li><span class="rt">{{ l.type }} {{ l.dir }}</span><a href="{{ l.href }}">{{ l.title }}</a> <span class="muted">· {{ l.via }}</span></li>{% endfor %}</ul>
-  {% else %}<div class="muted">{{ S.no_links }}</div>{% endif %}
-</div>
-{% endif %}
-
 {% if videos|length == 1 and videos[0].lesson_status %}
 <div class="card lesson" id="lesson-pending" data-src="{{ videos[0].lesson_src }}"
      data-state="{{ videos[0].lesson_status.state }}">
@@ -153,19 +145,14 @@
       <button data-mode="orig" class="on">{{ S.mode_orig }}</button><button data-mode="dub">{{ S.mode_dub }}</button>
     </span>{% endif %}
     <span class="muted">{{ S.kara_hint }}</span></div>
-  {% if L.dub %}<div class="muted">{{ S.dub_hint }}</div>{% endif %}
-  <div class="muted">{{ S.chapters }}</div>
-  <ol>{% for c in L.chapters %}<li><button data-at="{{ c.at }}"><span class="t">{{ c.at|ts }}</span>{{ c.title }}</button></li>{% endfor %}</ol>
+  <details class="desc"><summary>{{ S.chapters }}（{{ L.chapters|length }}）</summary><div>
+    <ol>{% for c in L.chapters %}<li><button data-at="{{ c.at }}"><span class="t">{{ c.at|ts }}</span>{{ c.title }}</button></li>{% endfor %}</ol>
+  </div></details>
 </div>
 {% endif %}
 
 <!-- 1 -->
 <h2>{{ S.h_prereq }}</h2>
-<div class="card">
-  <h4>{{ S.prereq_box }}</h4>
-  <ul>{% for p in overview.prerequisites %}<li><b>{{ p.concept }}</b> — {{ p.note }}</li>{% endfor %}</ul>
-</div>
-<h4>{{ S.outline }}</h4>
 <ol>
 {% for o in overview.outline %}
   {% set v = (videos | selectattr('id', 'equalto', o.video_id) | list | first) %}
@@ -184,17 +171,16 @@
   <a href="{{ v.meta.url }}" target="_blank" rel="noopener">{{ v.source_name }}</a>
 </p>
 {% if v.estimate or v.timings %}
+<details class="desc"><summary>{{ S.timings_summary }}</summary><div>
 <table><tr><th>{{ S.stage }}</th><th>{{ S.est }}</th><th>{{ S.actual }}</th></tr>
 {% for st in ['fetch','segment','shot','analyze','render'] %}
 <tr><td>{{ st }}</td>
   <td>{{ v.estimate.stages[st].sec|dur if v.estimate and st in v.estimate.stages else '–' }}</td>
   <td>{{ v.timings[st].sec|dur if st in v.timings else '–' }}</td></tr>
 {% endfor %}</table>
+</div></details>
 {% endif %}
-<p>{{ v.analysis.author_reasoning }}</p>
-<div class="mm-wrap" data-cap="{{ S.chain_cap }} · {{ v.meta.title }}"><pre class="mermaid">
-{{ v.chain_mermaid }}
-</pre></div>
+{% for para in v.reasoning_paras %}<p>{{ para }}</p>{% endfor %}
 <details class="desc"><summary>{{ S.chain_desc_summary }}</summary><div>
   <p class="muted">{{ S.chain_desc }}</p>
   <ol>{% for c in v.chain_desc %}<li><a href="#{{ v.id }}-s{{ c.id }}">{{ c.title }}</a>{% if not loop.last %} → <i>{{ c.leads_to }}</i>{% endif %}</li>{% endfor %}</ol>
@@ -208,27 +194,26 @@
 {% for s in v.analysis.segments %}
 <section class="seg" id="{{ v.id }}-s{{ s.id }}">
   <h4>{{ s.id }}. {{ s.title }} <span class="muted"><a href="{{ s.start_href }}" target="_blank" rel="noopener">{{ s.start_label }}</a>–{{ s.end_label }}</span></h4>
-  {% if s.summary %}<p><i>{{ S.author_says }}</i>{{ s.summary }}</p>{% endif %}
+  {% if s.summary %}<p>{{ s.summary_html }}</p>{% endif %}
   {% if s.shots %}
   <div class="frames">
     {% for sh in s.shots %}<figure><img src="{{ sh.href }}" alt="{{ sh.why }}" loading="lazy" data-video="{{ v.id }}" data-idx="{{ sh.idx }}"><figcaption>{{ sh.t_label }} · {{ sh.why }}</figcaption></figure>{% endfor %}
   </div>
   {% endif %}
   <div class="bridge"><b>{{ S.builds_on }}</b> {{ s.builds_on }}</div>
-  <p><span class="tag r">{{ S.reasoning }}</span>{{ s.reasoning }}</p>
+  <p><span class="tag r">{{ S.reasoning }}</span>{{ s.reasoning_html }}</p>
   {% if s.digest %}
   <ul class="pacer">
     {% for it in s.digest %}<li data-kind="{{ it.kind }}"><a href="{{ it.href }}" title="{{ S['d_why_' ~ it.kind] }}"><span class="k">{{ it.kind }}</span>{{ it.text }}<span class="act">→ {{ S['d_act_' ~ it.kind] }}</span></a></li>{% endfor %}
   </ul>
   {% endif %}
-  {% if s.explanation %}<p><span class="tag ai">{{ S.ai_note }}</span>{{ s.explanation }}</p>{% endif %}
+  {% if s.explanation %}<p><span class="tag ai">{{ S.ai_note }}</span>{{ s.explanation_html }}</p>{% endif %}
+  {% if s.terms_extra %}
+  <p class="terms-extra"><span class="muted">{{ S.terms_label }}:</span>{% for t in s.terms_extra %}<span class="term" data-zh="{{ t.zh }}">{{ t.term }}</span><button class="info" data-term="{{ t.tid }}" title="{{ S.more }}" aria-label="{{ S.more }}">i</button>{% endfor %}</p>
+  {% endif %}
   {% if s.terms %}
-  <dl class="terms">
     {% for t in s.terms %}
-    {% set tid = v.id ~ '-' ~ s.id ~ '-' ~ loop.index %}
-    <dt><span class="term" data-zh="{{ t.zh }}">{{ t.term }}</span><button class="info" data-term="{{ tid }}" title="{{ S.more }}" aria-label="{{ S.more }}">i</button></dt>
-    <dd>{{ t.definition }}{% if t.related %} <span class="muted">{{ S.related }}: {% for r in t.related %}{{ r.term if r is mapping else r }}{% if not loop.last %}{{ S.sep }}{% endif %}{% endfor %}</span>{% endif %}</dd>
-    <dialog id="term-{{ tid }}">
+    <dialog id="term-{{ t.tid }}">
       <button class="close" data-close aria-label="{{ S.close }}">✕</button>
       <h3>{{ t.term }}</h3>
       <div class="zh">{{ t.zh }}</div>
@@ -238,7 +223,6 @@
       <p class="muted">{{ S.f("source_seg", id=s.id, title=s.title) }}</p>
     </dialog>
     {% endfor %}
-  </dl>
   {% endif %}
   {% if s.issues %}
   <div class="issues">
@@ -273,28 +257,6 @@
 {% endfor %}{% endfor %}
 </table></div>
 {% endif %}
-<div class="mm-wrap" data-cap="Mindmap"><pre class="mermaid">
-{{ mindmap }}
-</pre></div>
-<details class="desc"><summary>{{ S.mindmap_desc_summary }}</summary><div>
-  <p class="muted">{{ S.mindmap_desc }}</p>
-  <ul><li><b>{{ overview.topic }}</b>
-    <ul>{% for v in videos %}<li>{{ v.meta.title }}
-      <ul>{% for s in v.analysis.segments %}<li><a href="#{{ v.id }}-s{{ s.id }}">{{ s.id }}. {{ s.title }}</a>{% if s.terms %} — {{ s.terms|map(attribute='term')|join(S.sep) }}{% endif %}</li>{% endfor %}</ul>
-    </li>{% endfor %}</ul>
-  </li></ul>
-</div></details>
-{% if term_graph %}
-<h4>{{ S.term_graph }}</h4>
-<p class="legend">{% for g in term_legend %}<span><i style="background:{{ g.color }}"></i>{{ g.title }}</span>{% endfor %}</p>
-<div class="mm-wrap" data-cap="{{ S.term_graph }}"><pre class="mermaid">
-{{ term_graph }}
-</pre></div>
-<details class="desc"><summary>{{ S.term_graph_desc_summary }}</summary><div>
-  <p class="muted">{{ S.term_graph_desc }}</p>
-  <ul>{% for e in term_edges %}<li><b>{{ e.a }}</b> {{ '⇄' if e.both else '→' }} <b>{{ e.b }}</b>{% if e.rel %}：{{ e.a }} → {{ e.b }} {{ e.rel }}{% endif %}{% if e.both and e.rel_back %}；{{ e.b }} → {{ e.a }} {{ e.rel_back }}{% endif %}</li>{% endfor %}</ul>
-</div></details>
-{% endif %}
 
 <!-- 5 -->
 <h2>{{ S.h_next }}</h2>
@@ -306,6 +268,16 @@
 </div>
 {% endfor %}
 
+{% if atlas %}
+<div class="card atlas-nav">
+  <b>📄 <a href="{{ atlas.atlas_href }}">{{ S.atlas }}</a></b>
+  {% if atlas.region %} · {{ S.region }}: <b>{{ atlas.region.name }}</b>{% endif %}
+  {% if atlas.links %}
+  <ul>{% for l in atlas.links %}<li><span class="rt">{{ l.type }} {{ l.dir }}</span><a href="{{ l.href }}">{{ l.title }}</a> <span class="muted">· {{ l.via }}</span></li>{% endfor %}</ul>
+  {% else %}<div class="muted">{{ S.no_links }}</div>{% endif %}
+</div>
+{% endif %}
+
 </main>
 
 {% endblock %}
@@ -315,7 +287,7 @@
 <script id="shots-ids" type="application/json">{{ videos | map(attribute='id') | list | tojson }}</script>
 {% endblock %}
 {% block js %}
-  /* 聽力版還在產生：定期探測 lesson.mp3，好了就自動重新整理 */
+  /* 語音解析還在產生：定期探測 lesson.mp3，好了就自動重新整理 */
   const pend = document.getElementById("lesson-pending");
   if (pend && pend.dataset.state !== "failed") {
     const probe = () => {
@@ -327,7 +299,7 @@
     setInterval(probe, 20000);
   }
   const KSTR = { play: {{ S.play | tojson }}, pause: {{ S.pause | tojson }}, orig: {{ S.orig_text | tojson }} };
-  /* 聽力版：點章節跳到該時間 */
+  /* 語音解析：點章節跳到該時間 */
   const lesson = document.getElementById("lesson");
   /* metadata 還沒載入時直接設 currentTime 會被瀏覽器丟掉、變成從頭播，所以先等 loadedmetadata */
   const seekTo = (t) => {

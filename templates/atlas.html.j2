@@ -3,9 +3,49 @@
 {% import "_search.html.j2" as search %}
 {% block title %}{{ S.atlas_title }}{% endblock %}
 {% block css %}
-  main { max-width: 1180px; }
-  .topnav { display:flex; gap:.4rem 1rem; flex-wrap:wrap; font-size:.9rem; margin:-.6rem 0 1rem; }
-  .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
+  /* ---- 版面：置頂搜尋列 + 左側導覽（YouTube 式）---- */
+  :root { --top:3.6rem; }
+  body { padding:0; }
+  main { max-width: min(2000px, 100%); padding:1.2rem 1.4rem 3rem; }
+  main > h2:first-child { margin-top:0; }
+  .topbar { position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:.8rem;
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; }
+  .topbar .search { flex:1; max-width:46rem; margin:0; }
+  .topbar .stats { display:flex; gap:1rem; color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top)); overflow:auto;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .err-f svg { width:.95rem; height:.95rem; flex:none; color:var(--wrong); }
+  .side .err-f.on svg { color:#fff; }
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .menu-btn { display:block; }
+    .topbar .stats { display:none; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease; max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
   .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
   {{ search.css() }}
   /* ---- 各站：YouTube 式縮圖卡 ---- */
@@ -13,7 +53,7 @@
   .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
   .region h3 i { display:inline-block; width:.9rem; height:.9rem; border-radius:3px; }
   .region .blurb { color:var(--muted); margin:0 0 .8rem; }
-  .wps { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.4rem 1rem; }
+  .wps { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap:1.6rem 1rem; }
   .wp { display:flex; flex-direction:column; gap:.45rem; min-width:0; }
   .wp[hidden] { display:none; }
   .wp .thumb { position:relative; display:block; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
@@ -49,7 +89,9 @@
   .wp .wp-err { display:none; }
   .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
   .wp .sub { font-size:.82rem; color:var(--muted); }
-  .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted); }
+  .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted);
+             background:none; border:none; padding:0; font:inherit; cursor:pointer; text-align:left; }
+  .wp .cat:hover { color:var(--accent); }
   .wp .cat i { display:inline-block; width:.55rem; height:.55rem; border-radius:2px; }
   .wp .more-btn { align-self:flex-start; background:none; border:1px solid var(--line); border-radius:999px;
                   color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
@@ -114,20 +156,40 @@
   .routes .via { color:var(--muted); }
 {% endblock %}
 {% block body %}
+<header class="topbar">
+  <button class="menu-btn" type="button" id="menu" aria-label="{{ S.menu }}" aria-expanded="false">☰</button>
+  <a class="brand" href="atlas.html">{{ S.atlas_h1 }}</a>
+  {{ search.box(S) }}
+  <span class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span></span>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+<nav class="side">
+  <a class="on" href="atlas.html">{{ S.nav_atlas }}</a>
+  {% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}
+  {% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}
+  {% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}
+  <hr>
+  <p class="grp">{{ S.side_regions }}</p>
+  <button type="button" class="cat-all on" data-cat="">{{ S.side_all }}<span class="n">{{ waypoints|length }}</span></button>
+  {% for r in regions %}
+  <button type="button" class="cat-f" data-cat="{{ r.name }}" title="{{ r.blurb }}"><i style="background:{{ r.color }}"></i><span class="lab">{{ r.name }}</span><span class="n">{{ r.members|length }}</span></button>
+  {% endfor %}
+  {% if unplaced %}
+  <button type="button" class="cat-f" data-cat="{{ S.unplaced }}" title="{{ S.unplaced_desc }}"><i style="background:var(--line)"></i><span class="lab">{{ S.unplaced }}</span><span class="n">{{ unplaced|length }}</span></button>
+  {% endif %}
+  <hr>
+  <p class="grp">{{ S.side_filters }}</p>
+  <button type="button" class="err-f" data-err-filter="err">{{ ic.danger() }}<span class="lab">{{ S.only_err }}</span></button>
+  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">{{ S.only_clean }}</span></button>
+</nav>
 <main>
-{% if has_listen or has_notes %}
-<p class="topnav">{% if has_listen %}<a href="listen.html">{{ S.nav_listen }}</a>{% endif %}{% if has_notes %}<a href="notes.html">{{ S.nav_notes }}</a>{% endif %}{% if has_digest %}<a href="digest.html">{{ S.nav_digest }}</a>{% endif %}<a class="on" href="atlas.html">{{ S.nav_atlas }}</a></p>
-{% endif %}
-<h1>{{ S.atlas_h1 }}</h1>
-<p class="stats"><span>{{ S.f("n_wp", n=waypoints|length) }}</span><span>{{ S.f("n_region", n=regions|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span></p>
-
-
 <h2>{{ S.h_stations }}</h2>
 <p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic.danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic.warn() }}{{ S.lvl_debatable }}</span></p>
-{{ search.bar(S, waypoints|length) }}
+{{ search.hint(S, waypoints|length) }}
 
 {% macro card(w, color, cat) %}
-<article class="wp" data-id="{{ w.id }}" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}">
+<article class="wp" data-id="{{ w.id }}" data-title="{{ w.title }}" data-channel="{{ w.channel or '' }}" data-category="{{ cat }}" data-err="{{ (w.err.wrong or 0) + (w.err.debatable or 0) if w.err else 0 }}">
   <a class="thumb" href="{{ w.href }}">
     <span class="ph" aria-hidden="true"><span>{{ w.title }}</span></span>
     {% if w.yt_thumb or w.thumb %}<img loading="lazy" src="{{ w.yt_thumb or w.thumb }}" data-fallback="{{ w.thumb if w.yt_thumb and w.thumb else '' }}" alt="{{ w.title }}">{% endif %}
@@ -136,7 +198,7 @@
   <h4><a href="{{ w.href }}">{{ w.title }}</a></h4>
   <div class="by">{{ w.channel }}{% if w.err %}{% if w.err.clean %}<span class="err ok" title="{{ w.err.tip }}">{{ S.err_ok }}</span>{% else %}{% if w.err.wrong %}<button class="err w" type="button" data-err title="{{ w.err.tip }}">{{ ic.danger() }}{{ w.err.wrong }}</button>{% endif %}{% if w.err.debatable %}<button class="err d" type="button" data-err title="{{ w.err.tip }}">{{ ic.warn() }}{{ w.err.debatable }}</button>{% endif %}{% endif %}{% endif %}</div>
   <div class="sub">{% if w.upload_date %}<span title="{{ w.upload_date }}">{{ w.upload_days|ago }}</span> · {% endif %}{{ S.f("n_seg", n=w.n_segments) }} · <a href="{{ w.url }}" target="_blank" rel="noopener">{{ S.blog_link if w.kind == 'blog' else 'YouTube' }}</a></div>
-  <div class="cat"><i style="background:{{ color }}"></i>{{ cat }}</div>
+  <button class="cat" type="button" data-cat="{{ cat }}" title="{{ S.f_category }}：{{ cat }}"><i style="background:{{ color }}"></i>{{ cat }}</button>
   <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
     {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
   </div>
@@ -174,20 +236,8 @@
   {% endif %}
 </article>
 {% endmacro %}
-{% for r in regions %}
-<section class="region" style="border-color:{{ r.color }}">
-  <h3><i style="background:{{ r.color }}"></i>{{ r.name }}</h3>
-  <p class="blurb">{{ r.blurb }}</p>
-  <div class="wps">{% for w in r.members %}{{ card(w, r.color, r.name) }}{% endfor %}</div>
-</section>
-{% endfor %}
-{% if unplaced %}
-<section class="region">
-  <h3><i style="background:var(--muted)"></i>{{ S.unplaced }}</h3>
-  <p class="blurb">{{ S.unplaced_desc }}{% if waypoints|length >= 2 %} {{ S.unplaced_hint | safe }}{% endif %}</p>
-  <div class="wps">{% for w in unplaced %}{{ card(w, 'var(--muted)', S.unplaced) }}{% endfor %}</div>
-</section>
-{% endif %}
+{# 不分組：一份清單、新到舊。分類仍印在卡片上，點了就加一個篩選條件（跟 listen.html 一樣）。#}
+<div class="wps">{% for w in waypoints %}{{ card(w, w.cat_color, w.cat) }}{% endfor %}</div>
 <dialog id="nextstep" class="modal">
   <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
   <div class="body">
@@ -210,6 +260,7 @@
   <div class="body"></div>
 </dialog>
 </main>
+</div>
 {% endblock %}
 {% block json %}
 <script id="steps-data" type="application/json">{{ steps_data | tojson }}</script>
@@ -335,5 +386,61 @@
   });
   EDLG.addEventListener("click", (e) => { if (e.target === EDLG || e.target.closest("[data-close]")) EDLG.close(); });
 
-{{ search.js(".wp", "section.region") }}
+  /* 側欄的勘誤篩選：透過 extra_ok 併進搜尋條件（跟 chip 條件 AND）。
+     必須在 search.js() 之前宣告，它會在初始化時抓這個函式。 */
+  let errFilter = "";
+  function extra_ok(el) {
+    if (!errFilter) return true;
+    const n = +(el.dataset.err || 0);
+    return errFilter === "err" ? n > 0 : n === 0;
+  }
+
+{{ search.js(".wp", none) }}
+  /* 分類可點：加一個篩選條件（跟 listen.html 一樣的行為） */
+  document.querySelectorAll(".wp .cat").forEach((el) =>
+    el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+
+  /* ---- 側欄 ---- */
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    const cat = b.dataset.cat;
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (cat) chips.push({ kind: "category", value: cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+
+  side.querySelectorAll("[data-err-filter]").forEach((b) => b.addEventListener("click", () => {
+    const want = b.dataset.errFilter;
+    errFilter = errFilter === want ? "" : want;
+    side.querySelectorAll("[data-err-filter]").forEach((x) =>
+      x.classList.toggle("on", x.dataset.errFilter === errFilter));
+    refilter(); closeNav();
+  }));
+
+  /* chip 從哪裡被加掉都要同步側欄的選取狀態：盯著 #sbox 的子節點變動最保險，
+     不必在每個會改 chips 的地方各補一次呼叫。 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+
+  /* 窄螢幕：側欄變成抽屜 */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+
+  /* 按 / 直接跳到搜尋框（跟 YouTube 一樣）；Esc 收起抽屜 */
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if (e.key === "/" && !typing) { e.preventDefault(); input.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
 {% endblock %}
