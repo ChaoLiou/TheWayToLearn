@@ -61,7 +61,7 @@
   .wp .more-btn { align-self:flex-start; background:none; border:1px solid var(--line); border-radius:999px;
                   color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .wp .wp-info { display:none; }
+  .wp .wp-info, .wp .wp-prog { display:none; }
   /* 進度：十步各一格 */
   .prog { display:flex; gap:3px; margin:.6rem 0 .3rem; }
   .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
@@ -94,6 +94,8 @@
   dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
   /* 繼續做：選一個目標 → 複製 prompt */
   #nextstep { width:min(640px, 94vw); }
+  #nextstep .prog-slot .prog { margin:.1rem 0 .3rem; }
+  #nextstep .prog-slot .stg { margin-bottom:.8rem; }
   #nextstep ol.steps { list-style:none; margin:.2rem 0 1rem; padding:0; display:grid; gap:.15rem; }
   #nextstep ol.steps li { display:flex; align-items:center; gap:.5rem; font-size:.9rem; color:var(--muted); }
   #nextstep ol.steps li .m { width:1.2rem; text-align:center; }
@@ -157,6 +159,12 @@
     <button class="more-btn" type="button">{{ S.more_info }}</button>
     <button class="go{{ ' done' if w.all_done }}" type="button">{{ S.next_step }}</button>
   </div>
+  <div class="wp-prog">
+    <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
+      {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
+    </div>
+    <div class="stg"><span>{{ S.progress }}</span><b>{{ w.n_done }}/{{ w.n_total }}</b>{% if w.note %}<span class="{{ '' if w.all_done else 'warn' }}">{{ w.note }}</span>{% endif %}</div>
+  </div>
   <div class="wp-info">
     <div><b>{{ w.topic }}</b></div>
     <ul>{% for t in w.takeaways %}<li>{{ t }}</li>{% endfor %}</ul>
@@ -167,10 +175,6 @@
       {% for e in w.routes_out %}<div><span class="rt">{{ S.route(e.type) }} {{ '—' if e.type != 'next' else '→' }}</span><a href="{{ e.other.href }}">{{ e.other.title }}</a> <span class="via">· {{ e.via }}</span></div>{% endfor %}
     </div>
     {% endif %}
-    <div class="prog" title="{{ S.progress }} {{ w.n_done }}/{{ w.n_total }}">
-      {% for st in w.stages %}<span data-s="{{ st.state }}" title="{{ st.n }}. {{ st.name }} · {{ S['st_' + st.state] }}{% if st.note %} — {{ st.note }}{% endif %}"></span>{% endfor %}
-    </div>
-    <div class="stg"><span>{{ S.progress }}</span><b>{{ w.n_done }}/{{ w.n_total }}</b>{% if w.note %}<span class="{{ '' if w.all_done else 'warn' }}">{{ w.note }}</span>{% endif %}</div>
     <div><a href="{{ w.href }}">{{ S.open_plan }}</a></div>
   </div>
   {% if w.issues %}
@@ -195,6 +199,7 @@
 <dialog id="nextstep" class="modal">
   <div class="head"><h3></h3><button type="button" data-close aria-label="{{ S.close }}">✕</button></div>
   <div class="body">
+    <div class="prog-slot"></div>
     <ol class="steps"></ol>
     <h4>{{ S.next_q }}</h4>
     <p class="hint">{{ S.next_hint }}</p>
@@ -264,9 +269,12 @@
   };
   document.querySelectorAll(".wp .go").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const d = STEPS[btn.closest(".wp").dataset.id];
+      const wp = btn.closest(".wp");
+      const d = STEPS[wp.dataset.id];
       if (!d) return;
       NS.querySelector(".head h3").textContent = d.title;
+      NS.querySelector(".prog-slot").replaceChildren(
+        ...[...(wp.querySelector(".wp-prog")?.children || [])].map((n) => n.cloneNode(true)));
       NS.querySelector("ol.steps").replaceChildren(...d.stages.map((st) => {
         const li = document.createElement("li");
         li.className = st.state;

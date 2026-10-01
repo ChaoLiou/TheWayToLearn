@@ -229,7 +229,7 @@
   .wp .more-btn { align-self:flex-start; background:none; border:1px solid var(--line); border-radius:999px;
                   color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
   .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .wp .wp-info { display:none; }
+  .wp .wp-info, .wp .wp-prog { display:none; }
   /* 進度：十步各一格 */
   .prog { display:flex; gap:3px; margin:.6rem 0 .3rem; }
   .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
@@ -262,6 +262,8 @@
   dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
   /* 繼續做：選一個目標 → 複製 prompt */
   #nextstep { width:min(640px, 94vw); }
+  #nextstep .prog-slot .prog { margin:.1rem 0 .3rem; }
+  #nextstep .prog-slot .stg { margin-bottom:.8rem; }
   #nextstep ol.steps { list-style:none; margin:.2rem 0 1rem; padding:0; display:grid; gap:.15rem; }
   #nextstep ol.steps li { display:flex; align-items:center; gap:.5rem; font-size:.9rem; color:var(--muted); }
   #nextstep ol.steps li .m { width:1.2rem; text-align:center; }
@@ -311,7 +313,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T21:59:13+08:00" title="2026-10-01 21:59">更新於 2026-10-01 21:59</span></div>
+  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T22:01:33+08:00" title="2026-10-01 22:01">更新於 2026-10-01 22:01</span></div>
 </header>
 
 
@@ -365,15 +367,17 @@
     <button class="more-btn" type="button">詳細</button>
     <button class="go" type="button">▸ 繼續做</button>
   </div>
+  <div class="wp-prog">
+    <div class="prog" title="進度 7/9">
+      <span data-s="todo" title="1. 估成本 · 還沒做"></span><span data-s="done" title="2. 抓字幕 · 完成"></span><span data-s="done" title="3. 切段 · 完成"></span><span data-s="partial" title="4. 截圖 · 沒做完"></span><span data-s="done" title="5. 逐段分析 · 完成"></span><span data-s="done" title="6. 練習 · 完成"></span><span data-s="done" title="7. 文字解析 · 完成"></span><span data-s="skip" title="8. 連結各站 · 不需要"></span><span data-s="done" title="9. 語音解析 · 完成"></span><span data-s="done" title="10. podcast 頁 · 完成"></span>
+    </div>
+    <div class="stg"><span>進度</span><b>7/9</b></div>
+  </div>
   <div class="wp-info">
     <div><b>睡得更好的六條科學建議，以及它們管用的邊界</b></div>
     <ul><li>搞懂規律為什麼排第一：它配合的是體內那個約 24 小時的時鐘</li><li>知道入睡需要核心體溫下降，於是房間要涼、熱水澡要提早洗</li><li>學會把褪黑激素當報時訊號看，不再把它當安眠藥用</li><li>拿到一條反直覺的做法：睡不著就下床，切斷床與失眠的連結</li><li>分得出睡眠衛生與睡眠障礙的界線，知道什麼時候該看醫生</li></ul>
     <div class="terms">術語：<code>sleep hygiene</code> <code>RU-SATED</code> <code>circadian rhythm</code> <code>suprachiasmatic nucleus</code> <code>zeitgeber</code> <code>social jet lag</code> <code>core body temperature</code> <code>distal vasodilation</code> …共 21 個</div>
     
-    <div class="prog" title="進度 7/9">
-      <span data-s="todo" title="1. 估成本 · 還沒做"></span><span data-s="done" title="2. 抓字幕 · 完成"></span><span data-s="done" title="3. 切段 · 完成"></span><span data-s="partial" title="4. 截圖 · 沒做完"></span><span data-s="done" title="5. 逐段分析 · 完成"></span><span data-s="done" title="6. 練習 · 完成"></span><span data-s="done" title="7. 文字解析 · 完成"></span><span data-s="skip" title="8. 連結各站 · 不需要"></span><span data-s="done" title="9. 語音解析 · 完成"></span><span data-s="done" title="10. podcast 頁 · 完成"></span>
-    </div>
-    <div class="stg"><span>進度</span><b>7/9</b></div>
     <div><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">開啟文字解析 →</a></div>
   </div>
   
@@ -402,6 +406,7 @@
 <dialog id="nextstep" class="modal">
   <div class="head"><h3></h3><button type="button" data-close aria-label="關閉 (Esc)">✕</button></div>
   <div class="body">
+    <div class="prog-slot"></div>
     <ol class="steps"></ol>
     <h4>要往下做到哪裡？</h4>
     <p class="hint">選一個 → 複製 prompt → 貼到 Claude Code 執行</p>
@@ -625,9 +630,12 @@
   };
   document.querySelectorAll(".wp .go").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const d = STEPS[btn.closest(".wp").dataset.id];
+      const wp = btn.closest(".wp");
+      const d = STEPS[wp.dataset.id];
       if (!d) return;
       NS.querySelector(".head h3").textContent = d.title;
+      NS.querySelector(".prog-slot").replaceChildren(
+        ...[...(wp.querySelector(".wp-prog")?.children || [])].map((n) => n.cloneNode(true)));
       NS.querySelector("ol.steps").replaceChildren(...d.stages.map((st) => {
         const li = document.createElement("li");
         li.className = st.state;
