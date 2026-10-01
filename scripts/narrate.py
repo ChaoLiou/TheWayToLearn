@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import functools
 import hashlib
 import json
 import re
@@ -37,18 +38,70 @@ from common import (
 
 AR, AC = "24000", "1"  # edge-tts 的輸出規格；原聲片段轉成一樣才能直接 concat
 CBR = "48k"  # lesson.mp3 用固定位元率，瀏覽器跳轉才精準（見 concat）
-DEFAULT_VOICE = {"zh-TW": "zh-TW-HsiaoChenNeural", "zh": "zh-CN-XiaoxiaoNeural", "en": "en-US-AriaNeural"}
+# 常見語言的預設聲音。查不到的語言會改問 edge-tts 要清單（pick_voice），
+# 所以這張表只是「免得每次都連線」的快取，不是支援範圍的上限。
+DEFAULT_VOICE = {
+    "zh-TW": "zh-TW-HsiaoChenNeural", "zh-HK": "zh-HK-HiuMaanNeural", "zh": "zh-CN-XiaoxiaoNeural",
+    "en": "en-US-AriaNeural", "ja": "ja-JP-NanamiNeural", "ko": "ko-KR-SunHiNeural",
+    "es": "es-ES-ElviraNeural", "fr": "fr-FR-DeniseNeural", "de": "de-DE-KatjaNeural",
+    "pt": "pt-BR-FranciscaNeural", "it": "it-IT-ElsaNeural", "ru": "ru-RU-SvetlanaNeural",
+    "id": "id-ID-GadisNeural", "th": "th-TH-PremwadeeNeural", "vi": "vi-VN-HoaiMyNeural",
+    "hi": "hi-IN-SwaraNeural", "ar": "ar-EG-SalmaNeural", "nl": "nl-NL-ColetteNeural",
+    "pl": "pl-PL-ZofiaNeural", "tr": "tr-TR-EmelNeural",
+}
 # 配音（唸原聲翻譯）用另一個性別的聲音，聽得出來不是講解者本人
-DUB_VOICE = {"zh-TW": "zh-TW-YunJheNeural", "zh": "zh-CN-YunxiNeural", "en": "en-US-GuyNeural"}
+DUB_VOICE = {
+    "zh-TW": "zh-TW-YunJheNeural", "zh-HK": "zh-HK-WanLungNeural", "zh": "zh-CN-YunxiNeural",
+    "en": "en-US-GuyNeural", "ja": "ja-JP-KeitaNeural", "ko": "ko-KR-InJoonNeural",
+    "es": "es-ES-AlvaroNeural", "fr": "fr-FR-HenriNeural", "de": "de-DE-ConradNeural",
+    "pt": "pt-BR-AntonioNeural", "it": "it-IT-DiegoNeural", "ru": "ru-RU-DmitryNeural",
+    "id": "id-ID-ArdiNeural", "th": "th-TH-NiwatNeural", "vi": "vi-VN-NamMinhNeural",
+    "hi": "hi-IN-MadhurNeural", "ar": "ar-EG-ShakirNeural", "nl": "nl-NL-MaartenNeural",
+    "pl": "pl-PL-MarekNeural", "tr": "tr-TR-AhmetNeural",
+}
+
+
+@functools.lru_cache(maxsize=1)
+def _catalog() -> tuple[dict, ...]:
+    """edge-tts 的全部聲音（一次連線，之後這個行程內重用）。拿不到就回空的。
+    import 放在函式裡，跟 _tts 一樣：沒要產語音的人不必裝 edge-tts。"""
+    try:
+        import edge_tts
+        return tuple(asyncio.run(edge_tts.list_voices()))
+    except (ImportError, OSError, RuntimeError) as e:   # 沒裝、離線、API 變動
+        print(f"   （查不到 edge-tts 語音清單：{e}）")
+        return ()
+
+
+def pick_voice(lang: str, gender: str) -> str | None:
+    """表裡沒有的語言就問 edge-tts：先找完全相同的 locale，再找同語系的任一個。
+    找不到該性別就不挑性別——有這個語言的聲音，比性別對得上重要。"""
+    want = lang.lower()
+    base = want.split("-")[0]
+    cands = [v for v in _catalog() if v.get("Locale", "").lower() == want] \
+        or [v for v in _catalog() if v.get("Locale", "").lower().split("-")[0] == base]
+    if not cands:
+        return None
+    same = [v for v in cands if v.get("Gender") == gender]
+    return (same or cands)[0]["ShortName"]
 
 
 def voice_for(lang: str) -> str:
-    return DEFAULT_VOICE.get(lang) or DEFAULT_VOICE.get(lang.split("-")[0], DEFAULT_VOICE["en"])
+    """講解的聲音：表 > edge-tts 清單 > 英文。回英文代表那個語言真的找不到聲音。"""
+    v = DEFAULT_VOICE.get(lang) or DEFAULT_VOICE.get(lang.split("-")[0])
+    if v:
+        return v
+    v = pick_voice(lang, "Female")
+    if v:
+        return v
+    print(f"   ⚠ 找不到 {lang} 的語音，改用英文聲音唸（聽起來會怪，可用 --voice 指定）")
+    return DEFAULT_VOICE["en"]
 
 
 def dub_voice_for(lang: str, main: str) -> str:
     """配音聲音：預設同語言的另一個性別；剛好跟講解者撞聲就換成講解的預設聲。"""
-    v = DUB_VOICE.get(lang) or DUB_VOICE.get(lang.split("-")[0], DUB_VOICE["en"])
+    v = DUB_VOICE.get(lang) or DUB_VOICE.get(lang.split("-")[0]) or pick_voice(lang, "Male") \
+        or DUB_VOICE["en"]
     return voice_for(lang) if v == main else v
 
 

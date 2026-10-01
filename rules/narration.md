@@ -42,7 +42,8 @@
 
 ## 語言與語音
 - 講稿語言用該站 `meta.json` 的 `output_lang`。
-- `voice` 預設：`zh-TW` → `zh-TW-HsiaoChenNeural`，`en` → `en-US-AriaNeural`。使用者指定就照他的。
+- `voice` 預設跟著該站的 `output_lang` 走：常見語言在 `narrate.py` 的 `DEFAULT_VOICE` 表裡（中英日韓西法德葡義俄印尼泰越印地阿拉伯荷蘭波蘭土耳其…），
+  表裡沒有的語言會去問 edge-tts 的聲音清單，挑同語系的女聲當講解、男聲當配音；真的找不到才退回英文並印一行警告。使用者指定就照他的（`--voice`）。
 - `rate` 預設 `+0%`；使用者嫌慢可設 `+15%`。
 
 ## 來源是部落格文章時

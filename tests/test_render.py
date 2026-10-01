@@ -174,3 +174,16 @@ def test_lesson_dub_toggle_rendered(tmp_path):
         json.dumps(dict(_lesson_fixture(), dub=None), ensure_ascii=False), encoding="utf-8")
     render.main(["--workspace", str(ws)])
     assert 'data-mode=' not in (ws / "測試影片 C" / "plan.html").read_text(encoding="utf-8")
+
+
+def test_voice_follows_output_lang():
+    """換輸出語言就該換語音：表裡的語言直接拿，講解與配音是不同的聲音。"""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from narrate import dub_voice_for, voice_for
+
+    for lang, prefix in [("zh-TW", "zh-TW-"), ("en", "en-"), ("ja", "ja-JP-"), ("ko", "ko-KR-")]:
+        main = voice_for(lang)
+        assert main.startswith(prefix), (lang, main)
+        dub = dub_voice_for(lang, main)
+        assert dub.startswith(prefix) and dub != main, (lang, main, dub)

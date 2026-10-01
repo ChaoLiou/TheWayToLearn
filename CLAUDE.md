@@ -151,6 +151,7 @@ agent 產的所有內文用該站的 `output_lang`，術語 `term` 永遠英文�
 - 片段以內容雜湊命名快取在 `lesson_parts/`，改字幕合併或章節不必重跑 TTS
 - `lesson.status.json` 讓步驟 6 產出的 `plan.html` 顯示「語音解析產生中」，完成後頁面自己偵測並重新整理（`--mark-pending` 可提前標記）
 - `plan.html` 有播放器、章節，以及 karaoke 講稿視窗（已唸過=一般色、目前=強調、未唸=灰、原聲=斜體，點任一句從那裡播）
+- 講解與配音的聲音跟著該站 `output_lang`：`DEFAULT_VOICE` / `DUB_VOICE` 收常見語言，表裡沒有就跑 `pick_voice()` 問 edge-tts 的清單挑同語系的女聲／男聲，都找不到才退英文並警告。所以換輸出語言不必另外設聲音
 - clip 有 `translation` 就多產一軌 `lesson.dub.mp3`：原聲換成另一個聲音（`--dub-voice`，預設同語言不同性別）唸翻譯，講解部分兩軌共用同一批 TTS 檔。翻譯逐句合成，長度即 KTV 高亮節奏。網頁上「🎙 原聲 / 🗣 翻譯」切換（快捷鍵 D），兩軌 block 一一對應所以切換後停在同一個位置，章節與講稿一起換；`--no-dub` 關掉
 - 文件版面 → `rules/output.md` + `templates/plan.html.j2`
 - 估算係數 → `config/estimate.yaml`
