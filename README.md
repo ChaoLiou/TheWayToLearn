@@ -2,6 +2,10 @@
 
 **English** · [繁體中文](docs/README.zh-TW.md)
 
+### 🔗 [See it for yourself](https://chaoliou.github.io/TheWayToLearn/demo/)
+
+A real run on a TED talk about sleep — read the explainer, press play on the audio version, flip through the practice cards. Nothing to install.
+
 **This is a [Claude Code](https://claude.com/claude-code) plugin.** Once installed, hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
 
 You use it by typing one line in Claude Code (`/pacer:learn <url>`). No programming required. Never used Claude Code before? [Getting started](#getting-started) below walks you through it from the install.
