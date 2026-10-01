@@ -208,7 +208,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 集</span><span>共 11m44s</span><span>更新於 2026-10-01 22:40</span></div>
+  <div class="tr"><span>1 集</span><span>共 11m44s</span><span>更新於 2026-10-01 23:21</span></div>
 </header>
 
 
@@ -238,7 +238,7 @@
   
 </nav>
 <main>
-<p class="muted">新的在上面。點一集就開始播；字幕與講稿在底部播放器。</p>
+
 
 
 
@@ -268,7 +268,8 @@
     <div class="acts">
       <button type="button" class="play" data-act="play">▶ 播放</button>
       <a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">📄 文字解析</a>
-      <a href="notes.html#t0kACis_dJE">📝 筆記</a>
+      <a href="notes.html?only=t0kACis_dJE#t0kACis_dJE">📝 這篇的筆記</a>
+      <a href="digest.html?only=t0kACis_dJE#t0kACis_dJE">✍️ 這篇的練習</a>
       <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">🔗 在 YouTube 看</a>
     </div>
   </div>
@@ -562,7 +563,7 @@ if (document.getElementById("sbox")) (() => {
       el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
       el.querySelector(".k").textContent = KIND[ch.kind] + "：";
       el.querySelector(".v").textContent = ch.label || ch.value;
-      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); dropUrlState(); drawChips(); refilter(); input.focus(); });
       box.insertBefore(el, input);
     });
   };
@@ -571,7 +572,16 @@ if (document.getElementById("sbox")) (() => {
     if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
     chips.push({ kind, value, label });
     input.value = "";
+    dropUrlState();
     drawChips(); refilter(); hideAc();
+  };
+
+  /* ?only= 與 #hash 只是「進頁面時的初始狀態」。使用者一改條件，網址就不再代表畫面上的東西，
+     而且重新整理會把 ?only= 又套回去。所以任何手動改動都把網址洗乾淨（不留歷史紀錄）。 */
+  let seeded = false;
+  const dropUrlState = () => {
+    if (!seeded || (!location.search && !location.hash)) return;
+    history.replaceState(null, "", location.pathname);
   };
 
   const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
@@ -618,9 +628,9 @@ if (document.getElementById("sbox")) (() => {
       if (e.key === " " && !input.value.trim() && acIdx < 0) return;
       e.preventDefault(); commit();
     } else if (e.key === "Escape") { hideAc(); }
-    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); dropUrlState(); drawChips(); refilter(); }
   });
-  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+  clearEl.addEventListener("click", () => { chips.length = 0; dropUrlState(); drawChips(); refilter(); input.focus(); });
 
   /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
      autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
@@ -631,6 +641,7 @@ if (document.getElementById("sbox")) (() => {
     drawChips();
   }
   refilter();
+  seeded = true;
 
   // 點卡片上的分類 = 加一個分類條件
   document.querySelectorAll(".ep .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));

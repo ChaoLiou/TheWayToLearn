@@ -206,14 +206,6 @@
   
   
   
-  
-  <p class="grp">主題區</p>
-  <button type="button" class="cat-all on" data-cat="">全部影片<span class="n">1</span></button>
-  
-  <button type="button" class="cat-f" data-cat="睡眠"><i style="background:var(--line)"></i><span class="lab">睡眠</span><span class="n">1</span></button>
-  
-
-  <hr>
   <p class="grp">篩選</p>
   <div class="filters" id="filters">
     <button type="button" class="on" data-f="all">全部</button>
@@ -223,12 +215,20 @@
     <span class="sp"></span>
   </div>
   <hr>
+  
+  <p class="grp">主題區</p>
+  <button type="button" class="cat-all on" data-cat="">全部影片<span class="n">1</span></button>
+  
+  <button type="button" class="cat-f" data-cat="睡眠"><i style="background:var(--line)"></i><span class="lab">睡眠</span><span class="n">1</span></button>
+  
+
+  <hr>
   <button type="button" class="tool" id="export" title="下載 notes.keep.json，放到 workspace/ 後重跑 notes.py 就會記住">⬇ 匯出留／刪狀態</button>
   <button type="button" class="tool" id="reset">清掉本機狀態</button>
   
 </nav>
 <main>
-<p class="muted">每一篇學習素材留下的觀念與技巧。新的在上面；每條都連回原本的段落。</p>
+
 
 
 
@@ -254,7 +254,7 @@
         <span>TED</span>
         <span class="cat" data-cat="睡眠" title="分類">睡眠</span>
         <span>產生於 2026-10-01</span>
-        <a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">開啟文字解析</a>
+        <a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">📄 文字解析</a>
         <a href="listen.html#t0kACis_dJE">🎧 語音解析</a>
         <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">🔗 在 YouTube 看</a>
       </div>
@@ -486,7 +486,7 @@
       el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
       el.querySelector(".k").textContent = KIND[ch.kind] + "：";
       el.querySelector(".v").textContent = ch.label || ch.value;
-      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); dropUrlState(); drawChips(); refilter(); input.focus(); });
       box.insertBefore(el, input);
     });
   };
@@ -495,7 +495,16 @@
     if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
     chips.push({ kind, value, label });
     input.value = "";
+    dropUrlState();
     drawChips(); refilter(); hideAc();
+  };
+
+  /* ?only= 與 #hash 只是「進頁面時的初始狀態」。使用者一改條件，網址就不再代表畫面上的東西，
+     而且重新整理會把 ?only= 又套回去。所以任何手動改動都把網址洗乾淨（不留歷史紀錄）。 */
+  let seeded = false;
+  const dropUrlState = () => {
+    if (!seeded || (!location.search && !location.hash)) return;
+    history.replaceState(null, "", location.pathname);
   };
 
   const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
@@ -542,9 +551,9 @@
       if (e.key === " " && !input.value.trim() && acIdx < 0) return;
       e.preventDefault(); commit();
     } else if (e.key === "Escape") { hideAc(); }
-    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); dropUrlState(); drawChips(); refilter(); }
   });
-  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+  clearEl.addEventListener("click", () => { chips.length = 0; dropUrlState(); drawChips(); refilter(); input.focus(); });
 
   /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
      autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
@@ -555,6 +564,7 @@
     drawChips();
   }
   refilter();
+  seeded = true;
 
   document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
   const apply = () => { applyNotes(); refilter(); };

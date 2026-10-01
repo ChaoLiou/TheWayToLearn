@@ -320,7 +320,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T22:40:31+08:00" title="2026-10-01 22:40">更新於 2026-10-01 22:40</span></div>
+  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T23:21:33+08:00" title="2026-10-01 23:21">更新於 2026-10-01 23:21</span></div>
 </header>
 
 
@@ -335,6 +335,10 @@
   <a  href="digest.html">✍️ 練習</a>
 
   <hr>
+  <p class="grp">篩選</p>
+  <button type="button" class="err-f" data-err-filter="err"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg><span class="lab">只看有勘誤的</span></button>
+  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
+  <hr>
   
   
   
@@ -345,10 +349,6 @@
   <button type="button" class="cat-f" data-cat="睡眠" title="睡眠怎麼運作，以及怎麼在不看醫生的前提下把它調好。從體內時鐘、房間環境，一路到躺上床之後的行為。"><i style="background:#4e79a7"></i><span class="lab">睡眠</span><span class="n">1</span></button>
   
 
-  <hr>
-  <p class="grp">篩選</p>
-  <button type="button" class="err-f" data-err-filter="err"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg><span class="lab">只看有勘誤的</span></button>
-  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
 </nav>
 <main>
 
@@ -777,7 +777,7 @@
       el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
       el.querySelector(".k").textContent = KIND[ch.kind] + "：";
       el.querySelector(".v").textContent = ch.label || ch.value;
-      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); dropUrlState(); drawChips(); refilter(); input.focus(); });
       box.insertBefore(el, input);
     });
   };
@@ -786,7 +786,16 @@
     if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
     chips.push({ kind, value, label });
     input.value = "";
+    dropUrlState();
     drawChips(); refilter(); hideAc();
+  };
+
+  /* ?only= 與 #hash 只是「進頁面時的初始狀態」。使用者一改條件，網址就不再代表畫面上的東西，
+     而且重新整理會把 ?only= 又套回去。所以任何手動改動都把網址洗乾淨（不留歷史紀錄）。 */
+  let seeded = false;
+  const dropUrlState = () => {
+    if (!seeded || (!location.search && !location.hash)) return;
+    history.replaceState(null, "", location.pathname);
   };
 
   const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
@@ -833,9 +842,9 @@
       if (e.key === " " && !input.value.trim() && acIdx < 0) return;
       e.preventDefault(); commit();
     } else if (e.key === "Escape") { hideAc(); }
-    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); dropUrlState(); drawChips(); refilter(); }
   });
-  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+  clearEl.addEventListener("click", () => { chips.length = 0; dropUrlState(); drawChips(); refilter(); input.focus(); });
 
   /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
      autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
@@ -846,6 +855,7 @@
     drawChips();
   }
   refilter();
+  seeded = true;
 
   /* 分類可點：加一個篩選條件（跟 listen.html 一樣的行為） */
   document.querySelectorAll(".wp .cat").forEach((el) =>
