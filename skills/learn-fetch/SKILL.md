@@ -1,9 +1,9 @@
 ---
 name: learn-fetch
-description: [步驟 2/10·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片；部落格網址則抓正文段落當 transcript。重抓資源、換字幕語言時用。
+description: [步驟 2/11·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片；部落格網址則抓正文段落當 transcript。重抓資源、換字幕語言時用。
 ---
 
-# /learn-fetch　—　步驟 2/8 抓字幕
+# /learn-fetch　—　步驟 2/11 抓字幕
 
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/fetch.py <url|id> [--lang zh-TW,zh,en] [--output-lang zh-TW|en] [--force]

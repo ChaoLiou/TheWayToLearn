@@ -274,7 +274,7 @@ class Timer:
 # ---- 流程步驟：每個階段跑完都印同一種進度行，讓使用者知道走到哪 ----
 def sibling_pages(ws: Path) -> dict[str, bool]:
     """topnav 要不要顯示某一頁：看「資料在不在」而不是「那個 html 這一刻產了沒」。
-    四頁互相連結，但產生順序不固定（listen 是第 10 步、notes 是工具 skill），用 html 是否存在判斷
+    四頁互相連結，但產生順序不固定（listen 排在最後，atlas 要兩站以上才跑），用 html 是否存在判斷
     會讓先產的那一頁少一個頁籤，而且要等它下次重產才補得回來。資料在 = 那頁遲早會有。"""
     stations = [d for d in ws.iterdir()
                 if d.is_dir() and not d.name.startswith((".", "_")) and (d / "meta.json").exists()]
@@ -297,6 +297,7 @@ STEPS: list[tuple[str, str]] = [
     ("shot", "截圖"),
     ("analyze", "逐段分析"),
     ("digest", "練習"),
+    ("notes", "筆記"),
     ("render", "產出 plan.html"),
     ("atlas", "連結各站"),
     ("narrate", "產出語音解析"),

@@ -1,9 +1,9 @@
 ---
 name: learn-notes
-description: "[工具·筆記] 把某一站（或全部站）留給我的觀念／技巧／體悟擷取成 notes.json，彙整成 workspace/notes.html，每條連回 plan.html 的那一段。使用者說「做筆記」「這支我學到什麼」「整理筆記」時使用。"
+description: "[步驟 7/11·筆記] 把某一站（或全部站）留給我的觀念／技巧／體悟擷取成 notes.json，彙整成 workspace/notes.html，每條連回 plan.html 的那一段。使用者說「做筆記」「這支我學到什麼」「整理筆記」時使用。"
 ---
 
-# /learn-notes　—　筆記（工具；不在 `/learn` 的十步裡，PACER 工作單 `/learn-digest` 取代了它的位置）
+# /learn-notes　—　步驟 7/11 筆記（`/learn --notes false` 可跳過；也可以隨時單獨跑）
 
 用法：`/learn-notes <video_id|url|all> [--force]`
 

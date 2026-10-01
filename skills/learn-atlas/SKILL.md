@@ -1,9 +1,9 @@
 ---
 name: learn-atlas
-description: [步驟 8/10·連結各站] 影片解析（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字解析的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。
+description: [步驟 9/11·連結各站] 影片解析（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字解析的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。
 ---
 
-# /learn-atlas　—　步驟 7/8 連結各站
+# /learn-atlas　—　步驟 9/11 連結各站
 
 名詞：**waypoint** = 一支影片的資料夾、**route** = 兩站之間的關聯（只有 `next` = 接著看、`related` = 相關無先後）、**region** = 主題區。規則在 `rules/atlas.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）。
 

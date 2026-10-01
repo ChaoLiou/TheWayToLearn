@@ -1,9 +1,9 @@
 ---
 name: learn-estimate
-description: [步驟 1/10·估成本] 只給 YouTube 連結或部落格網址就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
+description: [步驟 1/11·估成本] 只給 YouTube 連結或部落格網址就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
 ---
 
-# /learn-estimate　—　步驟 1/8 估成本
+# /learn-estimate　—　步驟 1/11 估成本
 
 ```
 uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <url> [<url> ...] [--shots auto|none|many] [--vision true|false|auto]

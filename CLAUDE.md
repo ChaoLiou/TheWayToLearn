@@ -131,7 +131,7 @@ agent 產的所有內文用該站的 `output_lang`，術語 `term` 永遠英文�
 
 ## 步驟進度
 
-流程固定 10 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → digest → render → atlas → narrate → listen（atlas 需 ≥2 站；digest / narrate / listen 各由 `--digest` / `--narrate` / `--listen` 控制，預設都開）。依賴其實是樹：fetch→segment→(shot)→analyze 是主幹，之後 digest / render / atlas / narrate 只依賴 analyze，listen 依賴 narrate；digest 排在 render 前是讓 plan.html 第一次就有 PACER 標籤。notes 不在十步裡了（工具 skill `/learn-notes`）。estimate 最後印消化積欠，超過 `config/estimate.yaml` 的 `balance.max_backlog` 就警告（`/learn` 停下來建議先 `/learn-digest do due`，`--force` 硬跑）。每個 script 跑完呼叫 `print_step()` 印 `[N/10] ✔ … ●●●○○○○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
+流程固定 11 步（`STEPS` 在 `scripts/common.py`）：estimate → fetch → segment → shot → analyze → digest → notes → render → atlas → narrate → listen（atlas 需 ≥2 站；digest / notes / narrate / listen 各由 `--digest` / `--notes` / `--narrate` / `--listen` 控制，預設都開）。依賴其實是樹：fetch→segment→(shot)→analyze 是主幹，之後 digest / notes / render / atlas / narrate 只依賴 analyze，listen 依賴 narrate；digest 與 notes 排在 render 前，是讓 plan.html 第一次就有 PACER 標籤、頂部也連得到這支的筆記。estimate 最後印消化積欠，超過 `config/estimate.yaml` 的 `balance.max_backlog` 就警告（`/learn` 停下來建議先 `/learn-digest do due`，`--force` 硬跑）。每個 script 跑完呼叫 `print_step()` 印 `[N/11] ✔ … ●●●○○○○○○○○` 與下一步；agent 自己做的階段（segment / analyze / atlas 彙整）跑完呼叫 `scripts/progress.py <stage> "<結果>"`。改步驟只改 `STEPS`，SKILL.md 的標題與 description 前綴要一起改。
 
 ## 改規則不改程式
 
@@ -203,15 +203,15 @@ binding 宣告在 repo 根的 `wrangler.toml`（`[[r2_buckets]] binding = "MEDIA
 - **second brain**：`scripts/brain.py`（`digest.py` 跑完自動呼叫）把所有站的 digest.json + digest.state.json 匯成 `workspace/brain/`（Obsidian vault）：`stations/<站>.md`（五類分區、做完打勾、心得／回答／下次到期）、`concepts/<概念>.md`（同名概念跨站合併：analysis term 定義、各站說法、—rel→ `[[to]]`、E 證據、來源）、`README.md` 索引。檔名過 `safe()`（`/:*?"<>|#^[]` → `-`），`wl()` 產 `[[檔名|原名]]`。
 - **tldraw 先畫再對答案**：`/learn-canvas map <id>` 只把 C 概念當節點散在畫布上、不畫線；使用者連完說「對答案」→ `/learn-digest do <id> C` 讀 arrow 綁定對照 `relations`（多畫／漏畫／方向不同），再用另一色補答案線。
 
-## 筆記（notes.html）
+## 筆記（notes.html，第 7 步）
 
-`/learn-notes <id|all>`（第 9 步，`/learn --notes false` 可跳過）：agent 依 `rules/notes.md` 從 `analysis.json` + `_overview.json` 擷取每站 3–8 條「看完才知道的」觀念（`concept`）／技巧（`skill`）／體悟（`insight`），寫 `<站>/notes.json`（`schemas/notes.schema.json`；`text` ≤ 80 字、每條必有 `seg_id`），`validate.py notes` 檢查 schema 與 `seg_id` 存在於 `analysis.json`。`scripts/notes.py` 彙整成 `workspace/notes.html`：站依產出時間新到舊，每條連回 `plan.html#<vid>-s<seg_id>`；頂部搜尋列跟 atlas / listen 同一份（`_search.html.j2`，卡片 = `.st` 站，`data-category` 來自 atlas region，「任意」條件另會搜 `data-text` = 該站所有筆記內文），留／刪篩選透過 `extra_ok(el)` 併進搜尋（全站筆記被篩掉就整站隱藏）。
+`/learn-notes <id|all>`（第 7 步，`/learn --notes false` 可跳過）：agent 依 `rules/notes.md` 從 `analysis.json` + `_overview.json` 擷取每站 3–8 條「看完才知道的」觀念（`concept`）／技巧（`skill`）／體悟（`insight`），寫 `<站>/notes.json`（`schemas/notes.schema.json`；`text` ≤ 80 字、每條必有 `seg_id`），`validate.py notes` 檢查 schema 與 `seg_id` 存在於 `analysis.json`。`scripts/notes.py` 彙整成 `workspace/notes.html`：站依產出時間新到舊，每條連回 `plan.html#<vid>-s<seg_id>`；頂部搜尋列跟 atlas / listen 同一份（`_search.html.j2`，卡片 = `.st` 站，`data-category` 來自 atlas region，「任意」條件另會搜 `data-text` = 該站所有筆記內文），留／刪篩選透過 `extra_ok(el)` 併進搜尋（全站筆記被篩掉就整站隱藏）。
 混合式取捨：agent 擷取候選，使用者在頁面上按「留／刪」（localStorage，key = `<vid>:<note id>`）、篩選「只看留下的」；「匯出」下載 `notes.keep.json`，放到 `workspace/` 後 `notes.py` 把它當預設狀態（`data-st`），瀏覽器裡的操作再蓋上去。使用者要改內容就改 `notes.json` 重跑 `notes.py`。
 
 ## Skill 拆分
 
-`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 十個階段 skill + 工具 skill `/learn-publish`（發佈到 Cloudflare Pages）、`/learn-digest`（PACER 練習與對話式消化）、`/learn-canvas`（把 analysis.json 逐段畫成 tldraw 白板，需另裝 `tldraw-offline` skill）
-十個階段：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`、`/learn-narrate`、`/learn-notes`、`/learn-listen`。
+`skills/` 下（`.claude/skills` 是它的 symlink）：`/learn` 總指揮 + 十一個階段 skill + 工具 skill `/learn-publish`（發佈到 Cloudflare Pages）、`/learn-canvas`（把 analysis.json 逐段畫成 tldraw 白板，需另裝 `tldraw-offline` skill）
+十一個階段：`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-digest`、`/learn-notes`、`/learn-render`、`/learn-atlas`、`/learn-narrate`、`/learn-listen`。
 **analyze 一定在 subagent 裡跑**（`/learn` 用 Agent tool 派出去）：逐段分析會累積 150–200k context，留在主對話會讓 render / atlas / narrate 每輪重送。subagent 只回進度兩行與一句摘要，不回 analysis 內容。
 `/learn` 第 0 步一定先跑 estimate 並把分階段 + 總和給使用者看。
 共用慣例：`/learn-<stage> <video_id> [--force] [--vision ...]`；預設不覆蓋既有輸出。`/learn` 另有 `--from <stage>`、`--dry-run`。

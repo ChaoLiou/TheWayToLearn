@@ -55,12 +55,13 @@ def test_title_dirname_cuts_at_word_boundary():
 
 def test_step_line_format():
     from common import STEPS, step_line, step_no
-    assert step_no("segment") == 3 and len(STEPS) == 10
+    n = len(STEPS)
+    assert step_no("segment") == 3
     first = step_line("segment", "9 段")
-    assert first.startswith("[3/10] ✔ segment 切段 完成  ●●●○○○○○○○") and "9 段" in first
-    assert "下一步 [4/10] shot" in first
+    assert first.startswith(f"[3/{n}] ✔ segment 切段 完成  ●●●" + "○" * (n - 3)) and "9 段" in first
+    assert f"下一步 [4/{n}] shot" in first
     last = step_line("listen")
-    assert last.startswith("[10/10]") and "全部完成" in last and "下一步" not in last
+    assert last.startswith(f"[{n}/{n}]") and "全部完成" in last and "下一步" not in last
     assert "≥ 2 站" in step_line("render") and "選配" in step_line("atlas")
     assert step_no("digest") == 6 and "--digest false" in step_line("analyze")
 

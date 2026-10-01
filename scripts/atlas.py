@@ -64,7 +64,7 @@ def thumb(d: Path) -> str | None:
 
 
 def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
-    """這一站在十步 pipeline 上走到哪。state：done｜partial｜todo｜skip｜running。
+    """這一站在 pipeline 上走到哪（步數看 common.STEPS）。state：done｜partial｜todo｜skip｜running。
     partial 是「做過但缺一塊」——例如語音解析做了卻沒挑原聲片段、原聲沒翻譯、還沒做翻譯配音。"""
     seg = load_json(d / "segments.json") if (d / "segments.json").exists() else None
     lesson = load_json(d / "lesson.json") if (d / "lesson.json").exists() else None
@@ -110,6 +110,7 @@ def pipeline(d: Path, in_atlas: bool, multi: bool, S: Strings) -> list[dict]:
         "shot": shot_state(),
         "analyze": (("done", "") if (d / "analysis.json").exists() else ("todo", "")),
         "digest": (("done", "") if (d / "digest.json").exists() else ("todo", "")),
+        "notes": (("done", "") if (d / "notes.json").exists() else ("todo", "")),
         "render": (("done", "") if (d / "plan.html").exists() else ("todo", "")),
         "atlas": (("done", "") if in_atlas else ("todo", "")) if multi else ("skip", ""),
         "narrate": narrate_state(),

@@ -1,9 +1,9 @@
 ---
 name: learn-render
-description: [步驟 7/10·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產文字解析、不重抓資源時用。
+description: [步驟 8/11·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產文字解析、不重抓資源時用。
 ---
 
-# /learn-render　—　步驟 6/8 產出 plan.html
+# /learn-render　—　步驟 8/11 產出 plan.html
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
 

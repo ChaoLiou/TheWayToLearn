@@ -45,7 +45,7 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
     "combined": ("--combined", "false", "多支影片要不要合併成一份 plan.html", [
         ("false", "每支影片各自一份（預設）"), ("true", "合併成一份，需要跨影片的 _overview.json"),
     ]),
-    "narrate": ("--narrate", "true", "要不要順便產出語音解析（第 8 步）", [
+    "narrate": ("--narrate", "true", "要不要順便產出語音解析（第 10 步）", [
         ("true", "產出 lesson.mp3：TTS 講解與作者原聲交錯，plan.html 有播放器與講稿（預設）"),
         ("false", "只產出網頁版，不做聲音；之後想要再跑 /learn-narrate 也可以"),
     ]),
@@ -53,7 +53,11 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
         ("true", "agent 把每筆資訊標 P/A/C/E/R 並寫消化動作成 digest.json，彙整進 digest.html；plan.html 每段有標籤（預設）"),
         ("false", "不做；之後想要再跑 /learn-digest 也可以"),
     ]),
-    "listen": ("--listen", "true", "要不要重產 podcast 頁 listen.html（第 10 步）", [
+    "notes": ("--notes", "true", "要不要擷取筆記（第 7 步）", [
+        ("true", "agent 從 analysis 挑 3–8 條「看完才知道的」寫成 notes.json，彙整進 notes.html（預設）"),
+        ("false", "不做；之後想要再跑 /learn-notes 也可以"),
+    ]),
+    "listen": ("--listen", "true", "要不要重產 podcast 頁 listen.html（第 11 步）", [
         ("true", "把所有語音解析列成一集一集，並連到這站的 digest / notes（預設）"),
         ("false", "不重產；之後想要再跑 /learn-listen 也可以"),
     ]),
@@ -91,7 +95,7 @@ PARAMS: dict[str, tuple[str, str, str, list[tuple[str, str]]]] = {
 SAVABLE = ("output_lang",)
 
 SKILL_PARAMS: dict[str, list[str]] = {
-    "learn": ["shots", "vision", "max_shots", "digest", "narrate", "listen", "output_lang", "lang"],
+    "learn": ["shots", "vision", "max_shots", "digest", "notes", "narrate", "listen", "output_lang", "lang"],
     "learn-estimate": ["shots", "vision", "max_shots"],
     "learn-fetch": ["lang", "output_lang", "force"],
     "learn-segment": ["shots", "vision", "max_shots"],

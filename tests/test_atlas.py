@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import atlas
 import pytest
 import render
+from common import STEPS
 from i18n import Strings
 
 FX = Path(__file__).parent / "fixtures/ws"
@@ -187,7 +188,8 @@ def test_pipeline_and_next_actions(tmp_path):
     assert st["narrate"]["state"] == "todo"           # 也還沒做語音解析
     assert st["listen"]["state"] == "skip"            # 沒語音解析就沒東西可列
     assert st["digest"]["state"] == "todo"            # 測試影片 A 沒有 digest.json
-    assert atlas.pipeline(d, False, False, S)[7]["state"] == "skip"   # 只有一站時不需要連結
+    one = {x["key"]: x for x in atlas.pipeline(d, False, False, S)}
+    assert one["atlas"]["state"] == "skip"            # 只有一站時不需要連結
 
     # 做了語音解析但沒挑原聲片段 → 沒做完，而且說得出缺什麼
     (d / "lesson.json").write_text(json.dumps({"duration": 1, "dub": None}), encoding="utf-8")
@@ -198,8 +200,8 @@ def test_pipeline_and_next_actions(tmp_path):
     w = next(x for x in atlas.load_waypoints(ws) if x["dir"] == d.name)
     acts = atlas.next_actions(w, atlas.pipeline(d, True, True, S), S)
     assert [a["prompt"] for a in acts if a["prompt"].startswith("/atlas:learn-estimate")]  # 單一階段就給指令
-    # 沒做完的是 estimate / digest / render / narrate / listen，做到最後一步就把五步都寫進 prompt
-    assert acts[-1]["prompt"].count("/atlas:learn-") == 5
+    # 沒做完的是 estimate / digest / notes / render / narrate / listen，做到最後一步就把六步都寫進 prompt
+    assert acts[-1]["prompt"].count("/atlas:learn-") == 6
     assert S.n_no_clips not in acts[-1]["prompt"] and "rules/narration.md" in acts[-1]["prompt"]
 
 
@@ -210,7 +212,7 @@ def test_atlas_html_has_stage_ui(tmp_path):
     assert 'id="nextstep"' in html and html.count('class="prog"') == 2
     data = json.loads(html.split('id="steps-data" type="application/json">')[1].split("</script>")[0])
     assert set(data) == {"abcdefghijk", "zzzzzzzzzzz"}
-    assert len(data["abcdefghijk"]["stages"]) == 10 and data["abcdefghijk"]["actions"]
+    assert len(data["abcdefghijk"]["stages"]) == len(STEPS) and data["abcdefghijk"]["actions"]
 
 
 def test_video_error_rate_badge(tmp_path):

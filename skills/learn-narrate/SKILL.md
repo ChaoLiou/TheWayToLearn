@@ -1,9 +1,9 @@
 ---
 name: learn-narrate
-description: [步驟 9/10·產出語音解析] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
+description: [步驟 10/11·產出語音解析] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
 ---
 
-# /learn-narrate　—　步驟 8/8 產出語音解析
+# /learn-narrate　—　步驟 10/11 產出語音解析
 
 把 `analysis.json` 改寫成**寫給耳朵**的講稿，中間穿插作者的原聲片段，合成一份 `lesson.mp3`。
 
