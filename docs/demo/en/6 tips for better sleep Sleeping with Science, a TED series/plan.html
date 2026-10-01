@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six sleep tips, and the boundary where advice stops working — Text breakdown</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; }
+  }
+  body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size:1.9rem; } h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:3rem; }
+  h3 { margin-top:2rem; } h4 { margin:1.5rem 0 .3rem; color:var(--accent); }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  table { border-collapse:collapse; font-size:.9rem; } td,th { border:1px solid var(--line); padding:.2rem .6rem; }
+  a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  /* mermaid：可點開全視窗 */
+  .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
+  .mm-wrap::after { content:"⤢ Click to enlarge"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
+  .mm-wrap:hover { border-color:var(--accent); }
+  .mm-wrap svg { max-width:100%; height:auto; }
+  .mm-wrap svg[width] { max-width:none; height:auto; }   /* flowchart：不縮小，寬了就橫向捲 */
+  .legend { display:flex; flex-wrap:wrap; gap:.3rem .9rem; font-size:.85rem; color:var(--muted); margin:.2rem 0 .5rem; }
+  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px; margin-right:.3rem; vertical-align:-.05em; }
+  .mindmap-node text, .mindmap-node tspan { font-size:15px !important; }
+  .mindmap-node .section-root text { font-size:18px !important; font-weight:700; }
+  /* 圖的文字描述，預設收合 */
+  details.desc { margin:.4rem 0 1.2rem; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+  details.desc summary { cursor:pointer; padding:.4rem .8rem; color:var(--muted); font-size:.9rem; user-select:none; }
+  details.desc[open] summary { border-bottom:1px solid var(--line); }
+  details.desc > div { padding:.6rem 1rem; font-size:.92rem; overflow-x:auto; }
+  details.desc ol, details.desc ul { margin:.2rem 0; padding-left:1.4rem; }
+  /* 全視窗 viewer（mermaid + lightbox 共用） */
+  #viewer { position:fixed; inset:0; background:var(--overlay); z-index:100; display:flex; flex-direction:column; }
+  #viewer[hidden] { display:none; }
+  .v-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .8rem; color:#fff; font-size:.9rem;
+           background:rgba(0,0,0,.4); }
+  .v-bar .cap { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .v-bar button { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.3);
+                  border-radius:4px; padding:.2rem .6rem; cursor:pointer; font-size:.9rem; }
+  .v-bar button:hover { background:rgba(255,255,255,.25); }
+  .v-stage { flex:1; overflow:hidden; position:relative; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .v-stage.drag { cursor:grabbing; }
+  .v-content { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .v-content img { display:block; max-width:none; }
+  .v-content svg { display:block; background:var(--bg); border-radius:6px; }
+  .v-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.5); color:#fff;
+           border:none; font-size:2rem; padding:.4rem .7rem; cursor:pointer; border-radius:6px; }
+  .v-nav.prev { left:.5rem; } .v-nav.next { right:.5rem; }
+  .v-nav[hidden] { display:none; }
+
+  /* 勘誤／過時：plan.html 與 atlas.html 共用同一套外觀
+     紅八角 = 確定錯誤／已過時；橘三角 = 見仁見智 */
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem .6rem; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .issue { border-left:4px solid; border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .issue.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+  .issue.debatable { border-color:var(--debat); background:var(--debat-bg); }
+  .issue .lvl { display:inline-flex; align-items:center; gap:.25rem; font-size:.72rem; font-weight:700;
+                padding:.05rem .5rem; border-radius:999px; color:#fff; margin-right:.4rem; }
+  .issue .lvl svg { width:.9em; height:.9em; }
+  .issue.wrong .lvl { background:var(--wrong); } .issue.debatable .lvl { background:var(--debat); }
+  .issue blockquote { margin:.3rem 0; padding-left:.6rem; border-left:2px solid var(--line); color:var(--muted); font-style:italic; }
+  .issue .ev { font-size:.85rem; color:var(--muted); }
+  table.issues-sum { width:100%; }
+  table.issues-sum th { background:var(--card); text-align:left; font-weight:600; }
+  table.issues-sum td { vertical-align:top; }
+  table.issues-sum td.q { color:var(--muted); font-style:italic; max-width:24rem; }
+  table.issues-sum tr.wrong td:first-child { border-left:4px solid var(--wrong); }
+  table.issues-sum tr.debatable td:first-child { border-left:4px solid var(--debat); }
+  table.issues-sum .lv { display:inline-flex; vertical-align:-.15em; margin-right:.25rem; }
+  table.issues-sum .lv svg { width:.95em; height:.95em; }
+  table.issues-sum tr.wrong .lv { color:var(--wrong); } table.issues-sum tr.debatable .lv { color:var(--debat); }
+  table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
+
+
+  /* 1. Outline：段落清單 */
+  .lead { color:var(--muted); margin:.2rem 0 .6rem; }
+  ol.outline { padding-left:1.4rem; }
+  ol.outline li { margin:.15rem 0; }
+  ol.outline li a { text-decoration:none; }
+  ol.outline li a:hover { text-decoration:underline; }
+  ol.outline .t { color:var(--muted); font-size:.85rem; margin-left:.5rem; font-variant-numeric:tabular-nums; }
+  .seg { border-left:3px solid var(--accent); padding-left:1rem; margin:2rem 0; }
+  .bridge { background:var(--card); border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .bridge b { color:var(--accent); }
+  .tag { display:inline-block; font-size:.72rem; font-weight:600; letter-spacing:.02em; padding:.05rem .5rem;
+         border-radius:999px; margin-right:.4rem; vertical-align:.1em; white-space:nowrap; }
+  .tag.r { background:var(--accent); color:#fff; }
+  .tag.ai { background:var(--card); color:var(--accent); border:1px solid var(--accent); }
+  /* PACER 標籤：這段的每筆資訊是哪一類、該做什麼消化（digest.json） */
+  .pacer { list-style:none; margin:.4rem 0; padding:0; display:flex; flex-direction:column; gap:.2rem; }
+  .pacer a { display:flex; gap:.5rem; align-items:baseline; text-decoration:none; color:var(--fg); font-size:.88rem; padding:.15rem .5rem; border-radius:6px; }
+  .pacer a:hover { background:var(--card); }
+  .pacer .k { font-size:.7rem; font-weight:700; border-radius:4px; padding:0 .4rem; color:#fff; flex:none; }
+  .pacer [data-kind="P"] .k { background:#59a14f; } .pacer [data-kind="A"] .k { background:#b07aa1; } .pacer [data-kind="C"] .k { background:#4e79a7; }
+  .pacer [data-kind="E"] .k { background:#e49444; } .pacer [data-kind="R"] .k { background:#76b7b2; }
+  .pacer .act { color:var(--muted); font-size:.78rem; margin-left:auto; flex:none; }
+  .atlas-nav ul { margin:.3rem 0 0; padding-left:1.2rem; }
+  .hub { display:flex; gap:.5rem; flex-wrap:wrap; margin:.2rem 0 .6rem; }
+  .hub a { font-size:.85rem; text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:.15rem .7rem; background:var(--card); color:var(--fg); }
+  .hub a:hover { border-color:var(--accent); color:var(--accent); }
+  .lesson audio { width:100%; margin:.5rem 0 .3rem; }
+  .lesson ol { margin:.2rem 0 0; padding-left:1.4rem; display:grid; gap:.1rem .9rem;
+               grid-template-columns:repeat(auto-fill, minmax(18rem, 1fr)); }
+  .lesson button { background:none; border:none; color:var(--accent); cursor:pointer; padding:0; font:inherit; text-align:left; }
+  .lesson .t { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:.4rem; }
+  .lesson .acts { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.2rem; }
+  .lesson .acts button { background:var(--accent); color:#fff; border:none; border-radius:6px;
+                         padding:.25rem .7rem; cursor:pointer; font:inherit; }
+  /* 原聲 / 翻譯配音的切換（分段按鈕，亮起來的是目前這軌）*/
+  .modes { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .modes[hidden] { display:none; }
+  .modes button, .lesson .acts .modes button { background:var(--card); color:var(--muted); border:none;
+                  border-radius:0; padding:.25rem .8rem; cursor:pointer; font:inherit; }
+  .modes button + button { border-left:1px solid var(--line); }
+  .modes button.on, .lesson .acts .modes button.on { background:var(--accent); color:#fff; }
+  /* karaoke 講稿視窗 */
+  #kara { position:fixed; inset:0; z-index:110; background:var(--bg); display:flex; flex-direction:column; }
+  #kara[hidden] { display:none; }
+  #kara .bar { display:flex; align-items:center; gap:.5rem; padding:.6rem 1rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  #kara .bar .ttl { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #kara .bar button { background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:6px;
+                      padding:.25rem .7rem; cursor:pointer; font:inherit; }
+  #kara .bar button:hover { border-color:var(--accent); color:var(--accent); }
+  #kara .bar .time { color:var(--muted); font-variant-numeric:tabular-nums; }
+  #kara .bar select { background:var(--card); color:var(--fg); border:1px solid var(--line);
+                      border-radius:6px; padding:.25rem .4rem; font:inherit; cursor:pointer; }
+  #kara .body { flex:1; overflow-y:auto; padding:0 1rem; }
+  #kara .inner { max-width:760px; margin:0 auto; padding:30vh 0; }
+  #kara h4 { position:sticky; top:0; z-index:2; height:2.5rem; box-sizing:border-box; background:var(--bg); margin:1.6rem 0 .4rem;
+             padding:.4rem 0; color:var(--accent); box-shadow:0 6px 6px -6px var(--bg); }
+  #kara .clipbox { position:relative; }
+  #kara .cliphead { position:sticky; top:2.5rem; z-index:1; background:var(--bg); }
+  #kara .trans { position:sticky; top:4.2rem; z-index:1; color:var(--muted); font-size:.92rem; line-height:1.8;
+                 background:var(--card); border:1px solid var(--line); border-radius:8px;
+                 padding:.6rem .8rem; margin:.2rem 0 .6rem; max-height:26vh; overflow-y:auto; }
+  #kara p { margin:.35rem 0; padding:.35rem .6rem; border-radius:6px; cursor:pointer;
+            color:var(--muted); line-height:1.9; transition:color .15s, background .15s; }
+  #kara p:hover { background:var(--card); }
+  #kara p.done { color:var(--fg); }
+  #kara p.now { color:var(--fg); background:color-mix(in srgb, var(--accent) 18%, transparent);
+                box-shadow:inset 3px 0 0 var(--accent); }
+  #kara p.clip { font-style:italic; }
+  #kara .cliphead { color:var(--muted); font-size:.85rem; margin:1rem 0 .2rem; font-style:normal; }
+  #kara p.clip { border-left:2px solid var(--line); }
+  #kara p.dub { font-style:normal; border-left:2px dashed var(--accent); }
+  #kara .back { position:absolute; right:1.2rem; bottom:1.2rem; background:var(--accent); color:#fff;
+                border:none; border-radius:999px; padding:.5rem 1rem; cursor:pointer; font:inherit; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  #kara .back[hidden] { display:none; }
+
+  .atlas-nav .rt { display:inline-block; font-size:.72rem; font-weight:700; padding:0 .45rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.4rem; }
+  /* 勘誤／過時的外觀在 _base.html.j2，跟 atlas.html 共用 */
+  .issues { margin:.8rem 0; }
+  .frames { display:flex; flex-wrap:wrap; gap:.6rem; }
+  .frames figure { margin:0; max-width:280px; }
+  .frames img { width:100%; border:1px solid var(--line); border-radius:4px; cursor:zoom-in; }
+  .frames figcaption { font-size:.8rem; color:var(--muted); }
+  /* 術語：就地標在文章裡（原文 + hover 中文 + ⓘ） */
+  .term { position:relative; border-bottom:1px dotted var(--accent); cursor:help; font-weight:600; }
+  .term::after { content:attr(data-zh); position:absolute; left:0; bottom:calc(100% + 4px); white-space:nowrap;
+                 background:var(--fg); color:var(--bg); font-size:.8rem; font-weight:400; padding:.15rem .5rem;
+                 border-radius:4px; opacity:0; pointer-events:none; transition:opacity .12s; z-index:5; }
+  .term:hover::after { opacity:1; }
+  .info { display:inline-flex; align-items:center; justify-content:center; width:1.15rem; height:1.15rem;
+          border-radius:50%; border:1px solid var(--accent); color:var(--accent); background:none;
+          font:700 .75rem/1 system-ui; cursor:pointer; padding:0; }
+  .info:hover { background:var(--accent); color:#fff; }
+  p .info { margin:0 .15rem 0 .1rem; vertical-align:.05em; transform:scale(.8); }
+  /* 文中沒出現的術語：收在段末一行，仍可點 ⓘ 看定義 */
+  .terms-extra { font-size:.88rem; margin:.3rem 0; }
+  .terms-extra .term { margin-left:.3rem; }
+  dialog { border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--fg);
+           max-width:560px; width:calc(100% - 2rem); padding:1.2rem 1.5rem; }
+  dialog::backdrop { background:rgba(0,0,0,.5); }
+  dialog h3 { margin:0 0 .2rem; } dialog .zh { color:var(--muted); margin-bottom:.8rem; }
+  dialog .close { float:right; border:none; background:none; color:var(--muted); font-size:1.2rem; cursor:pointer; }
+
+</style>
+</head>
+<body>
+
+<div id="kara" hidden>
+  <div class="bar">
+    <span class="ttl">Script</span>
+    <span class="time"><span id="k-cur">0:00</span> / <span id="k-tot">0:00</span></span>
+    <label class="muted">Speed
+      <select id="k-rate">
+        <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option>
+      </select></label>
+    
+    <button data-k="restart">⏮ Restart</button>
+    <button data-k="toggle">⏸ Pause</button>
+    <button data-k="close">✕</button>
+  </div>
+  <div class="body"><div class="inner"></div></div>
+  <button class="back" hidden>Back to current</button>
+</div>
+<main>
+<h1>Six sleep tips, and the boundary where advice stops working</h1>
+<p class="muted">Text breakdown · 1 · generated 2026-10-01 23:52</p>
+
+
+
+<p class="hub"><a href="../atlas.html">📄 All videos</a><a href="../listen.html#t0kACis_dJE">🎧 Audio breakdown</a><a href="../notes.html?only=t0kACis_dJE#t0kACis_dJE">📝 Notes for this one</a><a href="../digest.html?only=t0kACis_dJE#t0kACis_dJE">✍️ Practice for this one</a></p>
+
+
+
+
+<div class="card lesson">
+  <span class="muted">12m21s · Narration interleaved with the author&#39;s own words; click a chapter to jump.</span>
+  <audio id="lesson" controls preload="metadata" src="lesson.mp3"></audio>
+  <div class="acts"><button id="kara-open">💬 Open captions</button>
+    
+    <span class="muted">Follow line by line; click any line to start there</span></div>
+  <details class="desc"><summary>Chapters（8）</summary><div>
+    <ol><li><button data-at="0.0"><span class="t">0:00</span>A bad night is normal — but fixable</button></li><li><button data-at="58.51"><span class="t">0:58</span>Tip 1: regularity, weekends included</button></li><li><button data-at="156.94"><span class="t">2:36</span>Tip 2: keep it cool</button></li><li><button data-at="233.19"><span class="t">3:53</span>Tip 3: darkness, starting in the evening</button></li><li><button data-at="309.25"><span class="t">5:09</span>Tip 4: walk it out</button></li><li><button data-at="417.45"><span class="t">6:57</span>Tip 5: alcohol and caffeine</button></li><li><button data-at="469.36"><span class="t">7:49</span>Tip 6: sleep is a landing, not a switch</button></li><li><button data-at="575.78"><span class="t">9:35</span>These tips do not treat a disorder</button></li></ol>
+  </div></details>
+</div>
+
+
+<!-- 1 -->
+<h2>1. Outline</h2>
+
+
+  
+  
+  <p class="lead"><b>Starting point</b> · Matt Walker takes the one thing the audience already accepts — a bad night is normal — and turns it into a question about levers, then spends six tips moving inward from the body clock to the room to what you do once you are in bed, before drawing the line where none of it applies.</p>
+  <ol class="outline">
+  
+    <li><a href="#t0kACis_dJE-s1">A bad night is normal — but fixable</a><span class="t">0:00</span></li>
+  
+    <li><a href="#t0kACis_dJE-s2">Tip 1: regularity, weekends included</a><span class="t">0:21</span></li>
+  
+    <li><a href="#t0kACis_dJE-s3">Tip 2: keep it cool</a><span class="t">1:04</span></li>
+  
+    <li><a href="#t0kACis_dJE-s4">Tip 3: darkness, starting in the evening</a><span class="t">1:44</span></li>
+  
+    <li><a href="#t0kACis_dJE-s5">Tip 4: walk it out</a><span class="t">2:28</span></li>
+  
+    <li><a href="#t0kACis_dJE-s6">Tip 5: alcohol and caffeine</a><span class="t">3:21</span></li>
+  
+    <li><a href="#t0kACis_dJE-s7">Tip 6: sleep is a landing, not a switch</a><span class="t">3:39</span></li>
+  
+    <li><a href="#t0kACis_dJE-s8">These tips do not treat a disorder</a><span class="t">4:33</span></li>
+  
+  </ol>
+
+
+<!-- 2 -->
+<h2>2. The YouTuber&#39;s line of reasoning</h2>
+
+<h3 id="v-t0kACis_dJE">6 tips for better sleep | Sleeping with Science, a TED series</h3>
+<p class="muted">
+  TED · 5m29s · subtitles en ·
+  vision=on
+  （Animated voice-over: the illustrations carry the two numbers the narration states (the 1 °C / 65 °F bedroom target and the 25-minute rule) plus the plane-landing metaphor, so reading the frames confirms whether the visuals add anything the words leave out.） ·
+  <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">YouTube</a>
+</p>
+
+<details class="desc"><summary>Estimated vs actual time</summary><div>
+<table><tr><th>Stage</th><th>Estimated</th><th>Actual</th></tr>
+
+<tr><td>fetch</td>
+  <td>–</td>
+  <td>3s</td></tr>
+
+<tr><td>segment</td>
+  <td>–</td>
+  <td>–</td></tr>
+
+<tr><td>shot</td>
+  <td>–</td>
+  <td>1s</td></tr>
+
+<tr><td>analyze</td>
+  <td>–</td>
+  <td>7m00s</td></tr>
+
+<tr><td>render</td>
+  <td>–</td>
+  <td>–</td></tr>
+</table>
+</div></details>
+
+<p>Matt Walker starts from something the audience already believes about itself — that a bad night happens to everyone and is nothing to worry about — and uses that concession to swap the question.The issue is not whether you slept badly last night;it is how you raise both the quantity and the quality of sleep over time.</p><p>From there he refuses the usual format of a sleep-hygiene list, where six rules arrive as six arbitrary commands.Each tip is attached to a mechanism that makes it follow: regularity works because there is a master 24-hour clock that expects it;cool works because the body must shed about a degree of core temperature to fall and stay asleep;</p><p>dark works because darkness in the evening is what releases melatonin;getting out of bed works because the brain is an associative device that has learned to pair the bed with being awake;the wind-down routine works because sleep onset is a descent, not a switch.</p><p>The ordering is deliberate too: he moves from the slowest, most internal variable — the clock that runs whether you cooperate or not — outward through the room you sleep in, then into the night itself when the room is right and sleep still will not come, and finally into the last hour before bed, the only stretch most people actually control.He ends by fencing the whole list in.Everything he has said is performance advice for a system that works;</p><p>if the system is broken — insomnia, sleep apnea — the advice does not apply, and the closing image of sleep as a life-support system is the reason he thinks getting it right is worth the trouble.</p>
+<details class="desc"><summary>Reasoning chain: what each segment leaves for the next</summary><div>
+  <p class="muted">Each row is a segment; the text after the arrow is the thread it leaves for the next one. Click a title to jump to that segment.</p>
+  <ol><li><a href="#t0kACis_dJE-s1">A bad night is normal — but fixable</a> → <i>Six tips are promised but not ranked, which leaves an obvious question hanging: which one comes first, and on what grounds? The answer sets up the next segment — the first tip is the one that governs the conditions all the others operate in.</i></li><li><a href="#t0kACis_dJE-s2">Tip 1: regularity, weekends included</a> → <i>The clock is internal, but it does not run in isolation — it reads signals from the body and the room. That raises the next question: which signals? The first one the talk takes up is not a signal the environment sends in, but a change the body itself has to make.</i></li><li><a href="#t0kACis_dJE-s3">Tip 2: keep it cool</a> → <i>Temperature is one input the clock and body read, and it is a slow one. The more decisive signal — the one that tells the clock what time of day it actually is — has not been named yet, and it is the subject of the next tip.</i></li><li><a href="#t0kACis_dJE-s4">Tip 3: darkness, starting in the evening</a> → <i>The room has now been specified: cool, and dark from the evening onward. But a correctly set room is not a guarantee, and the obvious next case is the one everyone has lived through — the conditions are right, the lights are off, and sleep still does not come.</i></li><li><a href="#t0kACis_dJE-s5">Tip 4: walk it out</a> → <i>The bed has now been defended against wakefulness at night. What has not been examined is what was swallowed hours earlier — the two everyday substances that can guarantee a bad night before the bedroom is even entered.</i></li><li><a href="#t0kACis_dJE-s6">Tip 5: alcohol and caffeine</a> → <i>Both substances work by interfering with the passage into sleep — one by hiding the pressure to sleep, the other by faking the arrival. That raises the question the final tip answers: what is that passage supposed to look like when nothing is interfering with it?</i></li><li><a href="#t0kACis_dJE-s7">Tip 6: sleep is a landing, not a switch</a> → <i>Every tip so far has assumed a system that works and merely needs better conditions. That assumption has never been stated, and the closing segment is where Walker finally states it — along with what happens when it is false.</i></li><li><a href="#t0kACis_dJE-s8">These tips do not treat a disorder</a></li></ol>
+</div></details>
+
+
+<!-- 3 -->
+<h2>3. Segment by segment</h2>
+
+<h3>6 tips for better sleep | Sleeping with Science, a TED series</h3>
+
+<section class="seg" id="t0kACis_dJE-s1">
+  <h4>1. A bad night is normal — but fixable <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=0s" target="_blank" rel="noopener">0:00</a>–0:21</span></h4>
+  <p>Matt Walker opens by granting that everyone sleeps badly sometimes and that this is perfectly normal, then reframes the question: how do you improve both the quantity and the quality of sleep? He promises six scientifically grounded tips.</p>
+  
+  <div class="bridge"><b>Builds on</b> There is no earlier segment to answer; the background this opening picks up is the listener&#39;s own experience. Almost everyone arriving at this talk has had a bad night recently and half-suspects it says something about them, and Walker starts from that shared fact rather than from a statistic.</div>
+  <p><span class="tag r">Reasoning</span>Because the audience is likely to read bad sleep as a personal failing, Walker first grants that it is perfectly normal — which costs him nothing and buys the listener&#39;s attention — and then immediately replaces the question. Not &#39;why did I sleep badly&#39;, but &#39;how could we try to improve both the quantity and the quality of our sleep&#39;. That reframing is what makes six tips possible: if bad sleep were a verdict there would be nothing to do, but if sleep is a system with inputs, there are inputs to change.</p>
+  
+  <ul class="pacer">
+    <li data-kind="R"><a href="../digest.html#t0kACis_dJE-d26" title="Trivial but look-up-later facts: put them in flashcards and recall with spaced repetition."><span class="k">R</span>The talk targets quantity and quality together, not just hours.<span class="act">→ Store + recall</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>Worth slowing down on the pair of words he uses once and never defines: quantity and quality. Quantity is hours in bed asleep. Quality is a different axis — how continuous the night is, how much of it reaches the deep and REM stages, how little of it is spent in micro-awakenings you never remember. They can move independently, and that is why the talk needs six tips rather than one: some of what follows buys hours, some buys depth, and a habit can protect one while quietly destroying the other. His other framing word is &#39;scientifically grounded&#39;, which is a claim about where the tips come from, not a claim that they work for everyone — a limit he keeps in reserve.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="how deep and unbroken a night is">sleep quality</span><button class="info" data-term="t0kACis_dJE-1-1" title="More" aria-label="More">i</button><span class="term" data-zh="everyday habits that protect sleep">sleep hygiene</span><button class="info" data-term="t0kACis_dJE-1-2" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-1-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sleep quality</h3>
+      <div class="zh">how deep and unbroken a night is</div>
+      <p>How continuous and deep sleep is, as opposed to how long it lasts.</p>
+      <p>Quality is measured by things the sleeper usually cannot report: how often the night is broken by brief arousals, how much time is spent in slow-wave and REM stages, how efficiently the time in bed is actually spent asleep. A common misreading is to treat eight hours in bed as proof of good sleep; alcohol is the clearest counterexample, since it can preserve the hours while hollowing out the architecture. Throughout this talk, when a tip claims to help &#39;both&#39;, it is claiming to add hours and protect the structure inside them.</p>
+      <p class="muted">Related terms: sleep hygiene (what the tips target)</p>
+      <p class="muted">From segment 1 “A bad night is normal — but fixable”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-1-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sleep hygiene</h3>
+      <div class="zh">everyday habits that protect sleep</div>
+      <p>The set of behavioural and environmental habits that make normal sleep easier, such as timing, light, temperature and substances.</p>
+      <p>&#39;Sleep hygiene&#39; is the clinical umbrella name for exactly the kind of list this talk gives, even though Walker never uses the phrase. It matters because the term also carries a known limitation: hygiene advice is maintenance for a healthy system and is not, on its own, an effective treatment for a diagnosed sleep disorder. Keeping that distinction in view explains why the talk can be both useful and, for some listeners, beside the point.</p>
+      <p class="muted">Related terms: sleep quality (what it protects)</p>
+      <p class="muted">From segment 1 “A bad night is normal — but fixable”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> Six tips are promised but not ranked, which leaves an obvious question hanging: which one comes first, and on what grounds? The answer sets up the next segment — the first tip is the one that governs the conditions all the others operate in.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s2">
+  <h4>2. Tip 1: regularity, weekends included <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=21s" target="_blank" rel="noopener">0:21</a>–1:04</span></h4>
+  <p>Go to bed and wake up at the same time. Regularity is king: it anchors sleep and lifts both quantity and quality regardless of weekday, weekend, or a bad night before. The mechanism is a <span class="term" data-zh="the brain&#39;s central timekeeper">master 24-hour clock</span><button class="info" data-term="t0kACis_dJE-2-1" title="More" aria-label="More">i</button> deep in the brain that expects regularity and works best under it. He notes we all set a wake-up alarm but almost nobody sets a <span class="term" data-zh="an alarm for going to bed">to-bed alarm</span><button class="info" data-term="t0kACis_dJE-2-3" title="More" aria-label="More">i</button>.</p>
+  
+  <div class="bridge"><b>Builds on</b> The open left the ranking question unanswered, and this segment answers it: regularity goes first. It earns the position for exactly the reason the previous segment set up — it is the one habit Walker claims moves both quantity and quality at the same time, rather than trading one for the other.</div>
+  <p><span class="tag r">Reasoning</span>Because success has just been defined on two axes, Walker opens with the tip that scores on both, and he states it as a near-absolute: regularity is king, no matter whether it is a weekday or the weekend, and even after a bad night. Then, rather than leaving it as a rule to obey, he gives the reason underneath it — deep in the brain there is a master 24-hour clock that expects regularity and works best under it. Once the habit has a mechanism, the weekend clause stops sounding like puritanism and starts sounding like an engineering constraint. He closes on the asymmetry nobody notices: we all set an alarm to end sleep, hardly anyone sets one to start it.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d1" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>A master 24-hour clock in the brain expects regularity.<span class="act">→ Map</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d2" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Fix one bed time and one wake time, and defend them on weekends too.<span class="act">→ Practice</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d3" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Set a to-bed alarm, the half of the alarm nobody sets.<span class="act">→ Practice</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d4" title="Trivial but look-up-later facts: put them in flashcards and recall with spaced repetition."><span class="k">R</span>Almost everyone sets a wake-up alarm; almost nobody sets a to-bed alarm.<span class="act">→ Store + recall</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>The clause doing the most work is the one easiest to skip: keep the schedule even if you slept badly. That runs against the intuition to repay a deficit by sleeping in, and the reason is that the clock is set mainly by when you wake and what light you see afterwards. Sleeping two hours late on Sunday shifts the pacemaker later, so Sunday night&#39;s sleep arrives late and Monday is spent recovering from a jet lag you created without travelling. The to-bed alarm is the practical counterpart. The reason most people&#39;s bedtime drifts is not that they chose it; bedtime is whatever is left over after the day finishes, so it is the only part of the schedule with no one defending it. An alarm turns it back into an appointment.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="the body&#39;s daily cycle">circadian rhythm</span><button class="info" data-term="t0kACis_dJE-2-2" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-2-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>master 24-hour clock</h3>
+      <div class="zh">the brain&#39;s central timekeeper</div>
+      <p>A small cluster of cells deep in the brain that keeps an internal roughly 24-hour schedule and times the sleep-wake cycle.</p>
+      <p>Physiologically this is the suprachiasmatic nucleus, sitting in the hypothalamus just above the crossing of the optic nerves — a position that is not an accident, since its main correction signal comes directly from the eyes. Left alone in constant darkness, the human clock runs slightly longer than 24 hours, which is why it needs daily resetting rather than simply being wound once. Regularity is the cheapest way to supply that reset, because it makes the timing of light, meals and activity repeat instead of wander.</p>
+      <p class="muted">Related terms: circadian rhythm (what it generates), to-bed alarm (how to obey it)</p>
+      <p class="muted">From segment 2 “Tip 1: regularity, weekends included”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-2-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>circadian rhythm</h3>
+      <div class="zh">the body&#39;s daily cycle</div>
+      <p>The roughly 24-hour cycle in alertness, body temperature and hormone release that the internal clock drives.</p>
+      <p>The rhythm is not only about sleepiness — core temperature, cortisol, melatonin and digestive activity all ride on it, which is why a shifted schedule leaves people feeling wrong in ways that have nothing to do with being tired. It is also why the same eight hours of sleep are not equivalent at any hour: sleep taken against the rhythm is lighter and more fragmented than sleep taken with it. This is the rhythm that every later tip either supports or disturbs.</p>
+      <p class="muted">Related terms: master 24-hour clock (produced by)</p>
+      <p class="muted">From segment 2 “Tip 1: regularity, weekends included”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-2-3">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>to-bed alarm</h3>
+      <div class="zh">an alarm for going to bed</div>
+      <p>An alarm set for the time you should start heading to bed, the mirror image of a wake-up alarm.</p>
+      <p>The idea is almost trivially simple and almost nobody does it, which is Walker&#39;s point. A wake-up alarm exists because something external — work, school — demands a fixed end to the night; nothing external demands a fixed start, so the start drifts. Setting the alarm earlier than the intended sleep time rather than at it is the usual refinement, since it has to cover the time it takes to actually stop what you are doing.</p>
+      <p class="muted">Related terms: master 24-hour clock (serves)</p>
+      <p class="muted">From segment 2 “Tip 1: regularity, weekends included”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> The clock is internal, but it does not run in isolation — it reads signals from the body and the room. That raises the next question: which signals? The first one the talk takes up is not a signal the environment sends in, but a change the body itself has to make.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s3">
+  <h4>3. Tip 2: keep it cool <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=64s" target="_blank" rel="noopener">1:04</a>–1:44</span></h4>
+  <p>Brain and body must drop their core temperature by about 1 °C (2–3 °F) to start and stay asleep, which is why a room that is too cold is easier to fall asleep in than one that is too hot. The current recommendation is a bedroom around 65 °F, a little over 18 °C.</p>
+  
+  <div class="frames">
+    <figure><img src="frames/s03_72.jpg" alt="The animation shows the behaviour, not the number: someone flinging the bedroom window wide open onto a cold starry night with the bed already turned down. The 1 °C / 65 °F figures exist only in the narration." loading="lazy" data-video="t0kACis_dJE" data-idx="0"><figcaption>1:12 · The animation shows the behaviour, not the number: someone flinging the bedroom window wide open onto a cold starry night with the bed already turned down. The 1 °C / 65 °F figures exist only in the narration.</figcaption></figure>
+  </div>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment handed over a clock that depends on signals, and this one supplies the first of them — temperature. It is the right place to start because it is a precondition rather than a preference: the body has to make a specific physical change before sleep can begin at all.</div>
+  <p><span class="tag r">Reasoning</span>Because the last segment established that sleep is timed by a mechanism rather than willed, Walker now gives that mechanism a physical variable to move. Brain and body must drop core temperature by about one degree Celsius — two to three Fahrenheit — to initiate sleep and then to stay asleep. From that single fact he derives two things in a row. First, an everyday observation that suddenly makes sense: a room that is too cold is easier to fall asleep in than one that is too hot, because the cold room is doing the work for you. Second, an actual number — about 65 degrees Fahrenheit, a little over 18 Celsius — and he pre-empts the objection by admitting it sounds cold.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d5" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>Sleep starts only after core body temperature drops about 1 °C.<span class="act">→ Map</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d6" title="Details that support a concept: store now, later ask what it proves and how you would use it."><span class="k">E</span>Core temperature has to fall about 1 °C (2–3 °F) to start and to stay asleep.<span class="act">→ Store + rehearse</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d7" title="Details that support a concept: store now, later ask what it proves and how you would use it."><span class="k">E</span>The recommended bedroom is around 65 °F, a little over 18 °C.<span class="act">→ Store + rehearse</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d8" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Lower the bedroom instead of adding blankets.<span class="act">→ Practice</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>The direction of the change is the whole point, and it is where the common objection comes from: if cooling is required, why does a hot bath before bed help? Because the bath cools you. Warm water dilates the blood vessels in the skin, the body dumps heat through the surface, and core temperature falls faster afterwards than it would have on its own. Core and skin move in opposite directions, and only the core number is the one sleep depends on. The second thing worth adding is that 65°F is a population recommendation, not a personal law — it is a starting point to adjust from, and the bedding you sleep under changes what the room number has to be. The illustration at this point is not a thermometer, as a diagram-minded viewer might expect: it shows someone throwing the bedroom window wide open onto a cold night sky over the city. That turns the number into an action and quietly picks the cheapest version of it — ventilation rather than air conditioning.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="deep internal body temperature">core body temperature</span><button class="info" data-term="t0kACis_dJE-3-1" title="More" aria-label="More">i</button><span class="term" data-zh="keeping body temperature in range">thermoregulation</span><button class="info" data-term="t0kACis_dJE-3-2" title="More" aria-label="More">i</button><span class="term" data-zh="the moment of falling asleep">sleep onset</span><button class="info" data-term="t0kACis_dJE-3-3" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-3-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>core body temperature</h3>
+      <div class="zh">deep internal body temperature</div>
+      <p>The temperature of the body&#39;s internal organs and brain, as distinct from the temperature of the skin.</p>
+      <p>Core temperature follows a daily rhythm of roughly one degree Celsius, peaking in the early evening and bottoming out a couple of hours before habitual wake time. Sleep onset does not merely coincide with the fall — the fall is part of the trigger, which is why the evening peak is also the hardest time of day to fall asleep. Measuring it properly requires an internal probe, so in practice the room is adjusted rather than the number.</p>
+      <p class="muted">Related terms: thermoregulation (controlled by), sleep onset (precondition for)</p>
+      <p class="muted">From segment 3 “Tip 2: keep it cool”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-3-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>thermoregulation</h3>
+      <div class="zh">keeping body temperature in range</div>
+      <p>The body&#39;s control of its own temperature, mainly by moving blood towards or away from the skin.</p>
+      <p>The main lever is blood flow: dilating the vessels in the hands, feet and face radiates heat away, constricting them conserves it. This is why warm hands and feet are a reliable sign that sleep is approaching, and why socks can help some people fall asleep in a cold room — warming the extremities opens the radiators and lets the core drop. It also explains the apparent paradox of the hot bath.</p>
+      <p class="muted">Related terms: core body temperature (regulates)</p>
+      <p class="muted">From segment 3 “Tip 2: keep it cool”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-3-3">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sleep onset</h3>
+      <div class="zh">the moment of falling asleep</div>
+      <p>The transition from wake into the first stage of sleep.</p>
+      <p>Onset is a process rather than an instant: alertness falls, attention becomes unreliable, muscle tone drops and the EEG changes character, usually over several minutes. Because it is a process with physiological preconditions — the temperature drop among them — it can be made easier or harder by the conditions, but it cannot be executed on command. That distinction is the quiet premise behind every remaining tip in this talk.</p>
+      <p class="muted">Related terms: core body temperature (depends on)</p>
+      <p class="muted">From segment 3 “Tip 2: keep it cool”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> Temperature is one input the clock and body read, and it is a slow one. The more decisive signal — the one that tells the clock what time of day it actually is — has not been named yet, and it is the subject of the next tip.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s4">
+  <h4>4. Tip 3: darkness, starting in the evening <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=104s" target="_blank" rel="noopener">1:44</a>–2:28</span></h4>
+  <p>We are a dark-deprived society, and darkness specifically in the evening is what triggers <span class="term" data-zh="the hormone that times sleep">melatonin</span><button class="info" data-term="t0kACis_dJE-4-1" title="More" aria-label="More">i</button>, the hormone that regulates sleep timing. In the last hour before bed, stay away from screens and dim half the lights in the house; eye masks or blackout shades help.</p>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment ended by pointing past temperature to the stronger signal, and this is it: light, approached from its absence. Darkness is the input the clock trusts most, which is why Walker treats it as an environmental condition to engineer rather than a mood to cultivate.</div>
+  <p><span class="tag r">Reasoning</span>Because the clock needs an external signal to stay aligned, Walker names the one it is built to read, and he states the problem as a shortage rather than an excess: we are a dark-deprived society. Then he narrows it to the hour that matters — darkness specifically in the evening — because that is what triggers the release of melatonin, the hormone that regulates the healthy timing of sleep. Only after the mechanism does he give instructions, and the instructions are concrete and cheap: in the last hour before bed, stay away from computer screens, tablets and phones; dim down half the lights in the house; use an eye mask or blackout shades if you like.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d9" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>Evening darkness releases melatonin, which schedules sleep.<span class="act">→ Map</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d10" title="Information that resembles what you know: find where it matches, where it doesn&#39;t, and when it breaks, so new knowledge attaches to the old network."><span class="k">A</span>Melatonin is a starting gun, not the race — it says when, not how.<span class="act">→ Critique</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d11" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Dim the house in the last hour, not just the phone.<span class="act">→ Practice</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d12" title="Details that support a concept: store now, later ask what it proves and how you would use it."><span class="k">E</span>Walker ranks screens above room lighting; lux usually reverses it.<span class="act">→ Store + rehearse</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>The most consequential thing to add is what melatonin is not. It is a timing signal, not a sedative — it announces biological night and lets the rest of the system act on that announcement; it does not switch consciousness off. That is why people who take a supplement and feel nothing conclude it &#39;does not work&#39;, and why the dose that matters most is the one your own eyes trigger by sitting in dim light. The second addition concerns the ordering of his two instructions, which does not match the size of their effects. Note also that he gives the lighting advice a hedge he gives nothing else — &#39;half the lights&#39; — while the screen advice is unqualified, which is the opposite of what the exposure numbers suggest.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="a unit of light reaching the eye">lux</span><button class="info" data-term="t0kACis_dJE-4-2" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-4-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>melatonin</h3>
+      <div class="zh">the hormone that times sleep</div>
+      <p>A hormone released by the pineal gland once evening darkness arrives, signalling to the body that biological night has begun.</p>
+      <p>Melatonin is best thought of as the body&#39;s announcement of nightfall rather than as a sleeping pill: it tells the rest of the system when night is, and the system responds by lowering temperature and raising sleep pressure&#39;s effect. Light at the eye suppresses it, blue-weighted light most strongly, which is why evening illumination delays the whole cascade. The common misunderstanding is to judge a melatonin supplement by whether it makes you drowsy; its real use is shifting timing, which is why jet lag responds to it better than ordinary insomnia does.</p>
+      <p class="muted">Related terms: circadian rhythm (timing signal for), lux (suppressed by)</p>
+      <p class="muted">From segment 4 “Tip 3: darkness, starting in the evening”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-4-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>lux</h3>
+      <div class="zh">a unit of light reaching the eye</div>
+      <p>The standard measure of how much light actually falls on a surface — here, on the eye.</p>
+      <p>Lux is useful in this discussion because it measures what the clock actually responds to, which is light arriving at the retina, not light emitted by a device. A phone is bright but small and held away from the face; a ceiling fixture is further away but fills the whole visual field, and on most home setups it wins. Outdoor daylight is on a different scale again — tens of thousands of lux — which is why daytime light exposure is as much a part of the darkness story as evening dimming.</p>
+      <p class="muted">Related terms: melatonin (suppresses)</p>
+      <p class="muted">From segment 4 “Tip 3: darkness, starting in the evening”</p>
+    </dialog>
+    
+  
+  
+  <div class="issues">
+    
+    <div class="issue debatable">
+      <span class="lvl"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>Debatable</span>
+      <a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=122s" target="_blank" rel="noopener" class="muted">2:02</a>
+      <blockquote>「In the last hour before bed, try to stay away from all of those computer screens and tablets and phones.」</blockquote>
+      <div>The advice is sound, but the ranking is questionable. Screens are named first and without qualification, while ordinary room lighting comes second and is softened to &#39;half the lights&#39; — whereas for most households the ceiling fixture is the larger source of light at the eye. A phone held at arm&#39;s length delivers on the order of 10–40 lux to the retina; an overhead fixture in a normally lit living room delivers roughly 100–300 lux across the whole visual field, and that is the exposure shown to suppress melatonin and delay its onset. Screens still matter, partly through light and partly through what is on them, but a listener who gives up the phone and keeps the overhead lights on all evening has fixed the smaller half of the problem.</div>
+      <div class="ev">Evidence: Gooley et al., &#39;Exposure to Room Light before Bedtime Suppresses Melatonin Onset&#39;, J Clin Endocrinol Metab 96(3), 2011, found ordinary room light shortened melatonin duration and suppressed its onset in the majority of participants; subsequent reviews of evening screen use report real but comparatively modest melatonin effects.</div>
+    </div>
+    
+  </div>
+  
+  <div class="bridge"><b>Leads to</b> The room has now been specified: cool, and dark from the evening onward. But a correctly set room is not a guarantee, and the obvious next case is the one everyone has lived through — the conditions are right, the lights are off, and sleep still does not come.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s5">
+  <h4>5. Tip 4: walk it out <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=148s" target="_blank" rel="noopener">2:28</a>–3:21</span></h4>
+  <p>Do not lie awake in bed. The rule of thumb is 25 minutes — if you cannot fall asleep or cannot get back to sleep after that, get out of bed and do something else. The reason is <span class="term" data-zh="learning that two things go together">associative learning</span><button class="info" data-term="t0kACis_dJE-5-1" title="More" aria-label="More">i</button>: the brain has learned that bed triggers wakefulness, and that association has to be broken. Return only when sleepy, so the bed becomes a place of consistent sleep.</p>
+  
+  <div class="frames">
+    <figure><img src="frames/s05_160.jpg" alt="This is the one live-action frame in the tip, and it carries two things the narration never says: an on-screen card putting chronic insomnia at about 10–15% of adults, and a &#39;Powered by Beautyrest&#39; credit — a mattress brand sponsoring a talk about sleep." loading="lazy" data-video="t0kACis_dJE" data-idx="1"><figcaption>2:40 · This is the one live-action frame in the tip, and it carries two things the narration never says: an on-screen card putting chronic insomnia at about 10–15% of adults, and a &#39;Powered by Beautyrest&#39; credit — a mattress brand sponsoring a talk about sleep.</figcaption></figure>
+  </div>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment left the failure case open — the room is right and you are still awake — and this tip is the answer to exactly that. It also marks a change of register: the first three tips adjusted physiology, and this one addresses something the brain has learned.</div>
+  <p><span class="tag r">Reasoning</span>Because the environmental tips cannot promise results, Walker needs a rule for the night when they do not work, and his rule is counterintuitive: do not stay in bed awake for long periods. The rule of thumb is twenty-five minutes, whether you are trying to fall asleep for the first time or have woken and cannot get back. Then comes the reason, and it is the only place in the talk where the mechanism is psychological rather than bodily: the brain is an incredibly associative device, it has learned that the bed is a trigger of wakefulness, and that association has to be broken. The instruction follows directly from the mechanism — get up, do something else, return only when sleepy — and so does the goal, which is not tonight&#39;s sleep but a relearned association in which the bed means consistent sleep.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d13" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>The brain is associative: a bed you lie awake in comes to mean wakefulness.<span class="act">→ Map</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d14" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Leave the bed when sleep will not come, and come back only when sleepy.<span class="act">→ Practice</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d15" title="Information that resembles what you know: find where it matches, where it doesn&#39;t, and when it breaks, so new knowledge attaches to the old network."><span class="k">A</span>Walker&#39;s own framing: the bed is a trigger the brain has been trained on.<span class="act">→ Critique</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d16" title="Details that support a concept: store now, later ask what it proves and how you would use it."><span class="k">E</span>The talk says 25 minutes; clinical manuals usually say 15–20.<span class="act">→ Store + rehearse</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>What Walker leaves implicit is that this is the core of the most effective non-drug treatment for insomnia, where it is called <span class="term" data-zh="keeping the bed for sleep only">stimulus control</span><button class="info" data-term="t0kACis_dJE-5-2" title="More" aria-label="More">i</button>: the bed is reserved for sleep so that it keeps its meaning, and lying awake in it is treated as actively harmful because every such hour trains the opposite lesson. That also resolves the obvious objection to the number. If the brain is learning associations, then checking a clock to measure twenty-five minutes is itself a wakeful, arousing act — the figure is meant to be estimated from how it feels, never timed, and clock-watching is one of the first habits a clinician removes. The frame at this point is worth describing because it is not what the words set up: there is no clock graphic, just Walker on a couch, with a caption reading &#39;About 10–15% of adults say they have chronic insomnia&#39; and a sponsor credit, &#39;Powered by Beautyrest&#39;. The caption supplies a figure the narration never mentions, and the credit is useful context — this is a sleep series funded by a mattress company, which is worth knowing even when, as here, the advice costs nothing and sells nothing.</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-5-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>associative learning</h3>
+      <div class="zh">learning that two things go together</div>
+      <p>The process by which the brain links a cue to an outcome, so that the cue alone starts producing the response.</p>
+      <p>This is the same mechanism as Pavlov&#39;s bell, applied to a piece of furniture. The bed is a cue; whatever reliably happens there becomes the response it predicts. For a good sleeper the bed predicts sleep, and sleepiness arrives on contact. For someone who has spent months lying awake in it, the bed predicts effortful wakefulness, and arousal arrives instead — which is why the problem persists even after whatever originally caused it has gone away.</p>
+      <p class="muted">Related terms: stimulus control (applied as)</p>
+      <p class="muted">From segment 5 “Tip 4: walk it out”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-5-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>stimulus control</h3>
+      <div class="zh">keeping the bed for sleep only</div>
+      <p>The practice of restricting the bed to sleep so that it stops predicting wakefulness and starts predicting sleep again.</p>
+      <p>Stimulus control is a defined component of cognitive behavioural therapy for insomnia, and it is the clinical name for what this tip describes. The full instruction set is slightly larger than Walker&#39;s version: go to bed only when sleepy, use the bed for nothing but sleep and sex, leave when you cannot sleep, return only when sleepy, and keep a fixed wake time regardless of how the night went. Notice that the last of those is the regularity tip from earlier in this talk, which is why these two tips reinforce each other rather than sitting side by side.</p>
+      <p class="muted">Related terms: associative learning (exploits)</p>
+      <p class="muted">From segment 5 “Tip 4: walk it out”</p>
+    </dialog>
+    
+  
+  
+  <div class="issues">
+    
+    <div class="issue debatable">
+      <span class="lvl"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>Debatable</span>
+      <a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=159s" target="_blank" rel="noopener" class="muted">2:39</a>
+      <blockquote>「and it&#39;s been 25 minutes or so」</blockquote>
+      <div>Most clinical sources put the threshold lower. Stimulus-control instructions are usually written as &#39;if you are not asleep within about 15 to 20 minutes, get out of bed&#39;, and patient handouts repeat that range rather than 25 minutes. The gap is small and arguably harmless — Walker immediately qualifies it with &#39;or so&#39;, and the figure is supposed to be a felt estimate rather than a timed one, since looking at a clock to check is itself the kind of alerting behaviour the tip is trying to eliminate. But a listener who takes 25 as the standard will lie awake longer than the protocol intends, which is the direction that reinforces exactly the association being broken.</div>
+      <div class="ev">Evidence: Bootzin&#39;s stimulus-control instructions, the source of this tip, and American Academy of Sleep Medicine patient materials on insomnia both use a 15–20 minute threshold.</div>
+    </div>
+    
+  </div>
+  
+  <div class="bridge"><b>Leads to</b> The bed has now been defended against wakefulness at night. What has not been examined is what was swallowed hours earlier — the two everyday substances that can guarantee a bad night before the bedroom is even entered.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s6">
+  <h4>6. Tip 5: alcohol and caffeine <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=201s" target="_blank" rel="noopener">3:21</a>–3:39</span></h4>
+  <p>He points back to an earlier episode in the series rather than re-explaining, and compresses it to a rule of thumb: no caffeine in the afternoon or evening, and do not go to bed tipsy.</p>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment ended on the things done long before bedtime that decide how the night goes, and these are the two most common ones. Walker treats them as a known quantity rather than a new argument.</div>
+  <p><span class="tag r">Reasoning</span>Because the series has already covered alcohol and caffeine in detail, Walker makes a deliberate choice not to re-explain them, and the segment becomes the shortest in the talk — a pointer plus a rule of thumb. Stay away from caffeine in the afternoon and in the evening, and do not go to bed too tipsy. The compression is defensible as structure, since re-teaching two pharmacology stories here would break the rhythm of a six-tip list, but it does mean this tip arrives without the mechanism that makes every other tip persuasive.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d17" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>Alcohol and caffeine both attack the passage into sleep, from opposite ends.<span class="act">→ Map</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d18" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Cut the caffeine deadline, and stop treating a nightcap as help.<span class="act">→ Practice</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d19" title="Trivial but look-up-later facts: put them in flashcards and recall with spaced repetition."><span class="k">R</span>Sedation is not sleep — alcohol produces the first and costs you the second.<span class="act">→ Store + recall</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>So the mechanism is worth supplying. Caffeine works by blocking <span class="term" data-zh="the molecule that builds sleep pressure">adenosine</span><button class="info" data-term="t0kACis_dJE-6-1" title="More" aria-label="More">i</button>, the molecule that accumulates through the day and creates the pressure to sleep; it does not remove the pressure, it hides it, and when the drug clears the accumulated pressure is still there. Its half-life is roughly five to six hours in a typical adult, which is why an afternoon coffee still has a meaningful fraction circulating at midnight, and why people who insist caffeine does not affect them are often right about falling asleep and wrong about the night that follows — the damage shows up in depth, not in onset. Alcohol is the mirror image: it is a sedative, and <span class="term" data-zh="being chemically knocked out">sedation</span><button class="info" data-term="t0kACis_dJE-6-2" title="More" aria-label="More">i</button> is not sleep. It shortens the time to lose consciousness, then fragments the night with awakenings too brief to remember and suppresses <span class="term" data-zh="the dreaming stage of sleep">REM sleep</span><button class="info" data-term="t0kACis_dJE-6-3" title="More" aria-label="More">i</button>, so the hours survive while the structure inside them does not. This is the one tip that most clearly separates the two axes the talk opened with — both substances can leave the quantity looking fine while the quality is gone.</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-6-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>adenosine</h3>
+      <div class="zh">the molecule that builds sleep pressure</div>
+      <p>A chemical that accumulates in the brain while you are awake and creates the growing urge to sleep.</p>
+      <p>Adenosine is the &#39;how long have I been awake&#39; signal, and it runs independently of the circadian clock — the two systems combine to decide how sleepy you feel at a given hour. Sleep clears it, which is why the urge resets overnight. Caffeine does not clear it; it occupies the receptors so the signal cannot be read, which is the reason the sleepiness returns abruptly when the caffeine wears off rather than fading gradually.</p>
+      <p class="muted">Related terms: circadian rhythm (independent of), sedation (not the same as)</p>
+      <p class="muted">From segment 6 “Tip 5: alcohol and caffeine”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-6-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sedation</h3>
+      <div class="zh">being chemically knocked out</div>
+      <p>A drug-induced loss of consciousness that resembles sleep without reproducing its structure.</p>
+      <p>The distinction matters because the subjective experience is nearly identical — in both cases you stop being aware — but the electrical activity is not. Sedated unconsciousness lacks much of the ordered progression through sleep stages that gives sleep its restorative value, and most sleep-inducing drugs, alcohol included, produce something closer to sedation than to sleep. It is the cleanest example of quantity and quality coming apart.</p>
+      <p class="muted">Related terms: REM sleep (suppresses), sleep quality (degrades)</p>
+      <p class="muted">From segment 6 “Tip 5: alcohol and caffeine”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-6-3">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>REM sleep</h3>
+      <div class="zh">the dreaming stage of sleep</div>
+      <p>The stage of sleep with rapid eye movements, vivid dreaming and near-total muscle paralysis.</p>
+      <p>REM clusters in the second half of the night, which is why cutting a night short or fragmenting its later hours removes proportionally more REM than deep sleep. It is associated with emotional processing and with the integration of new memories into existing knowledge, so losing it tends to show up as mood and learning effects rather than as simple tiredness. Alcohol is notable for suppressing it specifically, which is part of why a drunken night&#39;s sleep leaves people feeling unrested despite plenty of hours.</p>
+      <p class="muted">Related terms: sleep quality (component of)</p>
+      <p class="muted">From segment 6 “Tip 5: alcohol and caffeine”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> Both substances work by interfering with the passage into sleep — one by hiding the pressure to sleep, the other by faking the arrival. That raises the question the final tip answers: what is that passage supposed to look like when nothing is interfering with it?</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s7">
+  <h4>7. Tip 6: sleep is a landing, not a switch <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=219s" target="_blank" rel="noopener">3:39</a>–4:33</span></h4>
+  <p>Modern expectation is that sleep works like a light switch. Physiologically it is closer to landing a plane: the brain needs time to descend onto the bedrock of good sleep. So in the last 20–60 minutes before bed, disengage from screens, do something relaxing, and once you find what works, keep to that routine.</p>
+  
+  <div class="frames">
+    <figure><img src="frames/s07_247.jpg" alt="The landing metaphor is drawn from the terminal window: a woman with folded arms watching a plane touch down. She is the spectator, not the pilot — the visual frames sleep onset as something you wait out rather than something you fly." loading="lazy" data-video="t0kACis_dJE" data-idx="2"><figcaption>4:07 · The landing metaphor is drawn from the terminal window: a woman with folded arms watching a plane touch down. She is the spectator, not the pilot — the visual frames sleep onset as something you wait out rather than something you fly.</figcaption></figure>
+  </div>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment left the transition into sleep as the thing being interfered with but never described. The final tip describes it, and the description is what makes the advice follow instead of merely sounding sensible.</div>
+  <p><span class="tag r">Reasoning</span>Because every earlier tip has assumed that sleep onset takes time without ever saying so, Walker now names the false model people are carrying. We expect to dive into bed, switch off the light, and find that sleep is also just like a light switch — immediate and on demand. He replaces that model with a better one: sleep as a physiological process is much more similar to landing a plane, where it takes time for the brain to gradually descend onto the firm bedrock of good sleep. The <span class="term" data-zh="a fixed calming hour before bed">wind-down routine</span><button class="info" data-term="t0kACis_dJE-7-1" title="More" aria-label="More">i</button> is then a direct consequence rather than a separate rule. If sleep needs a descent, the descent needs airspace, so the last twenty minutes, half an hour, even the last hour go to disengaging from the computer and phone and doing something relaxing — and because the point is the descent rather than any particular activity, his final instruction is to find what works for you and stick to it.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d20" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>Sleep onset is a descent that takes time, not a switch you flip.<span class="act">→ Map</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d21" title="Information that resembles what you know: find where it matches, where it doesn&#39;t, and when it breaks, so new knowledge attaches to the old network."><span class="k">A</span>The talk&#39;s best image: falling asleep is landing a plane, not flipping a switch.<span class="act">→ Critique</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d22" title="How-to information: use it in a real context as early as possible; cramming is wasted."><span class="k">P</span>Build one wind-down routine and then stop redesigning it.<span class="act">→ Practice</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>The metaphor earns its place because of a structural difference, not because it is vivid. A switch has two states and no interval between them, so under that model failing to sleep instantly is a malfunction. A landing has an approach, so most &#39;I cannot fall asleep&#39; complaints turn out to be approaches begun at the runway. It also reframes the twenty-to-sixty-minute bracket correctly: that is a window to descend through, not a dose to take, which is why the exact activity matters far less than its reliability. Where the metaphor misleads is worth saying too — a pilot executes a landing on a schedule, whereas sleep onset is permissive. You can only arrange the conditions and then stop interfering; trying harder to sleep is self-defeating in a way that trying harder to land is not. The illustration catches this almost by accident: instead of a cockpit, the frame shows a woman standing at a terminal window at night, arms folded, watching a plane touch down on a lit runway. She is a spectator, not the pilot — which is exactly the right posture for the last hour before bed.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="how long falling asleep takes">sleep latency</span><button class="info" data-term="t0kACis_dJE-7-2" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-7-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>wind-down routine</h3>
+      <div class="zh">a fixed calming hour before bed</div>
+      <p>A consistent sequence of low-stimulation activities in the period before bed, used to make the transition into sleep reliable.</p>
+      <p>The two features that make a routine work are low arousal and repetition. Low arousal because anything demanding — work, argument, a gripping feed — keeps the system in a state incompatible with descent; repetition because a sequence that happens every night becomes a cue the brain can read, which is the same associative mechanism that makes the bed itself a cue. Specific content is interchangeable: reading, stretching, a shower and music all work if they are dull enough and happen every night.</p>
+      <p class="muted">Related terms: sleep latency (shortens), associative learning (built on)</p>
+      <p class="muted">From segment 7 “Tip 6: sleep is a landing, not a switch”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-7-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sleep latency</h3>
+      <div class="zh">how long falling asleep takes</div>
+      <p>The time between getting into bed intending to sleep and actually falling asleep.</p>
+      <p>Roughly ten to twenty minutes is typical for a healthy adult; consistently much longer suggests either timing or arousal is off, and consistently much shorter — falling asleep within a couple of minutes, every night — is usually a sign of accumulated sleep deprivation rather than of being a good sleeper. Latency is the quantity the landing metaphor is really about, and it is also the number behind the earlier rule about leaving the bed.</p>
+      <p class="muted">Related terms: sleep onset (measures)</p>
+      <p class="muted">From segment 7 “Tip 6: sleep is a landing, not a switch”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> Every tip so far has assumed a system that works and merely needs better conditions. That assumption has never been stated, and the closing segment is where Walker finally states it — along with what happens when it is false.</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s8">
+  <h4>8. These tips do not treat a disorder <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=273s" target="_blank" rel="noopener">4:33</a>–5:29</span></h4>
+  <p>He draws a boundary: if you have <span class="term" data-zh="persistent trouble sleeping">insomnia</span><button class="info" data-term="t0kACis_dJE-8-1" title="More" aria-label="More">i</button> or <span class="term" data-zh="breathing stops during sleep">sleep apnea</span><button class="info" data-term="t0kACis_dJE-8-2" title="More" aria-label="More">i</button>, these tips will not necessarily help. The sports-coach analogy — advice cannot fix a broken ankle, you treat the ankle first. See a doctor. He closes by calling sleep a life-support system, and perhaps a superpower.</p>
+  
+  <div class="bridge"><b>Builds on</b> The previous segment ended on an assumption left unexamined — that the sleep system is intact and only its conditions need adjusting. Walker now names that assumption and the cases in which it fails.</div>
+  <p><span class="tag r">Reasoning</span>Because he has just finished a list that sounds comprehensive, Walker&#39;s final move is to limit it rather than extend it: if you are suffering from a sleep disorder, insomnia or sleep apnea for example, these tips are not necessarily going to help. The sports-coach analogy makes the limit precise — a coach can hand over every technique for improving performance, but with a broken ankle none of it makes a difference, and the ankle gets treated first. So the advice is to see a doctor, which he calls the best piece of advice in the talk. Having fenced the list in, he can state the stake without overclaiming: sleep is close to a life-support system, and some may even call it a superpower.</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d23" title="What/why information: knowledge is a network, not a list — draw the links between concepts yourself."><span class="k">C</span>Sleep hygiene optimises a working system; a disorder needs treatment.<span class="act">→ Map</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d24" title="Information that resembles what you know: find where it matches, where it doesn&#39;t, and when it breaks, so new knowledge attaches to the old network."><span class="k">A</span>Walker&#39;s boundary: coaching cannot fix a broken ankle.<span class="act">→ Critique</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d25" title="Trivial but look-up-later facts: put them in flashcards and recall with spaced repetition."><span class="k">R</span>Insomnia and sleep apnea are the two disorders Walker names as out of scope.<span class="act">→ Store + recall</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI note</span>The two disorders he names fail in different ways, and the difference is useful. Sleep apnea is a mechanical breathing problem — the airway collapses repeatedly during the night and the brain surfaces each time to reopen it — so no amount of cool, dark or regularity touches the cause, and daytime exhaustion despite a full night in bed is the signal to get assessed. Insomnia is a disorder of the sleep process itself, and the relationship to the tips is more awkward than the analogy suggests: the leaving-the-bed tip is genuinely a piece of the standard treatment, but a piece delivered without the rest of the protocol, which also includes restricting time in bed and working on the beliefs that drive the arousal. Handing someone with insomnia a hygiene list is a known failure mode, because it reads as a list of things they are already doing and still failing at. On the closing line, &#39;life-support system&#39; is doing honest work — sleep is implicated in immune function, memory consolidation, metabolic regulation and emotional control — while &#39;superpower&#39; is rhetoric, and the better reading is that sleep is not an advantage but a baseline whose absence is the deficit.</p>
+  
+  <p class="terms-extra"><span class="muted">Terms:</span><span class="term" data-zh="the standard talk therapy for insomnia">CBT-I</span><button class="info" data-term="t0kACis_dJE-8-3" title="More" aria-label="More">i</button></p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-8-1">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>insomnia</h3>
+      <div class="zh">persistent trouble sleeping</div>
+      <p>Persistent difficulty falling or staying asleep despite adequate opportunity, with consequences during the day.</p>
+      <p>The diagnostic criteria turn on three things: the difficulty happens despite a proper chance to sleep, it recurs over months rather than during a bad week, and it impairs daytime functioning. The last point is what separates insomnia from simply being a short sleeper. It is also self-sustaining — worry about not sleeping produces the arousal that prevents sleeping — which is why treatment targets the behaviour and the beliefs rather than only the environment.</p>
+      <p class="muted">Related terms: CBT-I (treated by), stimulus control (partially addressed by)</p>
+      <p class="muted">From segment 8 “These tips do not treat a disorder”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-8-2">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>sleep apnea</h3>
+      <div class="zh">breathing stops during sleep</div>
+      <p>A disorder in which the airway repeatedly closes during sleep, interrupting breathing and fragmenting the night.</p>
+      <p>Each closure forces a brief arousal to reopen the airway, and these arousals can occur dozens of times an hour without the sleeper remembering any of them — which is why the usual presentation is heavy daytime sleepiness in someone who believes they slept all night. Loud snoring and witnessed pauses in breathing are the common external signs. It is diagnosed by a sleep study and treated mechanically, most often with positive airway pressure, so it is the clearest case in which better habits change nothing.</p>
+      <p class="muted">Related terms: sleep quality (destroys)</p>
+      <p class="muted">From segment 8 “These tips do not treat a disorder”</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-8-3">
+      <button class="close" data-close aria-label="Close (Esc)">✕</button>
+      <h3>CBT-I</h3>
+      <div class="zh">the standard talk therapy for insomnia</div>
+      <p>Cognitive behavioural therapy for insomnia, the recommended first-line treatment, combining scheduling changes with work on sleep-related thoughts.</p>
+      <p>CBT-I bundles several components: stimulus control, restricting time in bed to match actual sleep, relaxation methods, and challenging the beliefs that make a bad night feel catastrophic. Major guidelines put it ahead of sleeping pills as the first treatment to try, because its effects persist after treatment ends while medication effects do not. Its relationship to this talk is that one of its components appears here as a standalone tip — useful, but not the same thing as the treatment.</p>
+      <p class="muted">Related terms: insomnia (first-line treatment for), sleep hygiene (more than)</p>
+      <p class="muted">From segment 8 “These tips do not treat a disorder”</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>Leads to</b> Closing summary. The thread that began with a normal bad night ends with its own boundary drawn: six conditions you can set for a system that works, a referral for one that does not, and a reason the setting-up is worth doing at all.</div>
+</section>
+
+
+
+<!-- 4 -->
+<h2>4. Summary</h2>
+<p>The talk is built as a single narrowing path rather than a list. It opens by granting that a bad night is normal, which buys permission to ask what can actually be controlled. Tip one places the control inside the body: a master 24-hour clock that expects regularity, which is why weekends count and why a to-bed alarm is the missing half of the alarm we all already set. Tips two and three then supply what that clock reads from outside — a core temperature that must fall about 1 °C, and darkness in the evening that releases melatonin. Having specified the room, Walker concedes a correctly set room still does not guarantee sleep, and tip four moves to behaviour: the brain is an associative device, so lying awake teaches the bed to mean wakefulness, and the fix is to leave. Tip five removes what was swallowed earlier in the day, and tip six replaces the mental model entirely — sleep is not a light switch but a plane landing, which is what makes a wind-down routine a requirement rather than a nicety. The final move is the one that gives the rest its credibility: if the system is broken, insomnia or apnea, none of this is treatment. A coach cannot fix a broken ankle. See a doctor first.</p>
+
+
+<h4>Corrections at a glance</h4>
+<p class="err-legend"><span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>Wrong / outdated</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>Debatable (depends on version or context)</span></p>
+<div style="overflow-x:auto"><table class="issues-sum">
+<tr><th>Segment</th><th>Verbatim quote (from transcript)</th><th>Note</th></tr>
+
+<tr class="debatable"><td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="#t0kACis_dJE-s4">4. Tip 3: darkness, starting in the evening</a><br><span class="muted">2:02</span></td>
+<td class="q">「In the last hour before bed, try to stay away from all of those computer screens and tablets and phones.」</td><td>The advice is sound, but the ranking is questionable. Screens are named first and without qualification, while ordinary room lighting comes second and is softened to &#39;half the lights&#39; — whereas for most households the ceiling fixture is the larger source of light at the eye. A phone held at arm&#39;s length delivers on the order of 10–40 lux to the retina; an overhead fixture in a normally lit living room delivers roughly 100–300 lux across the whole visual field, and that is the exposure shown to suppress melatonin and delay its onset. Screens still matter, partly through light and partly through what is on them, but a listener who gives up the phone and keeps the overhead lights on all evening has fixed the smaller half of the problem.<br><span class="ev">Evidence: Gooley et al., &#39;Exposure to Room Light before Bedtime Suppresses Melatonin Onset&#39;, J Clin Endocrinol Metab 96(3), 2011, found ordinary room light shortened melatonin duration and suppressed its onset in the majority of participants; subsequent reviews of evening screen use report real but comparatively modest melatonin effects.</span></td></tr>
+
+<tr class="debatable"><td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="#t0kACis_dJE-s5">5. Tip 4: walk it out</a><br><span class="muted">2:39</span></td>
+<td class="q">「and it&#39;s been 25 minutes or so」</td><td>Most clinical sources put the threshold lower. Stimulus-control instructions are usually written as &#39;if you are not asleep within about 15 to 20 minutes, get out of bed&#39;, and patient handouts repeat that range rather than 25 minutes. The gap is small and arguably harmless — Walker immediately qualifies it with &#39;or so&#39;, and the figure is supposed to be a felt estimate rather than a timed one, since looking at a clock to check is itself the kind of alerting behaviour the tip is trying to eliminate. But a listener who takes 25 as the standard will lie awake longer than the protocol intends, which is the direction that reinforces exactly the association being broken.<br><span class="ev">Evidence: Bootzin&#39;s stimulus-control instructions, the source of this tip, and American Academy of Sleep Medicine patient materials on insomnia both use a 15–20 minute threshold.</span></td></tr>
+
+</table></div>
+
+
+<!-- 5 -->
+<h2>5. Three recommended next steps</h2>
+
+<div class="card">
+  <h4>1. Go deeper: how the master clock actually keeps time</h4>
+  <p>The talk names a 24-hour clock deep in the brain and leaves it as a black box. Knowing that it sits in the suprachiasmatic nucleus and is reset mainly by morning light turns tip one from a rule into something you can debug when your schedule slips.</p>
+  <p>Search YouTube: <a href="https://www.youtube.com/results?search_query=suprachiasmatic%20nucleus%20circadian%20rhythm%20explained" target="_blank" rel="noopener"><code>suprachiasmatic nucleus circadian rhythm explained</code></a> <a href="https://www.youtube.com/results?search_query=how%20light%20resets%20the%20body%20clock" target="_blank" rel="noopener"><code>how light resets the body clock</code></a> <a href="https://www.youtube.com/results?search_query=circadian%20rhythm%20morning%20light%20exposure" target="_blank" rel="noopener"><code>circadian rhythm morning light exposure</code></a> </p>
+</div>
+
+<div class="card">
+  <h4>2. Compare: what sleep is doing while you are in it</h4>
+  <p>Every tip here optimises the conditions for sleep without saying what the sleep is for. Walker&#39;s own work on memory consolidation and emotional processing during REM and deep sleep is the other half, and it is what makes the quality half of &#39;quantity and quality&#39; concrete.</p>
+  <p>Search YouTube: <a href="https://www.youtube.com/results?search_query=Matt%20Walker%20why%20we%20sleep%20REM%20deep%20sleep" target="_blank" rel="noopener"><code>Matt Walker why we sleep REM deep sleep</code></a> <a href="https://www.youtube.com/results?search_query=sleep%20memory%20consolidation%20explained" target="_blank" rel="noopener"><code>sleep memory consolidation explained</code></a> <a href="https://www.youtube.com/results?search_query=what%20happens%20during%20deep%20sleep%20stages" target="_blank" rel="noopener"><code>what happens during deep sleep stages</code></a> </p>
+</div>
+
+<div class="card">
+  <h4>3. Apply: the treatment the talk explicitly excludes</h4>
+  <p>The closing boundary — these tips will not help insomnia — points at a specific named treatment rather than a void. CBT-I is the first-line recommendation, and tip four&#39;s get-out-of-bed rule is a single borrowed piece of it, so seeing the full protocol shows what the talk left out.</p>
+  <p>Search YouTube: <a href="https://www.youtube.com/results?search_query=CBT-I%20cognitive%20behavioral%20therapy%20for%20insomnia" target="_blank" rel="noopener"><code>CBT-I cognitive behavioral therapy for insomnia</code></a> <a href="https://www.youtube.com/results?search_query=stimulus%20control%20therapy%20insomnia" target="_blank" rel="noopener"><code>stimulus control therapy insomnia</code></a> <a href="https://www.youtube.com/results?search_query=sleep%20restriction%20therapy%20explained" target="_blank" rel="noopener"><code>sleep restriction therapy explained</code></a> </p>
+</div>
+
+
+
+<div class="card atlas-nav">
+  <b>📄 <a href="../atlas.html">All videos</a></b>
+   · Region: <b>Sleep</b>
+  <div class="muted">This station is not linked to any other yet.</div>
+</div>
+
+
+</main>
+
+
+
+<!-- 全視窗 viewer -->
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <span class="cap"></span>
+    <button data-act="zoomout" title="Zoom out (-)">−</button>
+    <button data-act="zoomin" title="Zoom in (+)">+</button>
+    <button data-act="fit" title="Fit (F)">Fit</button>
+    <button data-act="reset" title="Actual size (1)">1:1</button>
+    <button data-act="close" title="Close (Esc)">✕</button>
+  </div>
+  <div class="v-stage">
+    <div class="v-content"></div>
+    <button class="v-nav prev" data-act="prev" hidden title="Previous (←)">‹</button>
+    <button class="v-nav next" data-act="next" hidden title="Next (→)">›</button>
+  </div>
+</div>
+
+<script id="tips-data" type="application/json">{}</script>
+
+
+
+<script id="lesson-data" type="application/json">{"chapters": [{"at": 0.0, "seg_id": 1, "title": "A bad night is normal \u2014 but fixable"}, {"at": 58.51, "seg_id": 2, "title": "Tip 1: regularity, weekends included"}, {"at": 156.94, "seg_id": 3, "title": "Tip 2: keep it cool"}, {"at": 233.19, "seg_id": 4, "title": "Tip 3: darkness, starting in the evening"}, {"at": 309.25, "seg_id": 5, "title": "Tip 4: walk it out"}, {"at": 417.45, "seg_id": 6, "title": "Tip 5: alcohol and caffeine"}, {"at": 469.36, "seg_id": 7, "title": "Tip 6: sleep is a landing, not a switch"}, {"at": 575.78, "seg_id": 8, "title": "These tips do not treat a disorder"}], "created": "2026-10-01T23:52:46+08:00", "dub": null, "duration": 741.05, "file": "lesson.mp3", "href": "lesson.mp3", "rate": "+0%", "read_voice": null, "reused_parts": 0, "timeline": [{"at": 0.0, "dur": 2.66, "i": 1, "kind": "say", "label": "", "lines": [{"at": 0.0, "dur": 2.66, "text": "This is about how to sleep better."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "This is about how to sleep better.", "translation": ""}, {"at": 2.66, "dur": 4.08, "i": 2, "kind": "say", "label": "", "lines": [{"at": 2.66, "dur": 4.08, "text": "The source is a TED talk from the Sleeping with Science series."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "The source is a TED talk from the Sleeping with Science series.", "translation": ""}, {"at": 6.74, "dur": 3.5, "i": 3, "kind": "say", "label": "", "lines": [{"at": 6.74, "dur": 3.5, "text": "The speaker is the sleep scientist Matt Walker,"}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "The speaker is the sleep scientist Matt Walker,", "translation": ""}, {"at": 10.25, "dur": 3.48, "i": 4, "kind": "say", "label": "", "lines": [{"at": 10.25, "dur": 3.48, "text": "and the original runs five and a half minutes."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "and the original runs five and a half minutes.", "translation": ""}, {"at": 13.73, "dur": 3.43, "i": 5, "kind": "say", "label": "", "lines": [{"at": 13.73, "dur": 3.43, "text": "He gives six tips that have research behind them."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "He gives six tips that have research behind them.", "translation": ""}, {"at": 17.16, "dur": 5.06, "i": 6, "kind": "say", "label": "", "lines": [{"at": 17.16, "dur": 5.06, "text": "We\u0027ll take them one at a time, and fill in the mechanisms he had to skip for time."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "We\u0027ll take them one at a time, and fill in the mechanisms he had to skip for time.", "translation": ""}, {"at": 22.22, "dur": 4.87, "i": 7, "kind": "say", "label": "", "lines": [{"at": 22.22, "dur": 4.87, "text": "About fifteen minutes. You can keep your eyes closed."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "About fifteen minutes. You can keep your eyes closed.", "translation": ""}, {"at": 27.1, "dur": 6.0, "i": 8, "kind": "say", "label": "", "lines": [{"at": 27.1, "dur": 6.0, "text": "He opens by granting something: everyone has a bad night, and that is perfectly normal."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "He opens by granting something: everyone has a bad night, and that is perfectly normal.", "translation": ""}, {"at": 33.1, "dur": 2.81, "i": 9, "kind": "say", "label": "", "lines": [{"at": 33.1, "dur": 2.81, "text": "That matters more than it sounds."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "That matters more than it sounds.", "translation": ""}, {"at": 35.9, "dur": 4.32, "i": 10, "kind": "say", "label": "", "lines": [{"at": 35.9, "dur": 4.32, "text": "By saying it first, he stops you worrying about last night,"}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "By saying it first, he stops you worrying about last night,", "translation": ""}, {"at": 40.22, "dur": 4.78, "i": 11, "kind": "say", "label": "", "lines": [{"at": 40.22, "dur": 4.78, "text": "and turns the question into a different one: what can you actually control?"}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "and turns the question into a different one: what can you actually control?", "translation": ""}, {"at": 45.0, "dur": 6.12, "i": 12, "kind": "say", "label": "", "lines": [{"at": 45.0, "dur": 6.12, "text": "What he leaves hanging is the order. Six tips, but which one comes first?"}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "What he leaves hanging is the order. Six tips, but which one comes first?", "translation": ""}, {"at": 51.12, "dur": 3.5, "i": 13, "kind": "say", "label": "", "lines": [{"at": 51.12, "dur": 3.5, "text": "Listen for the fact that tip one is about the body,"}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "Listen for the fact that tip one is about the body,", "translation": ""}, {"at": 54.62, "dur": 3.89, "i": 14, "kind": "say", "label": "", "lines": [{"at": 54.62, "dur": 3.89, "text": "and everything after it is about the room or your behaviour."}], "seg_id": 1, "seg_title": "A bad night is normal \u2014 but fixable", "source_end": null, "source_start": null, "text": "and everything after it is about the room or your behaviour.", "translation": ""}, {"at": 58.51, "dur": 6.41, "i": 15, "kind": "say", "label": "", "lines": [{"at": 58.51, "dur": 6.41, "text": "Tip one is regularity. Go to bed at the same time, wake up at the same time."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "Tip one is regularity. Go to bed at the same time, wake up at the same time.", "translation": ""}, {"at": 64.92, "dur": 2.62, "i": 16, "kind": "say", "label": "", "lines": [{"at": 64.92, "dur": 2.62, "text": "Let\u0027s hear the reason he gives,"}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "Let\u0027s hear the reason he gives,", "translation": ""}, {"at": 67.54, "dur": 5.04, "i": 17, "kind": "say", "label": "", "lines": [{"at": 67.54, "dur": 5.04, "text": "and notice that it stops being advice halfway through and becomes a mechanism."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "and notice that it stops being advice halfway through and becomes a mechanism.", "translation": ""}, {"at": 72.58, "dur": 23.36, "i": 18, "kind": "clip", "label": "the master 24-hour clock, and the alarm nobody sets", "lines": [{"at": 73.38, "dur": 3.04, "text": "And the reason is because deep within your brain,"}, {"at": 76.44, "dur": 6.15, "text": "you actually have a master 24-hour clock. It expects regularity"}, {"at": 82.61, "dur": 4.1, "text": "and works best under conditions of regularity,"}, {"at": 86.74, "dur": 3.74, "text": "including the control of your sleep-wake schedule."}, {"at": 90.51, "dur": 2.37, "text": "Many of us use an alarm to wake up"}, {"at": 92.9, "dur": 3.04, "text": "but very few of us use a to-bed alarm,"}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": 62.173, "source_start": 39.606, "text": "", "translation": ""}, {"at": 95.94, "dur": 2.83, "i": 19, "kind": "say", "label": "", "lines": [{"at": 95.94, "dur": 2.83, "text": "So the control is not willpower,"}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "So the control is not willpower,", "translation": ""}, {"at": 98.77, "dur": 5.52, "i": 20, "kind": "say", "label": "", "lines": [{"at": 98.77, "dur": 5.52, "text": "it is a clock deep in your brain that expects regularity and works best under it."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "it is a clock deep in your brain that expects regularity and works best under it.", "translation": ""}, {"at": 104.29, "dur": 4.99, "i": 21, "kind": "say", "label": "", "lines": [{"at": 104.29, "dur": 4.99, "text": "Two things follow from that. One: weekends count."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "Two things follow from that. One: weekends count.", "translation": ""}, {"at": 109.28, "dur": 5.42, "i": 22, "kind": "say", "label": "", "lines": [{"at": 109.28, "dur": 5.42, "text": "If you sleep in on Saturday you have moved the anchor, and Sunday night pays for it."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "If you sleep in on Saturday you have moved the anchor, and Sunday night pays for it.", "translation": ""}, {"at": 114.7, "dur": 4.2, "i": 23, "kind": "say", "label": "", "lines": [{"at": 114.7, "dur": 4.2, "text": "Two: after a bad night, hold the wake time anyway."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "Two: after a bad night, hold the wake time anyway.", "translation": ""}, {"at": 118.9, "dur": 5.5, "i": 24, "kind": "say", "label": "", "lines": [{"at": 118.9, "dur": 5.5, "text": "The instinct is to sleep in and repay the debt, but that just moves the clock again."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "The instinct is to sleep in and repay the debt, but that just moves the clock again.", "translation": ""}, {"at": 124.4, "dur": 4.37, "i": 25, "kind": "say", "label": "", "lines": [{"at": 124.4, "dur": 4.37, "text": "And the detail at the end is the most useful line in the whole tip."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "And the detail at the end is the most useful line in the whole tip.", "translation": ""}, {"at": 128.77, "dur": 6.05, "i": 26, "kind": "say", "label": "", "lines": [{"at": 128.77, "dur": 6.05, "text": "We all set an alarm to wake up. Almost nobody sets an alarm to go to bed."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "We all set an alarm to wake up. Almost nobody sets an alarm to go to bed.", "translation": ""}, {"at": 134.82, "dur": 6.41, "i": 27, "kind": "say", "label": "", "lines": [{"at": 134.82, "dur": 6.41, "text": "The term for the clock is the circadian rhythm. Circadian is from Latin for about a day \u2014"}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "The term for the clock is the circadian rhythm. Circadian is from Latin for about a day \u2014", "translation": ""}, {"at": 141.22, "dur": 5.5, "i": 28, "kind": "say", "label": "", "lines": [{"at": 141.22, "dur": 5.5, "text": "it runs a little over twenty-four hours, and light is what resets it each morning."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "it runs a little over twenty-four hours, and light is what resets it each morning.", "translation": ""}, {"at": 146.72, "dur": 3.79, "i": 29, "kind": "say", "label": "", "lines": [{"at": 146.72, "dur": 3.79, "text": "The clock is internal, but it does not run blind."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "The clock is internal, but it does not run blind.", "translation": ""}, {"at": 150.51, "dur": 6.43, "i": 30, "kind": "say", "label": "", "lines": [{"at": 150.51, "dur": 6.43, "text": "It reads signals from your body and from the room. That is what the next two tips supply."}], "seg_id": 2, "seg_title": "Tip 1: regularity, weekends included", "source_end": null, "source_start": null, "text": "It reads signals from your body and from the room. That is what the next two tips supply.", "translation": ""}, {"at": 156.94, "dur": 4.13, "i": 31, "kind": "say", "label": "", "lines": [{"at": 156.94, "dur": 4.13, "text": "Tip two is temperature. Keep it cool."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Tip two is temperature. Keep it cool.", "translation": ""}, {"at": 161.07, "dur": 6.17, "i": 32, "kind": "say", "label": "", "lines": [{"at": 161.07, "dur": 6.17, "text": "Here is the part people get backwards. You do not fall asleep and then cool down."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Here is the part people get backwards. You do not fall asleep and then cool down.", "translation": ""}, {"at": 167.24, "dur": 5.35, "i": 33, "kind": "say", "label": "", "lines": [{"at": 167.24, "dur": 5.35, "text": "Your brain and body have to drop their core temperature by about one degree Celsius \u2014"}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Your brain and body have to drop their core temperature by about one degree Celsius \u2014", "translation": ""}, {"at": 172.59, "dur": 4.87, "i": 34, "kind": "say", "label": "", "lines": [{"at": 172.59, "dur": 4.87, "text": "two to three Fahrenheit \u2014 in order to start sleep, and to stay asleep."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "two to three Fahrenheit \u2014 in order to start sleep, and to stay asleep.", "translation": ""}, {"at": 177.46, "dur": 4.37, "i": 35, "kind": "say", "label": "", "lines": [{"at": 177.46, "dur": 4.37, "text": "Which is why a slightly too-cold room is still easier to sleep in."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Which is why a slightly too-cold room is still easier to sleep in.", "translation": ""}, {"at": 181.83, "dur": 2.38, "i": 36, "kind": "say", "label": "", "lines": [{"at": 181.83, "dur": 2.38, "text": "A too-warm one is not."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "A too-warm one is not.", "translation": ""}, {"at": 184.21, "dur": 2.9, "i": 37, "kind": "say", "label": "", "lines": [{"at": 184.21, "dur": 2.9, "text": "The cold room is doing the work for you."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "The cold room is doing the work for you.", "translation": ""}, {"at": 187.11, "dur": 5.86, "i": 38, "kind": "say", "label": "", "lines": [{"at": 187.11, "dur": 5.86, "text": "His number is about sixty-five degrees Fahrenheit, a little over eighteen Celsius."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "His number is about sixty-five degrees Fahrenheit, a little over eighteen Celsius.", "translation": ""}, {"at": 192.97, "dur": 3.38, "i": 39, "kind": "say", "label": "", "lines": [{"at": 192.97, "dur": 3.38, "text": "That is colder than most people set a bedroom."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "That is colder than most people set a bedroom.", "translation": ""}, {"at": 196.35, "dur": 3.26, "i": 40, "kind": "say", "label": "", "lines": [{"at": 196.35, "dur": 3.26, "text": "The frame on screen here is worth mentioning,"}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "The frame on screen here is worth mentioning,", "translation": ""}, {"at": 199.62, "dur": 3.43, "i": 41, "kind": "say", "label": "", "lines": [{"at": 199.62, "dur": 3.43, "text": "because it shows the behaviour, not the number."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "because it shows the behaviour, not the number.", "translation": ""}, {"at": 203.05, "dur": 4.58, "i": 42, "kind": "say", "label": "", "lines": [{"at": 203.05, "dur": 4.58, "text": "Somebody throwing the bedroom window wide open onto a cold night."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Somebody throwing the bedroom window wide open onto a cold night.", "translation": ""}, {"at": 207.63, "dur": 2.5, "i": 43, "kind": "say", "label": "", "lines": [{"at": 207.63, "dur": 2.5, "text": "No thermometer anywhere."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "No thermometer anywhere.", "translation": ""}, {"at": 210.13, "dur": 5.11, "i": 44, "kind": "say", "label": "", "lines": [{"at": 210.13, "dur": 5.11, "text": "One practical note he does not make: it is core temperature that must fall."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "One practical note he does not make: it is core temperature that must fall.", "translation": ""}, {"at": 215.24, "dur": 3.91, "i": 45, "kind": "say", "label": "", "lines": [{"at": 215.24, "dur": 3.91, "text": "So warm feet and a cool room is not a contradiction \u2014"}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "So warm feet and a cool room is not a contradiction \u2014", "translation": ""}, {"at": 219.15, "dur": 4.13, "i": 46, "kind": "say", "label": "", "lines": [{"at": 219.15, "dur": 4.13, "text": "warm extremities actually help you shed heat from the core."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "warm extremities actually help you shed heat from the core.", "translation": ""}, {"at": 223.28, "dur": 4.51, "i": 47, "kind": "say", "label": "", "lines": [{"at": 223.28, "dur": 4.51, "text": "Temperature is one signal the clock reads, and it is a slow one."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "Temperature is one signal the clock reads, and it is a slow one.", "translation": ""}, {"at": 227.79, "dur": 5.4, "i": 48, "kind": "say", "label": "", "lines": [{"at": 227.79, "dur": 5.4, "text": "The sharper signal, the one that decides when sleep is scheduled at all, is light."}], "seg_id": 3, "seg_title": "Tip 2: keep it cool", "source_end": null, "source_start": null, "text": "The sharper signal, the one that decides when sleep is scheduled at all, is light.", "translation": ""}, {"at": 233.19, "dur": 5.59, "i": 49, "kind": "say", "label": "", "lines": [{"at": 233.19, "dur": 5.59, "text": "Tip three is darkness, and the timing is the point \u2014 he means darkness in the evening."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "Tip three is darkness, and the timing is the point \u2014 he means darkness in the evening.", "translation": ""}, {"at": 238.78, "dur": 4.13, "i": 50, "kind": "say", "label": "", "lines": [{"at": 238.78, "dur": 4.13, "text": "Darkness in the evening triggers a hormone called melatonin,"}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "Darkness in the evening triggers a hormone called melatonin,", "translation": ""}, {"at": 242.91, "dur": 3.72, "i": 51, "kind": "say", "label": "", "lines": [{"at": 242.91, "dur": 3.72, "text": "and melatonin regulates the timing of your sleep."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "and melatonin regulates the timing of your sleep.", "translation": ""}, {"at": 246.63, "dur": 5.66, "i": 52, "kind": "say", "label": "", "lines": [{"at": 246.63, "dur": 5.66, "text": "Hold on to that word, timing. Melatonin does not knock you out."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "Hold on to that word, timing. Melatonin does not knock you out.", "translation": ""}, {"at": 252.3, "dur": 3.24, "i": 53, "kind": "say", "label": "", "lines": [{"at": 252.3, "dur": 3.24, "text": "It is a clock signal, not a sedative."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "It is a clock signal, not a sedative.", "translation": ""}, {"at": 255.54, "dur": 5.14, "i": 54, "kind": "say", "label": "", "lines": [{"at": 255.54, "dur": 5.14, "text": "This is worth knowing before you buy it in a bottle expecting to be put to sleep."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "This is worth knowing before you buy it in a bottle expecting to be put to sleep.", "translation": ""}, {"at": 260.67, "dur": 4.82, "i": 55, "kind": "say", "label": "", "lines": [{"at": 260.67, "dur": 4.82, "text": "His advice: in the last hour, stay away from computer screens,"}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "His advice: in the last hour, stay away from computer screens,", "translation": ""}, {"at": 265.5, "dur": 4.1, "i": 56, "kind": "say", "label": "", "lines": [{"at": 265.5, "dur": 4.1, "text": "tablets and phones, and dim half the lights in the house."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "tablets and phones, and dim half the lights in the house.", "translation": ""}, {"at": 269.6, "dur": 3.94, "i": 57, "kind": "say", "label": "", "lines": [{"at": 269.6, "dur": 3.94, "text": "An eye mask or blackout shades if light still gets in."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "An eye mask or blackout shades if light still gets in.", "translation": ""}, {"at": 273.54, "dur": 3.14, "i": 58, "kind": "say", "label": "", "lines": [{"at": 273.54, "dur": 3.14, "text": "Here is where I would push back on the ranking."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "Here is where I would push back on the ranking.", "translation": ""}, {"at": 276.68, "dur": 3.41, "i": 59, "kind": "say", "label": "", "lines": [{"at": 276.68, "dur": 3.41, "text": "He names screens first and the lights second."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "He names screens first and the lights second.", "translation": ""}, {"at": 280.09, "dur": 3.5, "i": 60, "kind": "say", "label": "", "lines": [{"at": 280.09, "dur": 3.5, "text": "But measure the light actually reaching your eyes,"}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "But measure the light actually reaching your eyes,", "translation": ""}, {"at": 283.59, "dur": 5.76, "i": 61, "kind": "say", "label": "", "lines": [{"at": 283.59, "dur": 5.76, "text": "and an overhead ceiling light usually beats a phone held at arm\u0027s length, by a lot."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "and an overhead ceiling light usually beats a phone held at arm\u0027s length, by a lot.", "translation": ""}, {"at": 289.35, "dur": 5.28, "i": 62, "kind": "say", "label": "", "lines": [{"at": 289.35, "dur": 5.28, "text": "So if you only change one thing tonight, kill the ceiling light and use a lamp."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "So if you only change one thing tonight, kill the ceiling light and use a lamp.", "translation": ""}, {"at": 294.63, "dur": 3.86, "i": 63, "kind": "say", "label": "", "lines": [{"at": 294.63, "dur": 3.86, "text": "That is probably a bigger lever than putting the phone down."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "That is probably a bigger lever than putting the phone down.", "translation": ""}, {"at": 298.5, "dur": 5.42, "i": 64, "kind": "say", "label": "", "lines": [{"at": 298.5, "dur": 5.42, "text": "The room is now specified. Cool, and dark from the evening on."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "The room is now specified. Cool, and dark from the evening on.", "translation": ""}, {"at": 303.92, "dur": 5.33, "i": 65, "kind": "say", "label": "", "lines": [{"at": 303.92, "dur": 5.33, "text": "But a correctly set room is still no guarantee \u2014 which is where the next tip starts."}], "seg_id": 4, "seg_title": "Tip 3: darkness, starting in the evening", "source_end": null, "source_start": null, "text": "But a correctly set room is still no guarantee \u2014 which is where the next tip starts.", "translation": ""}, {"at": 309.25, "dur": 6.19, "i": 66, "kind": "say", "label": "", "lines": [{"at": 309.25, "dur": 6.19, "text": "Tip four he calls walk it out. Do not stay in bed awake for long stretches."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "Tip four he calls walk it out. Do not stay in bed awake for long stretches.", "translation": ""}, {"at": 315.44, "dur": 5.11, "i": 67, "kind": "say", "label": "", "lines": [{"at": 315.44, "dur": 5.11, "text": "This is the one tip where he gives you the learning mechanism rather than just the rule."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "This is the one tip where he gives you the learning mechanism rather than just the rule.", "translation": ""}, {"at": 320.55, "dur": 3.24, "i": 68, "kind": "say", "label": "", "lines": [{"at": 320.55, "dur": 3.24, "text": "Listen for the phrase associative device."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "Listen for the phrase associative device.", "translation": ""}, {"at": 323.79, "dur": 26.12, "i": 69, "kind": "clip", "label": "the brain as an associative device, and why you leave the bed", "lines": [{"at": 324.59, "dur": 2.29, "text": "And the reason is because your brain"}, {"at": 326.9, "dur": 2.82, "text": "is an incredibly associative device."}, {"at": 329.75, "dur": 2.7, "text": "The brain has learned the association"}, {"at": 332.47, "dur": 3.23, "text": "that the bed is this trigger of wakefulness,"}, {"at": 335.73, "dur": 2.6, "text": "and we need to break that association."}, {"at": 338.36, "dur": 3.44, "text": "And by getting out of bed, you can go and do something else."}, {"at": 341.82, "dur": 4.81, "text": "Only return to bed when you\u0027re sleepy. And in that way, gradually,"}, {"at": 346.66, "dur": 3.26, "text": "your brain will relearn the association"}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": 196.234, "source_start": 170.907, "text": "", "translation": ""}, {"at": 349.91, "dur": 4.87, "i": 70, "kind": "say", "label": "", "lines": [{"at": 349.91, "dur": 4.87, "text": "So lying there awake is not neutral. It is training."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "So lying there awake is not neutral. It is training.", "translation": ""}, {"at": 354.78, "dur": 4.2, "i": 71, "kind": "say", "label": "", "lines": [{"at": 354.78, "dur": 4.2, "text": "Every sleepless hour in that bed teaches your brain something."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "Every sleepless hour in that bed teaches your brain something.", "translation": ""}, {"at": 358.98, "dur": 2.88, "i": 72, "kind": "say", "label": "", "lines": [{"at": 358.98, "dur": 2.88, "text": "That this is a place where you are awake."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "That this is a place where you are awake.", "translation": ""}, {"at": 361.86, "dur": 2.74, "i": 73, "kind": "say", "label": "", "lines": [{"at": 361.86, "dur": 2.74, "text": "And that is why the common advice \u2014"}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "And that is why the common advice \u2014", "translation": ""}, {"at": 364.6, "dur": 4.44, "i": 74, "kind": "say", "label": "", "lines": [{"at": 364.6, "dur": 4.44, "text": "just stay there and keep trying \u2014 is actively making it worse."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "just stay there and keep trying \u2014 is actively making it worse.", "translation": ""}, {"at": 369.04, "dur": 3.1, "i": 75, "kind": "say", "label": "", "lines": [{"at": 369.04, "dur": 3.1, "text": "The fix is to break the association."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "The fix is to break the association.", "translation": ""}, {"at": 372.14, "dur": 4.2, "i": 76, "kind": "say", "label": "", "lines": [{"at": 372.14, "dur": 4.2, "text": "Get up, leave the room, do something quiet in dim light,"}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "Get up, leave the room, do something quiet in dim light,", "translation": ""}, {"at": 376.34, "dur": 7.1, "i": 77, "kind": "say", "label": "", "lines": [{"at": 376.34, "dur": 7.1, "text": "and come back only when you are sleepy. Not when you are tired of waiting. Sleepy."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "and come back only when you are sleepy. Not when you are tired of waiting. Sleepy.", "translation": ""}, {"at": 383.44, "dur": 7.18, "i": 78, "kind": "say", "label": "", "lines": [{"at": 383.44, "dur": 7.18, "text": "On his number: he says twenty-five minutes. Most clinical manuals say fifteen to twenty."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "On his number: he says twenty-five minutes. Most clinical manuals say fifteen to twenty.", "translation": ""}, {"at": 390.62, "dur": 3.91, "i": 79, "kind": "say", "label": "", "lines": [{"at": 390.62, "dur": 3.91, "text": "And in practice you are not supposed to watch the clock at all \u2014"}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "And in practice you are not supposed to watch the clock at all \u2014", "translation": ""}, {"at": 394.53, "dur": 4.8, "i": 80, "kind": "say", "label": "", "lines": [{"at": 394.53, "dur": 4.8, "text": "the real instruction is to leave before lying awake becomes the habit."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "the real instruction is to leave before lying awake becomes the habit.", "translation": ""}, {"at": 399.33, "dur": 5.74, "i": 81, "kind": "say", "label": "", "lines": [{"at": 399.33, "dur": 5.74, "text": "There is a name for this technique: stimulus control. Keep that name,"}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "There is a name for this technique: stimulus control. Keep that name,", "translation": ""}, {"at": 405.06, "dur": 4.66, "i": 82, "kind": "say", "label": "", "lines": [{"at": 405.06, "dur": 4.66, "text": "because it comes back at the end of the talk in a way he does not spell out."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "because it comes back at the end of the talk in a way he does not spell out.", "translation": ""}, {"at": 409.72, "dur": 3.72, "i": 83, "kind": "say", "label": "", "lines": [{"at": 409.72, "dur": 3.72, "text": "The bed is now defended against wakefulness at night."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "The bed is now defended against wakefulness at night.", "translation": ""}, {"at": 413.44, "dur": 4.01, "i": 84, "kind": "say", "label": "", "lines": [{"at": 413.44, "dur": 4.01, "text": "What has not been looked at is what you drank earlier in the day."}], "seg_id": 5, "seg_title": "Tip 4: walk it out", "source_end": null, "source_start": null, "text": "What has not been looked at is what you drank earlier in the day.", "translation": ""}, {"at": 417.45, "dur": 4.9, "i": 85, "kind": "say", "label": "", "lines": [{"at": 417.45, "dur": 4.9, "text": "Tip five is alcohol and caffeine, and he deliberately keeps it short \u2014"}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "Tip five is alcohol and caffeine, and he deliberately keeps it short \u2014", "translation": ""}, {"at": 422.34, "dur": 3.72, "i": 86, "kind": "say", "label": "", "lines": [{"at": 422.34, "dur": 3.72, "text": "he covered it in an earlier episode of the series."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "he covered it in an earlier episode of the series.", "translation": ""}, {"at": 426.06, "dur": 6.0, "i": 87, "kind": "say", "label": "", "lines": [{"at": 426.06, "dur": 6.0, "text": "The rule of thumb: no caffeine in the afternoon or evening, and do not go to bed tipsy."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "The rule of thumb: no caffeine in the afternoon or evening, and do not go to bed tipsy.", "translation": ""}, {"at": 432.06, "dur": 5.26, "i": 88, "kind": "say", "label": "", "lines": [{"at": 432.06, "dur": 5.26, "text": "The two work from opposite ends. Caffeine blocks adenosine,"}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "The two work from opposite ends. Caffeine blocks adenosine,", "translation": ""}, {"at": 437.32, "dur": 4.97, "i": 89, "kind": "say", "label": "", "lines": [{"at": 437.32, "dur": 4.97, "text": "which is the molecule that builds up all day and creates the pressure to sleep."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "which is the molecule that builds up all day and creates the pressure to sleep.", "translation": ""}, {"at": 442.29, "dur": 4.32, "i": 90, "kind": "say", "label": "", "lines": [{"at": 442.29, "dur": 4.32, "text": "Block it and the pressure is still there \u2014 you just cannot feel it."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "Block it and the pressure is still there \u2014 you just cannot feel it.", "translation": ""}, {"at": 446.61, "dur": 5.06, "i": 91, "kind": "say", "label": "", "lines": [{"at": 446.61, "dur": 5.06, "text": "Alcohol is the one people get most wrong, because it does make you drowsy."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "Alcohol is the one people get most wrong, because it does make you drowsy.", "translation": ""}, {"at": 451.67, "dur": 6.24, "i": 92, "kind": "say", "label": "", "lines": [{"at": 451.67, "dur": 6.24, "text": "But that is sedation, not sleep. It fragments the night and suppresses REM,"}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "But that is sedation, not sleep. It fragments the night and suppresses REM,", "translation": ""}, {"at": 457.91, "dur": 4.25, "i": 93, "kind": "say", "label": "", "lines": [{"at": 457.91, "dur": 4.25, "text": "so you spend hours unconscious and wake up unrestored."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "so you spend hours unconscious and wake up unrestored.", "translation": ""}, {"at": 462.16, "dur": 3.65, "i": 94, "kind": "say", "label": "", "lines": [{"at": 462.16, "dur": 3.65, "text": "Both of them interfere with the passage into sleep."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "Both of them interfere with the passage into sleep.", "translation": ""}, {"at": 465.81, "dur": 3.55, "i": 95, "kind": "say", "label": "", "lines": [{"at": 465.81, "dur": 3.55, "text": "Which is exactly the thing the last tip is about."}], "seg_id": 6, "seg_title": "Tip 5: alcohol and caffeine", "source_end": null, "source_start": null, "text": "Which is exactly the thing the last tip is about.", "translation": ""}, {"at": 469.36, "dur": 6.38, "i": 96, "kind": "say", "label": "", "lines": [{"at": 469.36, "dur": 6.38, "text": "Tip six is to have a wind-down routine. And he earns it with the best image in the talk."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "Tip six is to have a wind-down routine. And he earns it with the best image in the talk.", "translation": ""}, {"at": 475.74, "dur": 4.68, "i": 97, "kind": "say", "label": "", "lines": [{"at": 475.74, "dur": 4.68, "text": "Listen for what he contrasts sleep with, and what he replaces it with."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "Listen for what he contrasts sleep with, and what he replaces it with.", "translation": ""}, {"at": 480.42, "dur": 26.6, "i": 98, "kind": "clip", "label": "sleep is not a light switch, it is landing a plane", "lines": [{"at": 481.22, "dur": 3.89, "text": "and we think that sleep is also just like a light switch,"}, {"at": 485.13, "dur": 2.53, "text": "that we should immediately be able to fall asleep."}, {"at": 487.69, "dur": 4.31, "text": "Well, unfortunately, sleep isn\u0027t quite like that for most of us."}, {"at": 492.02, "dur": 3.19, "text": "Sleep, as a physiological process,"}, {"at": 495.24, "dur": 3.47, "text": "is much more similar to landing a plane."}, {"at": 498.73, "dur": 4.63, "text": "It takes time for your brain to gradually descend down"}, {"at": 503.38, "dur": 3.64, "text": "onto the firm bedrock of good sleep."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": 257.278, "source_start": 231.48, "text": "", "translation": ""}, {"at": 507.02, "dur": 6.14, "i": 99, "kind": "say", "label": "", "lines": [{"at": 507.02, "dur": 6.14, "text": "A light switch versus landing a plane. That contrast is doing real work."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "A light switch versus landing a plane. That contrast is doing real work.", "translation": ""}, {"at": 513.17, "dur": 4.32, "i": 100, "kind": "say", "label": "", "lines": [{"at": 513.17, "dur": 4.32, "text": "If sleep were a switch, a wind-down routine would be a luxury."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "If sleep were a switch, a wind-down routine would be a luxury.", "translation": ""}, {"at": 517.49, "dur": 3.79, "i": 101, "kind": "say", "label": "", "lines": [{"at": 517.49, "dur": 3.79, "text": "If it is a descent, then the approach is not optional \u2014"}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "If it is a descent, then the approach is not optional \u2014", "translation": ""}, {"at": 521.28, "dur": 3.89, "i": 102, "kind": "say", "label": "", "lines": [{"at": 521.28, "dur": 3.89, "text": "you cannot arrive without flying the glide path first."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "you cannot arrive without flying the glide path first.", "translation": ""}, {"at": 525.17, "dur": 6.1, "i": 103, "kind": "say", "label": "", "lines": [{"at": 525.17, "dur": 6.1, "text": "It also explains the most frustrating thing about insomnia: trying harder makes it worse."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "It also explains the most frustrating thing about insomnia: trying harder makes it worse.", "translation": ""}, {"at": 531.26, "dur": 2.45, "i": 104, "kind": "say", "label": "", "lines": [{"at": 531.26, "dur": 2.45, "text": "You cannot force a descent."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "You cannot force a descent.", "translation": ""}, {"at": 533.71, "dur": 3.6, "i": 105, "kind": "say", "label": "", "lines": [{"at": 533.71, "dur": 3.6, "text": "Practically: the last twenty minutes to an hour,"}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "Practically: the last twenty minutes to an hour,", "translation": ""}, {"at": 537.31, "dur": 4.42, "i": 106, "kind": "say", "label": "", "lines": [{"at": 537.31, "dur": 4.42, "text": "off the computer and the phone, something relaxing, and then \u2014"}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "off the computer and the phone, something relaxing, and then \u2014", "translation": ""}, {"at": 541.73, "dur": 4.2, "i": 107, "kind": "say", "label": "", "lines": [{"at": 541.73, "dur": 4.2, "text": "his emphasis \u2014 once you find what works, stick to it."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "his emphasis \u2014 once you find what works, stick to it.", "translation": ""}, {"at": 545.93, "dur": 4.15, "i": 108, "kind": "say", "label": "", "lines": [{"at": 545.93, "dur": 4.15, "text": "The repetition is part of the mechanism, not a detail."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "The repetition is part of the mechanism, not a detail.", "translation": ""}, {"at": 550.08, "dur": 3.05, "i": 109, "kind": "say", "label": "", "lines": [{"at": 550.08, "dur": 3.05, "text": "A small thing about the animation here."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "A small thing about the animation here.", "translation": ""}, {"at": 553.13, "dur": 4.99, "i": 110, "kind": "say", "label": "", "lines": [{"at": 553.13, "dur": 4.99, "text": "The plane is drawn from the terminal window, with a woman watching it land."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "The plane is drawn from the terminal window, with a woman watching it land.", "translation": ""}, {"at": 558.12, "dur": 3.26, "i": 111, "kind": "say", "label": "", "lines": [{"at": 558.12, "dur": 3.26, "text": "She is the spectator, not the pilot."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "She is the spectator, not the pilot.", "translation": ""}, {"at": 561.38, "dur": 3.98, "i": 112, "kind": "say", "label": "", "lines": [{"at": 561.38, "dur": 3.98, "text": "Which is arguably the more honest version of the metaphor."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "Which is arguably the more honest version of the metaphor.", "translation": ""}, {"at": 565.37, "dur": 4.32, "i": 113, "kind": "say", "label": "", "lines": [{"at": 565.37, "dur": 4.32, "text": "Every tip so far has assumed a system that basically works."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "Every tip so far has assumed a system that basically works.", "translation": ""}, {"at": 569.69, "dur": 3.02, "i": 114, "kind": "say", "label": "", "lines": [{"at": 569.69, "dur": 3.02, "text": "One that just needs better conditions."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "One that just needs better conditions.", "translation": ""}, {"at": 572.71, "dur": 3.07, "i": 115, "kind": "say", "label": "", "lines": [{"at": 572.71, "dur": 3.07, "text": "That assumption is about to get examined."}], "seg_id": 7, "seg_title": "Tip 6: sleep is a landing, not a switch", "source_end": null, "source_start": null, "text": "That assumption is about to get examined.", "translation": ""}, {"at": 575.78, "dur": 4.85, "i": 116, "kind": "say", "label": "", "lines": [{"at": 575.78, "dur": 4.85, "text": "The last thing he says is the thing that makes everything before it trustworthy."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "The last thing he says is the thing that makes everything before it trustworthy.", "translation": ""}, {"at": 580.63, "dur": 4.25, "i": 117, "kind": "say", "label": "", "lines": [{"at": 580.63, "dur": 4.25, "text": "If you have a sleep disorder \u2014 insomnia, sleep apnea \u2014"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "If you have a sleep disorder \u2014 insomnia, sleep apnea \u2014", "translation": ""}, {"at": 584.88, "dur": 3.65, "i": 118, "kind": "say", "label": "", "lines": [{"at": 584.88, "dur": 3.65, "text": "these tips are not necessarily going to help you."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "these tips are not necessarily going to help you.", "translation": ""}, {"at": 588.53, "dur": 3.48, "i": 119, "kind": "say", "label": "", "lines": [{"at": 588.53, "dur": 3.48, "text": "His analogy: if he were your sports coach,"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "His analogy: if he were your sports coach,", "translation": ""}, {"at": 592.01, "dur": 3.55, "i": 120, "kind": "say", "label": "", "lines": [{"at": 592.01, "dur": 3.55, "text": "he could give you every tip for better performance."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "he could give you every tip for better performance.", "translation": ""}, {"at": 595.56, "dur": 6.12, "i": 121, "kind": "say", "label": "", "lines": [{"at": 595.56, "dur": 6.12, "text": "But if you have a broken ankle, it makes no difference. You treat the ankle first."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "But if you have a broken ankle, it makes no difference. You treat the ankle first.", "translation": ""}, {"at": 601.68, "dur": 7.3, "i": 122, "kind": "say", "label": "", "lines": [{"at": 601.68, "dur": 7.3, "text": "So the boundary is between optimisation and repair, and the order matters. Repair first."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "So the boundary is between optimisation and repair, and the order matters. Repair first.", "translation": ""}, {"at": 608.98, "dur": 5.62, "i": 123, "kind": "say", "label": "", "lines": [{"at": 608.98, "dur": 5.62, "text": "One thing he does not say: there is a specific treatment on the other side of that line."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "One thing he does not say: there is a specific treatment on the other side of that line.", "translation": ""}, {"at": 614.59, "dur": 5.14, "i": 124, "kind": "say", "label": "", "lines": [{"at": 614.59, "dur": 5.14, "text": "It is called CBT-I, cognitive behavioural therapy for insomnia,"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "It is called CBT-I, cognitive behavioural therapy for insomnia,", "translation": ""}, {"at": 619.73, "dur": 4.39, "i": 125, "kind": "say", "label": "", "lines": [{"at": 619.73, "dur": 4.39, "text": "and it is the first-line recommendation \u2014 ahead of medication."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "and it is the first-line recommendation \u2014 ahead of medication.", "translation": ""}, {"at": 624.12, "dur": 3.07, "i": 126, "kind": "say", "label": "", "lines": [{"at": 624.12, "dur": 3.07, "text": "And here is the connection he leaves out."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "And here is the connection he leaves out.", "translation": ""}, {"at": 627.19, "dur": 6.79, "i": 127, "kind": "say", "label": "", "lines": [{"at": 627.19, "dur": 6.79, "text": "Stimulus control \u2014 tip four, getting out of bed \u2014 is itself one component of CBT-I."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Stimulus control \u2014 tip four, getting out of bed \u2014 is itself one component of CBT-I.", "translation": ""}, {"at": 633.98, "dur": 4.61, "i": 128, "kind": "say", "label": "", "lines": [{"at": 633.98, "dur": 4.61, "text": "So one of the six tips really is a piece of the treatment, borrowed."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "So one of the six tips really is a piece of the treatment, borrowed.", "translation": ""}, {"at": 638.59, "dur": 3.79, "i": 129, "kind": "say", "label": "", "lines": [{"at": 638.59, "dur": 3.79, "text": "He closes by calling sleep a life-support system,"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "He closes by calling sleep a life-support system,", "translation": ""}, {"at": 642.38, "dur": 3.46, "i": 130, "kind": "say", "label": "", "lines": [{"at": 642.38, "dur": 3.46, "text": "and says some might even call it a superpower."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "and says some might even call it a superpower.", "translation": ""}, {"at": 645.84, "dur": 4.51, "i": 131, "kind": "say", "label": "", "lines": [{"at": 645.84, "dur": 4.51, "text": "Let me pull the whole thing together, because it is not really a list."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Let me pull the whole thing together, because it is not really a list.", "translation": ""}, {"at": 650.35, "dur": 2.71, "i": 132, "kind": "say", "label": "", "lines": [{"at": 650.35, "dur": 2.71, "text": "It is one path moving inward."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "It is one path moving inward.", "translation": ""}, {"at": 653.06, "dur": 4.39, "i": 133, "kind": "say", "label": "", "lines": [{"at": 653.06, "dur": 4.39, "text": "It starts inside the body with a clock that wants regularity."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "It starts inside the body with a clock that wants regularity.", "translation": ""}, {"at": 657.46, "dur": 5.14, "i": 134, "kind": "say", "label": "", "lines": [{"at": 657.46, "dur": 5.14, "text": "Then it specifies the room that clock reads \u2014 cool, and dark in the evening."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Then it specifies the room that clock reads \u2014 cool, and dark in the evening.", "translation": ""}, {"at": 662.59, "dur": 3.5, "i": 135, "kind": "say", "label": "", "lines": [{"at": 662.59, "dur": 3.5, "text": "Then it moves to what you do once you are in that room,"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Then it moves to what you do once you are in that room,", "translation": ""}, {"at": 666.1, "dur": 3.79, "i": 136, "kind": "say", "label": "", "lines": [{"at": 666.1, "dur": 3.79, "text": "because a correct room still does not guarantee sleep."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "because a correct room still does not guarantee sleep.", "translation": ""}, {"at": 669.89, "dur": 2.9, "i": 137, "kind": "say", "label": "", "lines": [{"at": 669.89, "dur": 2.9, "text": "Then it removes what you drank earlier."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Then it removes what you drank earlier.", "translation": ""}, {"at": 672.79, "dur": 4.3, "i": 138, "kind": "say", "label": "", "lines": [{"at": 672.79, "dur": 4.3, "text": "Then it replaces your mental model of falling asleep entirely."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Then it replaces your mental model of falling asleep entirely.", "translation": ""}, {"at": 677.09, "dur": 3.55, "i": 139, "kind": "say", "label": "", "lines": [{"at": 677.09, "dur": 3.55, "text": "And then it draws the line where none of it applies."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "And then it draws the line where none of it applies.", "translation": ""}, {"at": 680.64, "dur": 3.7, "i": 140, "kind": "say", "label": "", "lines": [{"at": 680.64, "dur": 3.7, "text": "If you remember two things: set a to-bed alarm,"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "If you remember two things: set a to-bed alarm,", "translation": ""}, {"at": 684.34, "dur": 3.22, "i": 141, "kind": "say", "label": "", "lines": [{"at": 684.34, "dur": 3.22, "text": "and get out of bed when sleep will not come."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "and get out of bed when sleep will not come.", "translation": ""}, {"at": 687.55, "dur": 2.93, "i": 142, "kind": "say", "label": "", "lines": [{"at": 687.55, "dur": 2.93, "text": "Three directions you could go from here."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Three directions you could go from here.", "translation": ""}, {"at": 690.48, "dur": 6.41, "i": 143, "kind": "say", "label": "", "lines": [{"at": 690.48, "dur": 6.41, "text": "First, deeper. He names a twenty-four hour clock and leaves it a black box."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "First, deeper. He names a twenty-four hour clock and leaves it a black box.", "translation": ""}, {"at": 696.89, "dur": 5.18, "i": 144, "kind": "say", "label": "", "lines": [{"at": 696.89, "dur": 5.18, "text": "Look up the suprachiasmatic nucleus, and how morning light resets it."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Look up the suprachiasmatic nucleus, and how morning light resets it.", "translation": ""}, {"at": 702.07, "dur": 5.4, "i": 145, "kind": "say", "label": "", "lines": [{"at": 702.07, "dur": 5.4, "text": "That turns tip one from a rule into something you can debug when your schedule slips."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "That turns tip one from a rule into something you can debug when your schedule slips.", "translation": ""}, {"at": 707.47, "dur": 2.5, "i": 146, "kind": "say", "label": "", "lines": [{"at": 707.47, "dur": 2.5, "text": "Second, sideways."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Second, sideways.", "translation": ""}, {"at": 709.97, "dur": 5.57, "i": 147, "kind": "say", "label": "", "lines": [{"at": 709.97, "dur": 5.57, "text": "Every tip here optimises the conditions for sleep without saying what the sleep is for."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Every tip here optimises the conditions for sleep without saying what the sleep is for.", "translation": ""}, {"at": 715.54, "dur": 5.64, "i": 148, "kind": "say", "label": "", "lines": [{"at": 715.54, "dur": 5.64, "text": "Walker\u0027s own work on memory consolidation during deep sleep and REM is the other half \u2014"}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Walker\u0027s own work on memory consolidation during deep sleep and REM is the other half \u2014", "translation": ""}, {"at": 721.18, "dur": 3.79, "i": 149, "kind": "say", "label": "", "lines": [{"at": 721.18, "dur": 3.79, "text": "search for why we sleep, memory consolidation."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "search for why we sleep, memory consolidation.", "translation": ""}, {"at": 724.97, "dur": 4.44, "i": 150, "kind": "say", "label": "", "lines": [{"at": 724.97, "dur": 4.44, "text": "Third, applied. The treatment he excluded."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Third, applied. The treatment he excluded.", "translation": ""}, {"at": 729.41, "dur": 4.54, "i": 151, "kind": "say", "label": "", "lines": [{"at": 729.41, "dur": 4.54, "text": "Search for CBT-I, and for stimulus control therapy."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "Search for CBT-I, and for stimulus control therapy.", "translation": ""}, {"at": 733.94, "dur": 3.7, "i": 152, "kind": "say", "label": "", "lines": [{"at": 733.94, "dur": 3.7, "text": "That is where the broken ankle actually gets treated."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "That is where the broken ankle actually gets treated.", "translation": ""}, {"at": 737.64, "dur": 3.41, "i": 153, "kind": "say", "label": "", "lines": [{"at": 737.64, "dur": 3.41, "text": "That\u0027s it. Sleep well."}], "seg_id": 8, "seg_title": "These tips do not treat a disorder", "source_end": null, "source_start": null, "text": "That\u0027s it. Sleep well.", "translation": ""}], "total_parts": 153, "video_id": "t0kACis_dJE", "voice": "en-US-AriaNeural"}</script>
+<script id="shots-data" type="application/json">[[{"file": "frames/s03_72.jpg", "href": "frames/s03_72.jpg", "idx": 0, "seg_title": "Tip 2: keep it cool", "t": 72, "t_label": "1:12", "why": "The animation shows the behaviour, not the number: someone flinging the bedroom window wide open onto a cold starry night with the bed already turned down. The 1 \u00b0C / 65 \u00b0F figures exist only in the narration."}, {"file": "frames/s05_160.jpg", "href": "frames/s05_160.jpg", "idx": 1, "seg_title": "Tip 4: walk it out", "t": 160, "t_label": "2:40", "why": "This is the one live-action frame in the tip, and it carries two things the narration never says: an on-screen card putting chronic insomnia at about 10\u201315% of adults, and a \u0027Powered by Beautyrest\u0027 credit \u2014 a mattress brand sponsoring a talk about sleep."}, {"file": "frames/s07_247.jpg", "href": "frames/s07_247.jpg", "idx": 2, "seg_title": "Tip 6: sleep is a landing, not a switch", "t": 247, "t_label": "4:07", "why": "The landing metaphor is drawn from the terminal window: a woman with folded arms watching a plane touch down. She is the spectator, not the pilot \u2014 the visual frames sleep onset as something you wait out rather than something you fly."}]]</script>
+<script id="shots-ids" type="application/json">["t0kACis_dJE"]</script>
+
+<script type="module">
+
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  // 只有頁面真的有圖才去 CDN 抓 mermaid；抓不到（離線）也不能讓下面的搜尋、視窗等失效
+  if (document.querySelector(".mermaid")) {
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
+        flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
+      await mermaid.run({ querySelector: ".mermaid" });
+    } catch (e) { console.warn("mermaid 沒載到：", e); }
+  }
+
+  /* mindmap 配色：不吃 mermaid 主題，依 section 上色，線與節點同色，深淺主題都看得清 */
+  const PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"];
+  const css = getComputedStyle(document.documentElement);
+  const fg = css.getPropertyValue("--fg").trim(), bg = css.getPropertyValue("--bg").trim(), accent = css.getPropertyValue("--accent").trim();
+  const sectionOf = (el) => { const m = (el.getAttribute("class") || "").match(/section-(?:edge-)?(-?\d+)/); return m ? +m[1] : null; };
+  const colorOf = (sec) => sec === null || sec < 0 ? accent : PALETTE[sec % PALETTE.length];
+  const setImp = (el, props) => Object.entries(props).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
+  const paintMindmap = (svg) => {
+    // mermaid 主題用 !important 上色，所以這裡也要 !important 才蓋得掉
+    svg.querySelectorAll(".mindmap-edges path, path.edge").forEach((p) => {
+      setImp(p, { stroke: colorOf(sectionOf(p)), "stroke-width": "2.5px", "stroke-opacity": ".75", fill: "none" });
+    });
+    svg.querySelectorAll(".mindmap-node").forEach((n) => {
+      const sec = sectionOf(n), c = colorOf(sec), isRoot = sec === null || sec < 0;
+      n.querySelectorAll("rect, circle, path, polygon").forEach((sh) => {
+        setImp(sh, { fill: isRoot ? c : `color-mix(in srgb, ${c} 28%, ${bg})`, "fill-opacity": "1", stroke: c, "stroke-width": "2px" });
+      });
+      n.querySelectorAll("text, tspan").forEach((t) => setImp(t, { fill: isRoot ? "#fff" : fg }));
+      n.querySelectorAll("foreignObject span, foreignObject div, foreignObject p").forEach((t) => setImp(t, { color: isRoot ? "#fff" : fg }));
+    });
+  };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => { if (svg.querySelector(".mindmap-node")) paintMindmap(svg); });
+
+  /* hover 顯示完整文字：短標籤 → 完整說明（render.py 產生的對照表），用 SVG <title> */
+  const TIPS = JSON.parse(document.getElementById("tips-data").textContent);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const addTitle = (g, text) => { const t = document.createElementNS(SVGNS, "title"); t.textContent = text; g.prepend(t); };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => {
+    svg.querySelectorAll(".node, .mindmap-node, .edgeLabel, .cluster").forEach((g) => {
+      if (g.querySelector(":scope > title")) return;
+      const key = (g.textContent || "").replace(/\s+/g, "");
+      if (TIPS[key]) addTitle(g, TIPS[key]);
+    });
+    // mindmap 的線 = 上下層包含關係
+    svg.querySelectorAll(".mindmap-edges path, path.edge.section-edge-0, path[class*='section-edge-']").forEach((p) => {
+      if (!p.querySelector("title")) addTitle(p, "Parent \u2192 child: the segment contains the terms first defined in it");
+    });
+  });
+
+  /* ---------- viewer：pan / zoom / fit，mermaid 與截圖共用 ---------- */
+  const V = {
+    el: document.getElementById("viewer"),
+    stage: document.querySelector("#viewer .v-stage"),
+    content: document.querySelector("#viewer .v-content"),
+    cap: document.querySelector("#viewer .cap"),
+    prev: document.querySelector("#viewer .prev"),
+    next: document.querySelector("#viewer .next"),
+    items: [], idx: 0, s: 1, tx: 0, ty: 0, w: 0, h: 0,
+  };
+  const apply = () => V.content.style.transform = `translate(${V.tx}px,${V.ty}px) scale(${V.s})`;
+  const fit = () => {
+    const sw = V.stage.clientWidth, sh = V.stage.clientHeight;
+    V.s = Math.min(sw / V.w, sh / V.h) * 0.95;
+    V.tx = (sw - V.w * V.s) / 2; V.ty = (sh - V.h * V.s) / 2; apply();
+  };
+  const reset = () => { V.s = 1; V.tx = (V.stage.clientWidth - V.w) / 2; V.ty = (V.stage.clientHeight - V.h) / 2; apply(); };
+  const zoomAt = (f, cx, cy) => {
+    const ns = Math.min(20, Math.max(0.05, V.s * f));
+    V.tx = cx - (cx - V.tx) * (ns / V.s); V.ty = cy - (cy - V.ty) * (ns / V.s); V.s = ns; apply();
+  };
+  const show = (i) => {
+    V.idx = (i + V.items.length) % V.items.length;
+    const it = V.items[V.idx];
+    V.content.replaceChildren();
+    V.cap.textContent = (V.items.length > 1 ? `${V.idx + 1}/${V.items.length} · ` : "") + it.caption;
+    V.prev.hidden = V.next.hidden = V.items.length < 2;
+    if (it.type === "svg") {
+      const svg = it.node.cloneNode(true);
+      const vb = svg.viewBox.baseVal;
+      V.w = vb.width || svg.width.baseVal.value || 800; V.h = vb.height || svg.height.baseVal.value || 600;
+      svg.removeAttribute("style"); svg.setAttribute("width", V.w); svg.setAttribute("height", V.h);
+      V.content.appendChild(svg); fit();
+    } else {
+      const img = new Image();
+      img.onload = () => { V.w = img.naturalWidth; V.h = img.naturalHeight; V.content.appendChild(img); fit(); };
+      img.src = it.src;
+    }
+  };
+  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; document.body.style.overflow = "hidden"; show(i); };
+  const close = () => { V.el.hidden = true; document.body.style.overflow = ""; V.content.replaceChildren(); };
+
+  V.el.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act) return;
+    ({ zoomin: () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       zoomout: () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       fit, reset, close, prev: () => show(V.idx - 1), next: () => show(V.idx + 1) })[act]();
+  });
+  V.stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = V.stage.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  let drag = null;
+  V.stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    drag = { x: e.clientX - V.tx, y: e.clientY - V.ty }; V.stage.classList.add("drag"); V.stage.setPointerCapture(e.pointerId);
+  });
+  V.stage.addEventListener("pointermove", (e) => { if (drag) { V.tx = e.clientX - drag.x; V.ty = e.clientY - drag.y; apply(); } });
+  V.stage.addEventListener("pointerup", () => { drag = null; V.stage.classList.remove("drag"); });
+  V.stage.addEventListener("dblclick", (e) => { const r = V.stage.getBoundingClientRect(); zoomAt(1.6, e.clientX - r.left, e.clientY - r.top); });
+  addEventListener("keydown", (e) => {
+    if (V.el.hidden) return;
+    const k = { Escape: close, ArrowLeft: () => show(V.idx - 1), ArrowRight: () => show(V.idx + 1),
+                "+": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2), "=": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+                "-": () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2), f: fit, F: fit, "1": reset, "0": fit }[e.key];
+    if (k) { e.preventDefault(); k(); }
+  });
+  addEventListener("resize", () => { if (!V.el.hidden) fit(); });
+
+  /* mermaid → viewer */
+  document.querySelectorAll(".mm-wrap").forEach((w) => {
+    w.addEventListener("click", () => {
+      const svg = w.querySelector("svg"); if (!svg) return;
+      open([{ type: "svg", node: svg, caption: w.dataset.cap || "" }]);
+    });
+  });
+
+
+  /* 語音解析還在產生：定期探測 lesson.mp3，好了就自動重新整理 */
+  const pend = document.getElementById("lesson-pending");
+  if (pend && pend.dataset.state !== "failed") {
+    const probe = () => {
+      const a = new Audio(pend.dataset.src);
+      a.addEventListener("loadedmetadata", () => location.reload(), { once: true });
+      a.load();
+    };
+    document.getElementById("lesson-check").addEventListener("click", probe);
+    setInterval(probe, 20000);
+  }
+  const KSTR = { play: "\u25b6 Play", pause: "\u23f8 Pause", orig: "Original" };
+  /* 語音解析：點章節跳到該時間 */
+  const lesson = document.getElementById("lesson");
+  /* metadata 還沒載入時直接設 currentTime 會被瀏覽器丟掉、變成從頭播，所以先等 loadedmetadata */
+  const seekTo = (t) => {
+    if (!lesson) return;
+    const go = () => { lesson.currentTime = t; lesson.play(); };
+    if (lesson.readyState >= 1) go();
+    else { lesson.addEventListener("loadedmetadata", go, { once: true }); lesson.load(); }
+  };
+  if (lesson) document.querySelectorAll(".lesson button[data-at]").forEach((b) => {
+    b.addEventListener("click", () => seekTo(+b.dataset.at));
+  });
+
+  /* 截圖 → lightbox：輪流同一支影片的所有截圖 */
+  const shotsByVideo = JSON.parse(document.getElementById("shots-data").textContent);
+  const videoIds = JSON.parse(document.getElementById("shots-ids").textContent);
+  const fmtTs = (s) => { s = Math.floor(s); const m = Math.floor(s / 60), r = s % 60; return `${m}:${String(r).padStart(2, "0")}`; };
+  document.querySelectorAll(".frames img").forEach((img) => {
+    img.addEventListener("click", () => {
+      const shots = shotsByVideo[videoIds.indexOf(img.dataset.video)];
+      open(shots.map((sh) => ({ type: "img", src: sh.href, caption: `${sh.seg_title} · ${fmtTs(sh.t)} · ${sh.why}` })), +img.dataset.idx);
+    });
+  });
+
+  /* 術語 ⓘ → dialog */
+  document.querySelectorAll(".info[data-term]").forEach((b) => {
+    b.addEventListener("click", () => document.getElementById("term-" + b.dataset.term).showModal());
+  });
+  document.querySelectorAll("dialog").forEach((d) => {
+    d.querySelector("[data-close]").addEventListener("click", () => d.close());
+    d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
+  });
+
+  /* ---------- 講稿 karaoke ---------- */
+  const kd = document.getElementById("lesson-data");
+  if (lesson && kd) {
+    const data = JSON.parse(kd.textContent);
+    const K = {
+      el: document.getElementById("kara"),
+      body: document.querySelector("#kara .body"),
+      inner: document.querySelector("#kara .inner"),
+      back: document.querySelector("#kara .back"),
+      cur: document.getElementById("k-cur"),
+      tot: document.getElementById("k-tot"),
+      toggle: document.querySelector('#kara [data-k="toggle"]'),
+      auto: true, idx: -1, nodes: [], lines: [],
+    };
+    const ts = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s / 60); return `${m}:${String(s % 60).padStart(2, "0")}`; };
+
+    // 兩軌：orig = 作者原聲，dub = 另一個聲音唸翻譯。say 的部分兩軌是同一份音檔，只有 clip 不同。
+    const tracks = { orig: { href: data.href, timeline: data.timeline, duration: data.duration, chapters: data.chapters } };
+    if (data.dub) tracks.dub = { href: data.dub.href, timeline: data.dub.timeline, duration: data.dub.duration, chapters: data.dub.chapters };
+    let mode = "orig";
+
+    const buildScript = (tl) => {
+      K.inner.textContent = ""; K.nodes = []; K.lines = []; K.idx = -1;
+      let seg = null;
+      tl.forEach((e) => {
+        if (e.seg_id !== seg) {
+          seg = e.seg_id;
+          const h = document.createElement("h4");
+          h.textContent = `${e.seg_id}. ${e.seg_title}`;
+          K.inner.appendChild(h);
+        }
+        // 每段原聲自成一個 clipbox：標題與對照文字只在這段範圍內 sticky
+        let box = K.inner;
+        const isClip = e.kind === "clip" || e.kind === "dub";
+        if (isClip) {
+          box = document.createElement("section");
+          box.className = "clipbox";
+          K.inner.appendChild(box);
+          const h = document.createElement("div");
+          h.className = "cliphead";
+          h.textContent = (e.kind === "dub" ? "🗣 " : "🎙 ") + (e.label || "");
+          box.appendChild(h);
+          // 原聲軌上面放翻譯；翻譯軌上面放原文，兩邊都看得到對照
+          const other = e.kind === "dub" ? (e.orig_text ? `${KSTR.orig}：${e.orig_text}` : "") : e.translation;
+          if (other) {
+            const tr = document.createElement("div");
+            tr.className = "trans";
+            tr.textContent = other;
+            box.appendChild(tr);
+          }
+        }
+        (e.lines || []).forEach((l) => {
+          const p = document.createElement("p");
+          p.textContent = l.text;
+          if (isClip) p.classList.add(e.kind === "dub" ? "dub" : "clip");
+          p.addEventListener("click", () => { seekTo(l.at + 0.01); K.auto = true; K.back.hidden = true; });
+          box.appendChild(p);
+          K.nodes.push(p); K.lines.push(l);
+        });
+      });
+    };
+    buildScript(tracks.orig.timeline);
+    K.tot.textContent = ts(data.duration);
+
+    // 語速：currentTime 走的是媒體時間，所以 KTV 高亮會自動跟著變速
+    const rateSel = document.getElementById("k-rate");
+    let curRate = 1;
+    const setRate = (v) => {
+      curRate = v;
+      lesson.playbackRate = v;
+      if ("preservesPitch" in lesson) lesson.preservesPitch = true;
+      rateSel.value = String(v);
+      try { localStorage.setItem("lesson-rate", String(v)); } catch (_) {}
+    };
+    let saved = 1;
+    try { saved = parseFloat(localStorage.getItem("lesson-rate")) || 1; } catch (_) {}
+    setRate(saved);
+    rateSel.addEventListener("change", () => setRate(parseFloat(rateSel.value)));
+
+    const paint = () => {
+      const t = lesson.currentTime;
+      let i = K.lines.findIndex((l) => t < l.at + l.dur);
+      if (i < 0) i = K.lines.length - 1;
+      if (i === K.idx) return;
+      K.idx = i;
+      K.nodes.forEach((n, j) => {
+        n.classList.toggle("now", j === i);
+        n.classList.toggle("done", j < i);
+      });
+      if (K.auto && K.nodes[i]) K.nodes[i].scrollIntoView({ block: "center", behavior: "smooth" });
+    };
+    /* ---------- 原聲 ⇄ 翻譯配音 ---------- */
+    // 章節列是伺服器算好的（原聲軌），換軌時就地改時間
+    const chapBtns = [...document.querySelectorAll(".lesson ol button[data-at]")];
+    const syncChapters = () => {
+      const cs = tracks[mode].chapters || [];
+      chapBtns.forEach((b, i) => {
+        if (!cs[i]) return;
+        b.dataset.at = cs[i].at;
+        b.querySelector(".t").textContent = ts(cs[i].at);
+      });
+    };
+    // 兩軌的 block 一一對應（同一個 i），所以用「第幾個 block + 在裡面的比例」換算時間
+    const mapTime = (t, from, to) => {
+      const a = tracks[from].timeline, b = tracks[to].timeline;
+      let i = a.findIndex((e) => t < e.at + e.dur);
+      if (i < 0) i = a.length - 1;
+      const e = a[i], o = b[i] || b[b.length - 1];
+      const frac = e.dur > 0 ? Math.min(1, Math.max(0, (t - e.at) / e.dur)) : 0;
+      return o.at + frac * o.dur;
+    };
+    const setMode = (m) => {
+      if (!tracks[m] || m === mode) return;
+      const playing = !lesson.paused;
+      const t = mapTime(lesson.currentTime, mode, m);
+      mode = m;
+      try { localStorage.setItem("lesson-mode", m); } catch (_) {}
+      document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+      lesson.addEventListener("loadedmetadata", () => {
+        lesson.currentTime = t; setRate(curRate); paint();
+        if (playing) lesson.play();
+      }, { once: true });
+      lesson.src = tracks[m].href;
+      lesson.load();
+      buildScript(tracks[m].timeline);
+      syncChapters();
+      K.tot.textContent = ts(tracks[m].duration);
+    };
+    document.querySelectorAll("[data-mode]").forEach((b) => {
+      b.addEventListener("click", () => setMode(b.dataset.mode));
+    });
+    let savedMode = null;
+    try { savedMode = localStorage.getItem("lesson-mode"); } catch (_) {}
+    if (savedMode && tracks[savedMode]) setMode(savedMode);
+
+    lesson.addEventListener("timeupdate", () => { K.cur.textContent = ts(lesson.currentTime); paint(); });
+    lesson.addEventListener("play", () => { K.toggle.textContent = KSTR.pause; });
+    lesson.addEventListener("pause", () => { K.toggle.textContent = KSTR.play; });
+
+    // 只有使用者主動捲動才停止自動捲；程式自己捲（scrollIntoView）不會觸發這些事件
+    const userScrolled = () => { K.auto = false; K.back.hidden = false; };
+    ["wheel", "touchmove"].forEach((ev) => K.body.addEventListener(ev, userScrolled, { passive: true }));
+    K.body.addEventListener("keydown", (e) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key)) userScrolled();
+    });
+    K.back.addEventListener("click", () => {
+      K.auto = true; K.back.hidden = true;
+      if (K.nodes[K.idx]) K.nodes[K.idx].scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+
+    const openK = () => { K.el.hidden = false; document.body.style.overflow = "hidden"; K.idx = -1; paint(); };
+    const closeK = () => { K.el.hidden = true; document.body.style.overflow = ""; };
+    /* 只有按「開啟字幕」才開全視窗；按播放不會自己跳出來（擋住整頁很擾人） */
+    document.getElementById("kara-open").addEventListener("click", () => { openK(); if (lesson.paused) lesson.play(); });
+    K.el.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-k]")?.dataset.k;
+      if (a === "close") closeK();
+      else if (a === "restart") { seekTo(0); K.auto = true; K.back.hidden = true; }
+      else if (a === "toggle") lesson.paused ? lesson.play() : lesson.pause();
+    });
+    addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+      if (typing) return;
+      if (e.key === " ") {                      // 空白鍵隨時可播放／暫停
+        e.preventDefault();
+        lesson.paused ? lesson.play() : lesson.pause();
+      } else if (!K.el.hidden && e.key === "Escape") { e.preventDefault(); closeK(); }
+      else if (!K.el.hidden && e.key === "Home") { e.preventDefault(); seekTo(0); }
+      else if (tracks.dub && (e.key === "d" || e.key === "D")) { e.preventDefault(); setMode(mode === "dub" ? "orig" : "dub"); }
+    });
+  }
+
+
+</script>
+</body>
+</html>

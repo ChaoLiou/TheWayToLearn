@@ -31,7 +31,9 @@ from common import (
     load_json,
     locked,
     print_step,
+    set_ui_lang,
     sibling_pages,
+    station_lang,
     template_dirs,
     write_text,
 )
@@ -98,7 +100,7 @@ def load_stations(ws: Path) -> list[dict]:
             "plan": plan, "has_lesson": (d / "lesson.mp3").exists(),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
+            "output_lang": norm_lang(station_lang(meta, ws)),
             "items": items,
             "by_kind": {k: [n for n in items if n["kind"] == k] for k in KINDS},
         })
@@ -257,11 +259,14 @@ def export_brain(ws: Path) -> None:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--ui-lang", default=None,
+                    help="強制 HTML 介面語言（例如 en），蓋過各站 meta.json 的 output_lang；只換介面字串不翻內文")
     ap.add_argument("--backlog", action="store_true", help="只印消化積欠，不產頁")
     ap.add_argument("--pending", nargs="?", const="due", metavar="VID|due", help="列還沒做的筆（JSON）")
     ap.add_argument("--mark", nargs="+", metavar=("KEY", "ACTION"),
                     help="<vid>:<id> done|undo|rehearsed|grade [值]，或 <vid> read|unread，寫進 digest.state.json")
     args = ap.parse_args(argv)
+    set_ui_lang(args.ui_lang)
     if args.backlog:
         print(backlog_line(args.workspace))
         return

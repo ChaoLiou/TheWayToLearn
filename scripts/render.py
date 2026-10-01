@@ -25,7 +25,9 @@ from common import (
     is_blog,
     load_json,
     print_step,
+    set_ui_lang,
     template_dirs,
+    ui_lang_override,
     video_id,
     write_text,
 )
@@ -227,7 +229,8 @@ def render(overview_path: Path, video_dirs: list[Path], out: Path) -> None:
     videos = []
     # 輸出語言：第一支影片的 meta.output_lang（/learn 依對話語言寫入），預設 zh-TW
     first = by_id.get(order[0]) if order else None
-    S = Strings(norm_lang((load_json(first / "meta.json").get("output_lang") if first else None)
+    S = Strings(norm_lang(ui_lang_override()
+                          or (load_json(first / "meta.json").get("output_lang") if first else None)
                           or default_output_lang()))
     for vid in order:
         vdir = by_id.get(vid)
@@ -278,9 +281,12 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ids", nargs="*", help="video id 或 URL；不給 = workspace 下全部")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--ui-lang", default=None,
+                    help="強制 HTML 介面語言（例如 en），蓋過各站 meta.json 的 output_lang；只換介面字串不翻內文")
     ap.add_argument("--combined", action="store_true", help="多支合併成一份 plan.html")
     ap.add_argument("--out", type=Path, help="--combined 時的輸出路徑，預設 workspace/plan.html")
     args = ap.parse_args(argv)
+    set_ui_lang(args.ui_lang)
 
     ws = args.workspace
     if args.ids:

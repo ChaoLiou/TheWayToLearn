@@ -52,9 +52,31 @@ def save_setting(key: str, value, ws: Path | None = None) -> Path:
     return f
 
 
+_UI_LANG: str | None = None
+
+
+def set_ui_lang(code: str | None) -> None:
+    """`--ui-lang`：強制 HTML 介面字串的語言，蓋過各站 meta.json 的 output_lang。
+    用途是同一份 workspace 產多語系頁面（docs/demo/en 與 docs/demo/zh-TW）。
+    **只換介面字串**；內文是 analyze 階段用該站語言寫好的，不會跟著翻譯。"""
+    global _UI_LANG
+    _UI_LANG = (code or "").strip() or None
+
+
+def ui_lang_override() -> str | None:
+    return _UI_LANG
+
+
+def station_lang(meta: dict, ws: Path | None = None) -> str:
+    """這一站的介面語言：--ui-lang > 該站 meta.json > workspace 設定。"""
+    return _UI_LANG or meta.get("output_lang") or default_output_lang(ws)
+
+
 def default_output_lang(ws: Path | None = None) -> str:
-    """產出文件與介面的語言。順序：workspace/settings.json > $LEARN_LANG > zh-TW。
+    """產出文件與介面的語言。順序：--ui-lang > workspace/settings.json > $LEARN_LANG > zh-TW。
     個別站以自己 meta.json 的 output_lang 為準（已經產好的站不會因為改設定而變）。"""
+    if _UI_LANG:
+        return _UI_LANG
     v = load_settings(ws).get("output_lang") or os.environ.get("LEARN_LANG")
     return str(v).strip() if v else "zh-TW"
 

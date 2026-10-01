@@ -31,8 +31,11 @@ from common import (
     locked,
     print_step,
     save_json,
+    set_ui_lang,
     sibling_pages,
+    station_lang,
     template_dirs,
+    ui_lang_override,
     write_text,
 )
 from i18n import Strings, norm_lang
@@ -174,7 +177,7 @@ def load_waypoints(ws: Path) -> list[dict]:
             "issues": issues,
             "n_wrong": sum(1 for i in issues if i["level"] == "wrong"),
             "n_debatable": sum(1 for i in issues if i["level"] != "wrong"),
-            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
+            "output_lang": norm_lang(station_lang(meta, ws)),
             "href": f"{quote(d.name)}/plan.html",
             "upload_date": fmt_ymd(meta.get("upload_date")),
             "upload_days": days_since(meta.get("upload_date")),
@@ -307,7 +310,7 @@ def render(ws: Path) -> Path:
     color_of = {r["id"]: r["color"] for r in regions}
     # 介面語言：atlas.json 的 lang，否則取多數站的 output_lang
     lang = atlas.get("lang") or (max({w["output_lang"] for w in wps}, key=[w["output_lang"] for w in wps].count) if wps else None)
-    S = Strings(norm_lang(lang or default_output_lang(ws)))
+    S = Strings(norm_lang(ui_lang_override() or lang or default_output_lang(ws)))
     # 每一站走到哪一步，以及「繼續做」要複製的 prompt
     linked = {x for r in atlas["regions"] for x in r["waypoints"]} | {x for e in atlas["routes"] for x in (e["from"], e["to"])}
     for w in wps:
@@ -347,12 +350,15 @@ def render(ws: Path) -> Path:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--ui-lang", default=None,
+                    help="強制 HTML 介面語言（例如 en），蓋過各站 meta.json 的 output_lang；只換介面字串不翻內文")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--merge", metavar="PATCH.JSON",
                     help="把新站的 route/region 併進 atlas.json（- = 讀 stdin），再驗證並 render")
     ap.add_argument("--migrate-routes", action="store_true",
                     help="把舊的五種 route 型態換成 next / related（via 不動），再 render")
     args = ap.parse_args(argv)
+    set_ui_lang(args.ui_lang)
     if args.status:
         status(args.workspace)
         return

@@ -115,3 +115,24 @@ def test_prune_keep_cache_and_actual_delete(tmp_path):
     for keep in ("lesson.mp3", "plan.html", "analysis.json", "frames/s01_1.jpg"):
         assert (d / keep).exists()
     prune.main(["--workspace", str(ws), "--delete"])     # 再跑一次不會爆
+
+
+def test_shot_backfills_file_when_frames_already_exist(tmp_path, monkeypatch):
+    """重切段會重寫 segments.json（沒有 file 欄位），這時圖還在 frames/。
+    少了回填，render 會把那些 shot 靜靜丟掉——所以「都已存在」那條路也要回填並存檔。"""
+    import json
+
+    import screenshot
+    ws = tmp_path / "ws"
+    d = ws / "A vid"
+    (d / "frames").mkdir(parents=True)
+    (d / "meta.json").write_text(json.dumps({"video_id": "aaaaaaaaaaa", "url": "https://y/watch?v=aaaaaaaaaaa"}))
+    (d / "frames" / "s03_72.jpg").write_text("img")
+    (d / "segments.json").write_text(json.dumps(
+        {"video_id": "aaaaaaaaaaa", "vision": True,
+         "segments": [{"id": 3, "start": 0, "end": 99, "title": "t", "summary": "s",
+                       "shots": [{"t": 72, "why": "w"}]}]}, ensure_ascii=False))
+    monkeypatch.setattr(screenshot.shutil, "which", lambda _: "/usr/bin/ffmpeg")
+    screenshot.main(["aaaaaaaaaaa", "--workspace", str(ws)])
+    segs = json.loads((d / "segments.json").read_text())
+    assert segs["segments"][0]["shots"][0]["file"] == "frames/s03_72.jpg"

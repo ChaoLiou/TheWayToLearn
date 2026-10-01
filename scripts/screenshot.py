@@ -97,8 +97,20 @@ def main(argv=None):
 
     frames = vdir / "frames"
     frames.mkdir(exist_ok=True)
+    def backfill() -> None:
+        """把已經在 frames/ 裡的檔接回 segments.json 的 shot.file。
+        重切段會重寫 segments.json（沒有 file 欄位），這時圖還在磁碟上——
+        少了這一步 render 會把 `sh.get("file")` 為空的 shot 全部丟掉，而且不會報錯。"""
+        for sid, sh in shots:
+            if "file" not in sh:
+                p = frame_path(frames, sid, sh["t"])
+                if p:
+                    sh["file"] = f"frames/{p.name}"
+        save_json(seg_path, segs)
+
     todo = [(sid, sh) for sid, sh in shots if args.force or not frame_path(frames, sid, sh["t"])]
     if not todo:
+        backfill()
         print(f"跳過：{len(shots)} 張都已存在（--force 重截）")
         print_step("shot", f"{len(shots)} 張已存在")
         return
@@ -116,12 +128,7 @@ def main(argv=None):
                 sh["file"] = f"frames/{out.name}"
             if not args.keep_video:
                 video.unlink()
-    for sid, sh in shots:
-        if "file" not in sh:
-            p = frame_path(frames, sid, sh["t"])
-            if p:
-                sh["file"] = f"frames/{p.name}"
-    save_json(seg_path, segs)
+    backfill()
     got = sum(1 for _, sh in todo if sh.get("file"))
     print(f"OK {got} 張 → {frames}")
     print_step("shot", f"{sum(1 for _, sh in shots if sh.get('file'))} 張{'圖片' if blog_src else '截圖'}")

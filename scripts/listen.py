@@ -30,7 +30,9 @@ from common import (
     load_json,
     locked,
     print_step,
+    set_ui_lang,
     sibling_pages,
+    station_lang,
     template_dirs,
     write_text,
 )
@@ -113,7 +115,7 @@ def load_episodes(ws: Path) -> list[dict]:
             "thumb": thumb(d),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
+            "output_lang": norm_lang(station_lang(meta, ws)),
         })
     eps.sort(key=lambda e: e["created"], reverse=True)
     return eps
@@ -151,7 +153,10 @@ def render(ws: Path) -> Path:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--ui-lang", default=None,
+                    help="強制 HTML 介面語言（例如 en），蓋過各站 meta.json 的 output_lang；只換介面字串不翻內文")
     args = ap.parse_args(argv)
+    set_ui_lang(args.ui_lang)
     with locked(args.workspace / ".listen.lock", "listen.html"):
         out = render(args.workspace)
     print_step("listen", str(out))

@@ -141,3 +141,42 @@ def test_dub_lines_and_voice():
     quoted = narrate.dub_lines("我就說：「你能建立一個新的範例專案嗎？」就是建一個可以展示的 demo 專案。")
     assert quoted == ["我就說：「你能建立一個新的範例專案嗎？」", "就是建一個可以展示的 demo 專案。"]
     assert all(__import__("re").search(r"\w", x) for x in narrate.dub_lines("他問：「好嗎？」"))
+
+
+# ---------- --ui-lang：同一份 workspace 產多語系頁面 ----------
+
+def test_ui_lang_override_beats_station_meta():
+    """--ui-lang 要蓋過各站 meta.json 的 output_lang，否則同一份 workspace 產不出第二種語言。"""
+    import common
+    meta = {"output_lang": "zh-TW"}
+    try:
+        assert common.station_lang(meta) == "zh-TW"
+        assert common.ui_lang_override() is None
+        common.set_ui_lang("en")
+        assert common.ui_lang_override() == "en"
+        assert common.station_lang(meta) == "en"          # 蓋過 meta
+        assert common.default_output_lang() == "en"       # 也蓋過 settings / $LEARN_LANG
+        common.set_ui_lang("")                            # 空字串 = 取消
+        assert common.ui_lang_override() is None
+        assert common.station_lang(meta) == "zh-TW"
+    finally:
+        common.set_ui_lang(None)
+
+
+def test_ui_lang_switches_every_page(tmp_path):
+    """五個產頁的 script 都要吃 --ui-lang，而且只換介面字串、不動內文。"""
+    import shutil
+
+    import common
+    import render
+    ws = tmp_path / "ws"
+    shutil.copytree(Path(__file__).parent / "fixtures/ws", ws)
+    try:
+        common.set_ui_lang("en")
+        render.main(["--workspace", str(ws), "--ui-lang", "en"])
+        h = (ws / "測試影片 A: B" / "plan.html").read_text(encoding="utf-8")
+        assert 'lang="en"' in h and "1. Outline" in h and "Builds on" in h
+        assert "承上" not in h
+        assert "測試影片" in h           # 內文（標題）沒有被翻譯
+    finally:
+        common.set_ui_lang(None)

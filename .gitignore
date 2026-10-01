@@ -7,4 +7,5 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 dist-media/
-demo-ws/
+# demo 的來源 workspace 不進版控；發佈出來的 docs/demo/ 才進
+demo-ws*/

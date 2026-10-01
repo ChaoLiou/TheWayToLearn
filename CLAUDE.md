@@ -123,7 +123,18 @@ AI 的逐段說明必須「線性推進」（thematic progression / linear progr
 
 解析順序：**指令旗標 `--output-lang` > 該站 `meta.json` 的 `output_lang` > `workspace/settings.json` 的 `output_lang` > `$LEARN_LANG` > `zh-TW`**（`common.default_output_lang()` 一處決定，所有 script 共用）。
 `/learn` 第一次跑時問一次並用 `options.py learn --save output_lang=<值>` 記進 `workspace/settings.json`（`--save` 只收 `options.SAVABLE` 裡的鍵），之後整個 workspace 都不用再問；一個主題一個資料夾時，各自的語言各自記。
-agent 產的所有內文用該站的 `output_lang`，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（zh-TW 與 en 兩套字串都是完整的 274 條，新語言只需加一組）。
+agent 產的所有內文用該站的 `output_lang`，術語 `term` 永遠英文原文；HTML 介面文字由 `scripts/i18n.py` 依語言切換（zh-TW 與 en 兩套字串都是完整的 288 條，新語言只需加一組）。
+
+**`--ui-lang <code>`**（render / atlas / digest / notes / listen 五個產頁的 script 都有）強制介面語言，蓋過各站 `meta.json` 的 `output_lang`（`common.set_ui_lang()` / `station_lang()`）。**只換介面字串，不翻內文**——內文是 analyze 階段用該站語言寫好的。
+用途是同一份 workspace 產多語系頁面，`docs/demo/` 就是這樣做的：
+```bash
+for s in digest notes atlas listen render; do uv run scripts/$s.py --workspace demo-ws --ui-lang en; done
+uv run scripts/publish.py --workspace demo-ws --out docs/demo/en
+for s in digest notes atlas listen render; do uv run scripts/$s.py --workspace demo-ws --ui-lang zh-TW; done
+uv run scripts/publish.py --workspace demo-ws --out docs/demo/zh-TW
+for s in digest notes atlas listen render; do uv run scripts/$s.py --workspace demo-ws; done   # 復原
+```
+`docs/demo/index.html` 是手寫的語系入口：**以英文為基底**（瀏覽器偏好繁中才送 `zh-TW/`），`?lang=en|zh-TW` 可強制、`#hash` 原樣帶過去、沒有 JS 也看得到兩個連結。兩份各 9.2 MB 但 mp3 內容相同，git 以內容雜湊存所以只有一份 blob。
 
 ## 參數確認
 

@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全部影片</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; }
+  }
+  body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size:1.9rem; } h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:3rem; }
+  h3 { margin-top:2rem; } h4 { margin:1.5rem 0 .3rem; color:var(--accent); }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  table { border-collapse:collapse; font-size:.9rem; } td,th { border:1px solid var(--line); padding:.2rem .6rem; }
+  a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  /* mermaid：可點開全視窗 */
+  .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
+  .mm-wrap::after { content:"⤢ 點擊放大"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
+  .mm-wrap:hover { border-color:var(--accent); }
+  .mm-wrap svg { max-width:100%; height:auto; }
+  .mm-wrap svg[width] { max-width:none; height:auto; }   /* flowchart：不縮小，寬了就橫向捲 */
+  .legend { display:flex; flex-wrap:wrap; gap:.3rem .9rem; font-size:.85rem; color:var(--muted); margin:.2rem 0 .5rem; }
+  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px; margin-right:.3rem; vertical-align:-.05em; }
+  .mindmap-node text, .mindmap-node tspan { font-size:15px !important; }
+  .mindmap-node .section-root text { font-size:18px !important; font-weight:700; }
+  /* 圖的文字描述，預設收合 */
+  details.desc { margin:.4rem 0 1.2rem; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+  details.desc summary { cursor:pointer; padding:.4rem .8rem; color:var(--muted); font-size:.9rem; user-select:none; }
+  details.desc[open] summary { border-bottom:1px solid var(--line); }
+  details.desc > div { padding:.6rem 1rem; font-size:.92rem; overflow-x:auto; }
+  details.desc ol, details.desc ul { margin:.2rem 0; padding-left:1.4rem; }
+  /* 全視窗 viewer（mermaid + lightbox 共用） */
+  #viewer { position:fixed; inset:0; background:var(--overlay); z-index:100; display:flex; flex-direction:column; }
+  #viewer[hidden] { display:none; }
+  .v-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .8rem; color:#fff; font-size:.9rem;
+           background:rgba(0,0,0,.4); }
+  .v-bar .cap { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .v-bar button { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.3);
+                  border-radius:4px; padding:.2rem .6rem; cursor:pointer; font-size:.9rem; }
+  .v-bar button:hover { background:rgba(255,255,255,.25); }
+  .v-stage { flex:1; overflow:hidden; position:relative; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .v-stage.drag { cursor:grabbing; }
+  .v-content { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .v-content img { display:block; max-width:none; }
+  .v-content svg { display:block; background:var(--bg); border-radius:6px; }
+  .v-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.5); color:#fff;
+           border:none; font-size:2rem; padding:.4rem .7rem; cursor:pointer; border-radius:6px; }
+  .v-nav.prev { left:.5rem; } .v-nav.next { right:.5rem; }
+  .v-nav[hidden] { display:none; }
+
+  /* 勘誤／過時：plan.html 與 atlas.html 共用同一套外觀
+     紅八角 = 確定錯誤／已過時；橘三角 = 見仁見智 */
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem .6rem; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .issue { border-left:4px solid; border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .issue.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+  .issue.debatable { border-color:var(--debat); background:var(--debat-bg); }
+  .issue .lvl { display:inline-flex; align-items:center; gap:.25rem; font-size:.72rem; font-weight:700;
+                padding:.05rem .5rem; border-radius:999px; color:#fff; margin-right:.4rem; }
+  .issue .lvl svg { width:.9em; height:.9em; }
+  .issue.wrong .lvl { background:var(--wrong); } .issue.debatable .lvl { background:var(--debat); }
+  .issue blockquote { margin:.3rem 0; padding-left:.6rem; border-left:2px solid var(--line); color:var(--muted); font-style:italic; }
+  .issue .ev { font-size:.85rem; color:var(--muted); }
+  table.issues-sum { width:100%; }
+  table.issues-sum th { background:var(--card); text-align:left; font-weight:600; }
+  table.issues-sum td { vertical-align:top; }
+  table.issues-sum td.q { color:var(--muted); font-style:italic; max-width:24rem; }
+  table.issues-sum tr.wrong td:first-child { border-left:4px solid var(--wrong); }
+  table.issues-sum tr.debatable td:first-child { border-left:4px solid var(--debat); }
+  table.issues-sum .lv { display:inline-flex; vertical-align:-.15em; margin-right:.25rem; }
+  table.issues-sum .lv svg { width:.95em; height:.95em; }
+  table.issues-sum tr.wrong .lv { color:var(--wrong); } table.issues-sum tr.debatable .lv { color:var(--debat); }
+  table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
+
+
+
+  :root { --top:3.6rem; --content:64rem; }
+  body { padding:0; }
+  /* 置頂列：三欄，左右等寬，搜尋框才會真的置中（右側在窄螢幕收起也不會偏） */
+  .topbar { position:sticky; top:0; z-index:40; display:grid; align-items:center; gap:.8rem;
+            grid-template-columns:minmax(0,1fr) minmax(0,46rem) minmax(0,1fr);
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .tl { display:flex; align-items:center; gap:.4rem; min-width:0; }
+  .topbar .tr { display:flex; align-items:center; justify-content:flex-end; gap:1rem;
+                color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .search { margin:0; min-width:0; }
+  /* 條件一多就換行的話會把置頂列撐高、整個版面跟著跳；改成單行、超出就橫向捲 */
+  .topbar .sbox { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
+  .topbar .sbox .ico { flex:none; }
+  .topbar .sbox input { min-width:7rem; }
+  .topbar .chip { flex:none; max-width:11rem; }
+  .topbar .chip .v { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .layout main { max-width:var(--content); width:100%; margin:0 auto; padding:1.2rem 1.4rem 4rem; box-sizing:border-box; }
+  .layout main > :is(h1,h2):first-child { margin-top:0; }
+
+  /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top));
+          overflow-y:auto; overflow-x:hidden; box-sizing:border-box;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
+                          min-width:0; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; box-sizing:border-box; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .tool { font-size:.85rem; color:var(--muted); }
+
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .topbar { grid-template-columns:auto minmax(0,1fr); }
+    .topbar .tr { display:none; }
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .layout main { padding:1rem .9rem 5rem; }
+    .menu-btn { display:block; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease;
+            max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
+
+  :root { --content:2200px; }
+  .side .err-f svg { width:.95rem; height:.95rem; flex:none; color:var(--wrong); }
+  .side .err-f.on svg { color:#fff; }
+  .stats { display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; }
+  
+  /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
+  .search { position:relative; margin:.6rem 0 .3rem; }
+  .sbox { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.45rem .6rem;
+          background:var(--card); border:1px solid var(--line); border-radius:10px; cursor:text; }
+  .sbox:focus-within { border-color:var(--accent); }
+  .sbox .ico { color:var(--muted); }
+  .sbox input { flex:1; min-width:11rem; border:none; outline:none; background:none; color:var(--fg); font:inherit; padding:.15rem 0; }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--accent); color:#fff;
+          border-radius:999px; padding:.1rem .3rem .1rem .55rem; font-size:.83rem; white-space:nowrap; }
+  .chip .k { opacity:.75; font-size:.75rem; }
+  .chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:.95rem; line-height:1; padding:0 .2rem; }
+  .ac { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; margin:0; padding:.25rem 0; list-style:none;
+        background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+        max-height:17rem; overflow:auto; }
+  .ac[hidden] { display:none; }
+  .ac li { display:flex; align-items:center; gap:.5rem; padding:.35rem .7rem; cursor:pointer; font-size:.92rem; }
+  .ac li.on { background:var(--card); }
+  .ac .k { font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3rem; }
+  .ac .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .shint { font-size:.8rem; color:var(--muted); display:flex; gap:1rem; flex-wrap:wrap; margin:.35rem .2rem 1.4rem; }
+  .shint button { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+  #no-match { color:var(--muted); }
+
+  /* ---- 各站：YouTube 式縮圖卡 ---- */
+  .region { margin:2rem 0; padding:1rem 1.2rem; border:2px dashed var(--line); border-radius:12px; }
+  .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
+  .region h3 i { display:inline-block; width:.9rem; height:.9rem; border-radius:3px; }
+  .region .blurb { color:var(--muted); margin:0 0 .8rem; }
+  /* auto-fit：空出來的軌道會被收掉，剩餘寬度平均分給卡片，所以站數夠多時右邊不會留白。
+     .wp 的 max-width 是上限：站數少於一排的格數時，卡片維持正常大小、右邊留白，
+     而不是被拉成一張巨幅海報（跟 YouTube 一樣）。 */
+  .wps { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+         gap:1.8rem 1.1rem; align-items:start; }
+  .wp { display:flex; flex-direction:column; gap:.45rem; min-width:0; max-width:24rem; }
+  .wp[hidden] { display:none; }
+  .wp .thumb { position:relative; display:block; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
+               background:var(--card); border:1px solid var(--line); }
+  .wp .thumb img { position:relative; width:100%; height:100%; object-fit:cover; display:block; }
+  /* 沒縮圖／圖抓不到：用標題第一個字當縮圖，不留破圖 */
+  /* 沒縮圖：放完整標題，超過四行就截斷加「…」，永遠不溢出 */
+  .wp .thumb .ph { position:absolute; inset:0; display:grid; place-items:center; padding:.6rem .8rem; color:var(--muted);
+                   font-size:.95rem; font-weight:700; line-height:1.3; text-align:center; overflow:hidden; overflow-wrap:anywhere;
+                   background:linear-gradient(135deg, var(--card), var(--line)); user-select:none; }
+  .wp .thumb .ph > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden; }
+  .wp .dur { position:absolute; right:.35rem; bottom:.35rem; background:rgba(0,0,0,.8); color:#fff;
+             font-size:.75rem; font-weight:600; padding:.05rem .3rem; border-radius:4px; }
+  .wp h4 { margin:0; font-size:.98rem; line-height:1.35; color:var(--fg);
+           display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .wp h4 a { color:inherit; text-decoration:none; }
+  .wp h4 a:hover { color:var(--accent); }
+  .wp .by { font-size:.88rem; color:var(--muted); }
+  /* 這篇的勘誤件數：紅 = 確定錯誤／已過時，橘 = 見仁見智；點開看整張表 */
+  .err { display:inline-flex; align-items:center; gap:.2rem; margin-left:.35rem; font-size:.74rem; font-weight:600;
+         line-height:1.5; white-space:nowrap; padding:0 .35rem; border-radius:999px; border:1px solid var(--line);
+         font-family:inherit; background:none; }
+  button.err { cursor:pointer; }
+  button.err:hover { filter:brightness(1.15); }
+  .err svg { width:.85em; height:.85em; }
+  .err.w { color:var(--wrong); border-color:var(--wrong); background:var(--wrong-bg); }
+  .err.d { color:var(--debat); border-color:var(--debat); background:var(--debat-bg); }
+  .err.ok { color:var(--muted); font-weight:400; }
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem 0; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .wp .wp-err { display:none; }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
+  .wp .sub { font-size:.82rem; color:var(--muted); }
+  .wp .cat { display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; color:var(--muted);
+             background:none; border:none; padding:0; font:inherit; cursor:pointer; text-align:left; }
+  .wp .cat:hover { color:var(--accent); }
+  .wp .cat i { display:inline-block; width:.55rem; height:.55rem; border-radius:2px; }
+  .wp .more-btn { align-self:flex-start; background:none; border:1px solid var(--line); border-radius:999px;
+                  color:var(--muted); font:inherit; font-size:.78rem; padding:.05rem .55rem; cursor:pointer; }
+  .wp .more-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .wp .wp-info, .wp .wp-prog { display:none; }
+  /* 進度：十步各一格 */
+  .prog { display:flex; gap:3px; margin:.6rem 0 .3rem; }
+  .prog span { flex:1; height:5px; border-radius:3px; background:var(--line); }
+  .prog span[data-s="done"] { background:var(--accent); }
+  .prog span[data-s="partial"] { background:linear-gradient(90deg, var(--accent) 55%, var(--line) 55%); }
+  .prog span[data-s="running"] { background:var(--accent); opacity:.5; animation:pulse 1.4s ease-in-out infinite; }
+  .prog span[data-s="skip"] { background:none; border:1px dashed var(--line); height:3px; align-self:center; }
+  @keyframes pulse { 50% { opacity:1; } }
+  .stg { font-size:.82rem; color:var(--muted); display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+  .stg b { color:var(--fg); font-weight:600; }
+  .stg .warn { color:var(--accent); }
+  .wp .acts { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .wp .go { background:var(--accent); color:#fff; border:none; border-radius:999px;
+            font:inherit; font-size:.78rem; padding:.1rem .7rem; cursor:pointer; }
+  .wp .go.done { background:none; border:1px solid var(--line); color:var(--muted); }
+  .wp .go:hover { filter:brightness(1.1); }
+  /* 繼續做：選一個目標 → 複製 prompt */
+  /* 置中視窗（繼續做／詳細／勘誤）共用同一套外框、標題列與內文 */
+  dialog.modal { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg);
+                 width:min(560px, 92vw); max-height:86vh; padding:0; overflow:hidden; }
+  /* 標題可能兩三行，用 calc 猜高度會把內文底部切掉；交給 flex 分配 */
+  dialog.modal[open] { display:flex; flex-direction:column; }
+  dialog.modal .head { flex:none; }
+  dialog.modal::backdrop { background:var(--overlay); }
+  dialog.modal .head { display:flex; align-items:flex-start; gap:.6rem; padding:.9rem 1.1rem .6rem; border-bottom:1px solid var(--line); }
+  dialog.modal .head h3 { margin:0; font-size:1.03rem; line-height:1.4; flex:1; }
+  dialog.modal .head .by { display:block; font-size:.85rem; color:var(--muted); font-weight:400; margin-top:.2rem; }
+  dialog.modal .head button { background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; cursor:pointer; padding:0 .2rem; }
+  dialog.modal .body { flex:1 1 auto; min-height:0; padding:.9rem 1.1rem 1.4rem; overflow:auto; font-size:.93rem; }
+  dialog.modal .body ul { margin:.3rem 0; padding-left:1.2rem; }
+  /* 繼續做：選一個目標 → 複製 prompt */
+  #nextstep { width:min(640px, 94vw); }
+  #nextstep .prog-slot .prog { margin:.1rem 0 .3rem; }
+  #nextstep .prog-slot .stg { margin-bottom:.8rem; }
+  #nextstep ol.steps { list-style:none; margin:.2rem 0 1rem; padding:0; display:grid; gap:.15rem; }
+  #nextstep ol.steps li { display:flex; align-items:center; gap:.5rem; font-size:.9rem; color:var(--muted); }
+  #nextstep ol.steps li .m { width:1.2rem; text-align:center; }
+  #nextstep ol.steps li.done { color:var(--fg); }
+  #nextstep ol.steps li.partial .m, #nextstep ol.steps li.running .m { color:var(--accent); }
+  #nextstep ol.steps li .note { font-size:.82rem; color:var(--accent); }
+  #nextstep h4 { margin:.6rem 0 .1rem; font-size:.95rem; }
+  #nextstep .hint { font-size:.82rem; color:var(--muted); margin:0 0 .5rem; }
+  #nextstep .opts { display:grid; gap:.4rem; }
+  #nextstep .opts button { text-align:left; background:var(--card); border:1px solid var(--line); border-radius:8px;
+                           padding:.45rem .7rem; cursor:pointer; font:inherit; color:var(--fg); }
+  #nextstep .opts button:hover, #nextstep .opts button.on { border-color:var(--accent); }
+  #nextstep .opts button span { display:block; font-size:.8rem; color:var(--muted); }
+  #nextstep .out[hidden] { display:none; }
+  #nextstep .out { margin-top:.8rem; }
+  #nextstep pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.6rem .7rem;
+                  white-space:pre-wrap; word-break:break-word; font-size:.82rem; max-height:32vh; overflow:auto; margin:.3rem 0; }
+  #nextstep .copy { background:var(--accent); color:#fff; border:none; border-radius:6px;
+                    padding:.3rem .8rem; cursor:pointer; font:inherit; }
+  .wp .terms { font-size:.78rem; color:var(--muted); }
+  /* 詳細 */
+  #wpinfo .body .shot { display:block; margin:0 0 .7rem; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  #wpinfo .body .shot img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
+  /* 勘誤：表格寬一點 */
+  #errinfo { width:min(760px, 94vw); }
+  .routes { font-size:.85rem; margin-top:.3rem; }
+  .routes .rt { display:inline-block; font-size:.7rem; font-weight:700; padding:0 .4rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.3rem; }
+  .routes .via { color:var(--muted); }
+
+</style>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="tl">
+    <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
+    <a class="brand" href="atlas.html">PACER Learn</a>
+  </div>
+  
+<div class="search">
+  <div class="sbox" id="sbox">
+    <span class="ico">🔍</span>
+    <input id="sinput" type="text" placeholder="搜尋作者、標題、分類…" autocomplete="off"
+           aria-label="搜尋作者、標題、分類…" aria-expanded="false" role="combobox" aria-controls="ac">
+  </div>
+  <ul class="ac" id="ac" role="listbox" hidden></ul>
+</div>
+
+  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T23:34:47+08:00" title="2026-10-01 23:34">更新於 2026-10-01 23:34</span></div>
+</header>
+
+
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+
+<nav class="side">
+  
+  <a class="on" href="atlas.html">📄 全部影片</a>
+  <a  href="listen.html">🎧 語音解析</a>
+  <a  href="notes.html">📝 筆記</a>
+  <a  href="digest.html">✍️ 練習</a>
+
+  <hr>
+  <p class="grp">篩選</p>
+  <button type="button" class="err-f" data-err-filter="err"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg><span class="lab">只看有勘誤的</span></button>
+  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
+  <hr>
+  
+  
+  
+  
+  <p class="grp">主題區</p>
+  <button type="button" class="cat-all on" data-cat="">全部影片<span class="n">1</span></button>
+  
+  <button type="button" class="cat-f" data-cat="睡眠" title="睡眠怎麼運作，以及怎麼在不看醫生的前提下把它調好。從體內時鐘、房間環境，一路到躺上床之後的行為。"><i style="background:#4e79a7"></i><span class="lab">睡眠</span><span class="n">1</span></button>
+  
+
+</nav>
+<main>
+
+<p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
+<p id="no-match" hidden>沒有符合條件的站。</p>
+
+
+
+
+<div class="wps">
+<article class="wp" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED" data-category="睡眠" data-err="2">
+  <a class="thumb" href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">
+    <span class="ph" aria-hidden="true"><span>6 tips for better sleep | Sleeping with Science, a TED series</span></span>
+    <img loading="lazy" src="https://i.ytimg.com/vi/t0kACis_dJE/mqdefault.jpg" data-fallback="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/frames/s03_72.jpg" alt="6 tips for better sleep | Sleeping with Science, a TED series">
+    <span class="dur">5m29s</span>
+  </a>
+  <h4><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">6 tips for better sleep | Sleeping with Science, a TED series</a></h4>
+  <div class="by">TED<button class="err d" type="button" data-err title="這篇共 8 段，其中 0 處確定錯誤／已過時、2 處見仁見智，點看詳細"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>2</button></div>
+  <div class="sub"><span title="2020-09-02">6 年前</span> · 8 段 · <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">YouTube</a></div>
+  <button class="cat" type="button" data-cat="睡眠" title="分類：睡眠"><i style="background:#4e79a7"></i>睡眠</button>
+  <div class="acts">
+    <button class="more-btn" type="button">詳細</button>
+    <button class="go" type="button">▸ 繼續做</button>
+  </div>
+  <div class="wp-prog">
+    <div class="prog" title="進度 8/10">
+      <span data-s="todo" title="1. 估成本 · 還沒做"></span><span data-s="done" title="2. 抓字幕 · 完成"></span><span data-s="done" title="3. 切段 · 完成"></span><span data-s="partial" title="4. 截圖 · 沒做完"></span><span data-s="done" title="5. 逐段分析 · 完成"></span><span data-s="done" title="6. 練習 · 完成"></span><span data-s="done" title="7. 筆記 · 完成"></span><span data-s="done" title="8. 文字解析 · 完成"></span><span data-s="skip" title="9. 連結各站 · 不需要"></span><span data-s="done" title="10. 語音解析 · 完成"></span><span data-s="done" title="11. podcast 頁 · 完成"></span>
+    </div>
+    <div class="stg"><span>進度</span><b>8/10</b></div>
+  </div>
+  <div class="wp-info">
+    <div><b>睡得更好的六條科學建議，以及它們管用的邊界</b></div>
+    <ul><li>搞懂規律為什麼排第一：它配合的是體內那個約 24 小時的時鐘</li><li>知道入睡需要核心體溫下降，於是房間要涼、熱水澡要提早洗</li><li>學會把褪黑激素當報時訊號看，不再把它當安眠藥用</li><li>拿到一條反直覺的做法：睡不著就下床，切斷床與失眠的連結</li><li>分得出睡眠衛生與睡眠障礙的界線，知道什麼時候該看醫生</li></ul>
+    <div class="terms">術語：<code>sleep hygiene</code> <code>RU-SATED</code> <code>circadian rhythm</code> <code>suprachiasmatic nucleus</code> <code>zeitgeber</code> <code>social jet lag</code> <code>core body temperature</code> <code>distal vasodilation</code> …共 21 個</div>
+    
+    <div><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">開啟文字解析 →</a></div>
+  </div>
+  
+  <div class="wp-err">
+    <p class="err-legend"><span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智（取決於版本或情境）</span></p>
+    <div style="overflow-x:auto"><table class="issues-sum">
+      <tr><th>段落</th><th>原話（transcript 逐字）</th><th>說明</th></tr>
+      
+      <tr class="debatable">
+        <td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s4">4. 三：暗，傍晚就要開始</a><br><span class="muted">2:04</span></td>
+        <td class="q">「儘量遠離所有的電腦螢幕、」</td>
+        <td>方向沒錯，但把螢幕當成頭號元凶可能放錯重點。螢幕的光確實會壓抑褪黑激素，不過在一般使用距離下，手機與平板送進眼睛的光量遠少於整室照明；近年多項隨機對照試驗測到的入睡延後幅度偏小，而且很難跟「內容讓人興奮」「滑著滑著就晚睡」這兩個行為因素分開。真正的大戶往往是頭頂那盞燈——所以「把屋裡的燈亮度減半」這一句的效益可能高於關掉手機。<br><span class="ev">依據: Gooley et al., J Clin Endocrinol Metab 2011（睡前室內照明壓抑褪黑激素約 50%）；Chang et al., PNAS 2015（電子閱讀器效果可測但幅度有限）</span></td>
+      </tr>
+      
+      <tr class="debatable">
+        <td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s5">5. 四：睡不著就下床</a><br><span class="muted">2:39</span></td>
+        <td class="q">「但過了 25 分鐘左右都還沒入睡，」</td>
+        <td>25 分鐘是作者的經驗法則，不是公認的數字。刺激控制的原始版本與多數 CBT-I 手冊給的是 15 到 20 分鐘，也有治療師主張不設數字、覺得清醒到不舒服就起身。更要緊的是另一件影片沒說的事：這段時間要用感覺估，不要真的看鐘——盯著時間本身就會提高警醒，反而讓人更睡不著。<br><span class="ev">依據: Bootzin 的刺激控制原始指引（1972）與常見 CBT-I 手冊多採 15–20 分鐘，並一致建議把時鐘轉開</span></td>
+      </tr>
+      
+    </table></div>
+  </div>
+  
+</article>
+</div>
+<dialog id="nextstep" class="modal">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="關閉 (Esc)">✕</button></div>
+  <div class="body">
+    <div class="prog-slot"></div>
+    <ol class="steps"></ol>
+    <h4>要往下做到哪裡？</h4>
+    <p class="hint">選一個 → 複製 prompt → 貼到 Claude Code 執行</p>
+    <div class="opts"></div>
+    <div class="out" hidden>
+      <pre></pre>
+      <button class="copy" type="button">複製 prompt</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="wpinfo" class="modal">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="關閉 (Esc)">✕</button></div>
+  <div class="body"></div>
+</dialog>
+<dialog id="errinfo" class="modal">
+  <div class="head"><h3></h3><button type="button" data-close aria-label="關閉 (Esc)">✕</button></div>
+  <div class="body"></div>
+</dialog>
+</main>
+
+</div>
+
+
+
+<!-- 全視窗 viewer -->
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <span class="cap"></span>
+    <button data-act="zoomout" title="縮小 (-)">−</button>
+    <button data-act="zoomin" title="放大 (+)">+</button>
+    <button data-act="fit" title="最佳視角 (F)">Fit</button>
+    <button data-act="reset" title="原始大小 (1)">1:1</button>
+    <button data-act="close" title="關閉 (Esc)">✕</button>
+  </div>
+  <div class="v-stage">
+    <div class="v-content"></div>
+    <button class="v-nav prev" data-act="prev" hidden title="上一張 (←)">‹</button>
+    <button class="v-nav next" data-act="next" hidden title="下一張 (→)">›</button>
+  </div>
+</div>
+
+<script id="tips-data" type="application/json">{}</script>
+
+
+
+<script id="steps-data" type="application/json">{"t0kACis_dJE": {"actions": [{"desc": "\u5305\u542b 1 \u6b65\uff1a\u4f30\u6210\u672c", "label": "\u53ea\u505a\u300c\u4f30\u6210\u672c\u300d", "prompt": "/atlas:learn-estimate t0kACis_dJE"}, {"desc": "\u5305\u542b 2 \u6b65\uff1a\u4f30\u6210\u672c\u3001\u622a\u5716", "label": "\u505a\u5230\u300c\u622a\u5716\u300d", "prompt": "\u8acb\u5e6b\u300c6 tips for better sleep | Sleeping with Science, a TED series\u300d\u9019\u7bc7\u7e7c\u7e8c\u505a\u5b8c\u5b78\u7fd2 pipeline\uff08video_id: t0kACis_dJE\uff09\u3002\u4f9d\u5e8f\u57f7\u884c\uff0c\u6bcf\u4e00\u6b65\u8dd1\u5b8c\u518d\u8dd1\u4e0b\u4e00\u6b65\uff0c\u4e2d\u9014\u4e0d\u7528\u554f\u6211\uff1a\n\n1. /atlas:learn-estimate t0kACis_dJE\n2. /atlas:learn-shot t0kACis_dJE\n\n\u898f\u5247\u90fd\u5728 rules/ \u5e95\u4e0b\uff0c\u7167\u8457\u505a\uff1b\u6bcf\u4e00\u6b65\u7684\u7522\u51fa\u8981\u904e scripts/validate.py\u3002"}], "n_done": 8, "n_total": 10, "stages": [{"key": "estimate", "n": 1, "name": "\u4f30\u6210\u672c", "note": "", "state": "todo"}, {"key": "fetch", "n": 2, "name": "\u6293\u5b57\u5e55", "note": "", "state": "done"}, {"key": "segment", "n": 3, "name": "\u5207\u6bb5", "note": "", "state": "done"}, {"key": "shot", "n": 4, "name": "\u622a\u5716", "note": "", "state": "partial"}, {"key": "analyze", "n": 5, "name": "\u9010\u6bb5\u5206\u6790", "note": "", "state": "done"}, {"key": "digest", "n": 6, "name": "\u7df4\u7fd2", "note": "", "state": "done"}, {"key": "notes", "n": 7, "name": "\u7b46\u8a18", "note": "", "state": "done"}, {"key": "render", "n": 8, "name": "\u6587\u5b57\u89e3\u6790", "note": "", "state": "done"}, {"key": "atlas", "n": 9, "name": "\u9023\u7d50\u5404\u7ad9", "note": "", "state": "skip"}, {"key": "narrate", "n": 10, "name": "\u8a9e\u97f3\u89e3\u6790", "note": "", "state": "done"}, {"key": "listen", "n": 11, "name": "podcast \u9801", "note": "", "state": "done"}], "title": "6 tips for better sleep | Sleeping with Science, a TED series"}}</script>
+
+<script id="ui-data" type="application/json">{"any": "\u4efb\u610f", "author": "\u4f5c\u8005", "category": "\u5206\u985e", "showing": "\u986f\u793a {n} / {total} \u7ad9", "title": "\u6a19\u984c", "video": "\u5f71\u7247"}</script>
+
+
+<script type="module">
+
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  // 只有頁面真的有圖才去 CDN 抓 mermaid；抓不到（離線）也不能讓下面的搜尋、視窗等失效
+  if (document.querySelector(".mermaid")) {
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
+        flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
+      await mermaid.run({ querySelector: ".mermaid" });
+    } catch (e) { console.warn("mermaid 沒載到：", e); }
+  }
+
+  /* mindmap 配色：不吃 mermaid 主題，依 section 上色，線與節點同色，深淺主題都看得清 */
+  const PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"];
+  const css = getComputedStyle(document.documentElement);
+  const fg = css.getPropertyValue("--fg").trim(), bg = css.getPropertyValue("--bg").trim(), accent = css.getPropertyValue("--accent").trim();
+  const sectionOf = (el) => { const m = (el.getAttribute("class") || "").match(/section-(?:edge-)?(-?\d+)/); return m ? +m[1] : null; };
+  const colorOf = (sec) => sec === null || sec < 0 ? accent : PALETTE[sec % PALETTE.length];
+  const setImp = (el, props) => Object.entries(props).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
+  const paintMindmap = (svg) => {
+    // mermaid 主題用 !important 上色，所以這裡也要 !important 才蓋得掉
+    svg.querySelectorAll(".mindmap-edges path, path.edge").forEach((p) => {
+      setImp(p, { stroke: colorOf(sectionOf(p)), "stroke-width": "2.5px", "stroke-opacity": ".75", fill: "none" });
+    });
+    svg.querySelectorAll(".mindmap-node").forEach((n) => {
+      const sec = sectionOf(n), c = colorOf(sec), isRoot = sec === null || sec < 0;
+      n.querySelectorAll("rect, circle, path, polygon").forEach((sh) => {
+        setImp(sh, { fill: isRoot ? c : `color-mix(in srgb, ${c} 28%, ${bg})`, "fill-opacity": "1", stroke: c, "stroke-width": "2px" });
+      });
+      n.querySelectorAll("text, tspan").forEach((t) => setImp(t, { fill: isRoot ? "#fff" : fg }));
+      n.querySelectorAll("foreignObject span, foreignObject div, foreignObject p").forEach((t) => setImp(t, { color: isRoot ? "#fff" : fg }));
+    });
+  };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => { if (svg.querySelector(".mindmap-node")) paintMindmap(svg); });
+
+  /* hover 顯示完整文字：短標籤 → 完整說明（render.py 產生的對照表），用 SVG <title> */
+  const TIPS = JSON.parse(document.getElementById("tips-data").textContent);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const addTitle = (g, text) => { const t = document.createElementNS(SVGNS, "title"); t.textContent = text; g.prepend(t); };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => {
+    svg.querySelectorAll(".node, .mindmap-node, .edgeLabel, .cluster").forEach((g) => {
+      if (g.querySelector(":scope > title")) return;
+      const key = (g.textContent || "").replace(/\s+/g, "");
+      if (TIPS[key]) addTitle(g, TIPS[key]);
+    });
+    // mindmap 的線 = 上下層包含關係
+    svg.querySelectorAll(".mindmap-edges path, path.edge.section-edge-0, path[class*='section-edge-']").forEach((p) => {
+      if (!p.querySelector("title")) addTitle(p, "\u4e0a\u5c64 \u2192 \u4e0b\u5c64\uff1a\u6bb5\u843d\u5305\u542b\u5728\u6b64\u6bb5\u9996\u6b21\u5b9a\u7fa9\u7684\u8853\u8a9e");
+    });
+  });
+
+  /* ---------- viewer：pan / zoom / fit，mermaid 與截圖共用 ---------- */
+  const V = {
+    el: document.getElementById("viewer"),
+    stage: document.querySelector("#viewer .v-stage"),
+    content: document.querySelector("#viewer .v-content"),
+    cap: document.querySelector("#viewer .cap"),
+    prev: document.querySelector("#viewer .prev"),
+    next: document.querySelector("#viewer .next"),
+    items: [], idx: 0, s: 1, tx: 0, ty: 0, w: 0, h: 0,
+  };
+  const apply = () => V.content.style.transform = `translate(${V.tx}px,${V.ty}px) scale(${V.s})`;
+  const fit = () => {
+    const sw = V.stage.clientWidth, sh = V.stage.clientHeight;
+    V.s = Math.min(sw / V.w, sh / V.h) * 0.95;
+    V.tx = (sw - V.w * V.s) / 2; V.ty = (sh - V.h * V.s) / 2; apply();
+  };
+  const reset = () => { V.s = 1; V.tx = (V.stage.clientWidth - V.w) / 2; V.ty = (V.stage.clientHeight - V.h) / 2; apply(); };
+  const zoomAt = (f, cx, cy) => {
+    const ns = Math.min(20, Math.max(0.05, V.s * f));
+    V.tx = cx - (cx - V.tx) * (ns / V.s); V.ty = cy - (cy - V.ty) * (ns / V.s); V.s = ns; apply();
+  };
+  const show = (i) => {
+    V.idx = (i + V.items.length) % V.items.length;
+    const it = V.items[V.idx];
+    V.content.replaceChildren();
+    V.cap.textContent = (V.items.length > 1 ? `${V.idx + 1}/${V.items.length} · ` : "") + it.caption;
+    V.prev.hidden = V.next.hidden = V.items.length < 2;
+    if (it.type === "svg") {
+      const svg = it.node.cloneNode(true);
+      const vb = svg.viewBox.baseVal;
+      V.w = vb.width || svg.width.baseVal.value || 800; V.h = vb.height || svg.height.baseVal.value || 600;
+      svg.removeAttribute("style"); svg.setAttribute("width", V.w); svg.setAttribute("height", V.h);
+      V.content.appendChild(svg); fit();
+    } else {
+      const img = new Image();
+      img.onload = () => { V.w = img.naturalWidth; V.h = img.naturalHeight; V.content.appendChild(img); fit(); };
+      img.src = it.src;
+    }
+  };
+  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; document.body.style.overflow = "hidden"; show(i); };
+  const close = () => { V.el.hidden = true; document.body.style.overflow = ""; V.content.replaceChildren(); };
+
+  V.el.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act) return;
+    ({ zoomin: () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       zoomout: () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       fit, reset, close, prev: () => show(V.idx - 1), next: () => show(V.idx + 1) })[act]();
+  });
+  V.stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = V.stage.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  let drag = null;
+  V.stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    drag = { x: e.clientX - V.tx, y: e.clientY - V.ty }; V.stage.classList.add("drag"); V.stage.setPointerCapture(e.pointerId);
+  });
+  V.stage.addEventListener("pointermove", (e) => { if (drag) { V.tx = e.clientX - drag.x; V.ty = e.clientY - drag.y; apply(); } });
+  V.stage.addEventListener("pointerup", () => { drag = null; V.stage.classList.remove("drag"); });
+  V.stage.addEventListener("dblclick", (e) => { const r = V.stage.getBoundingClientRect(); zoomAt(1.6, e.clientX - r.left, e.clientY - r.top); });
+  addEventListener("keydown", (e) => {
+    if (V.el.hidden) return;
+    const k = { Escape: close, ArrowLeft: () => show(V.idx - 1), ArrowRight: () => show(V.idx + 1),
+                "+": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2), "=": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+                "-": () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2), f: fit, F: fit, "1": reset, "0": fit }[e.key];
+    if (k) { e.preventDefault(); k(); }
+  });
+  addEventListener("resize", () => { if (!V.el.hidden) fit(); });
+
+  /* mermaid → viewer */
+  document.querySelectorAll(".mm-wrap").forEach((w) => {
+    w.addEventListener("click", () => {
+      const svg = w.querySelector("svg"); if (!svg) return;
+      open([{ type: "svg", node: svg, caption: w.dataset.cap || "" }]);
+    });
+  });
+
+
+
+  /* 「更新於」在瀏覽當下算相對時間，隔天再打開也不會停在產生時的那一刻 */
+  const AGO = {"d": "{n} \u5929\u524d", "h": "{n} \u5c0f\u6642\u524d", "mo": "{n} \u500b\u6708\u524d", "now": "\u525b\u525b", "today": "\u4eca\u5929", "updated": "\u66f4\u65b0\u65bc {t}", "y": "{n} \u5e74\u524d"};
+  (() => {
+    const el = document.getElementById("updated"), t = Date.parse(el.dataset.ts);
+    if (!t) return;
+    const h = Math.floor((Date.now() - t) / 36e5), d = Math.floor(h / 24);
+    const f = (k, n) => AGO[k].replace("{n}", n);
+    const rel = h < 1 ? AGO.now : h < 24 ? f("h", h)
+      : d < 30 ? f("d", d) : d < 365 ? f("mo", Math.max(1, Math.floor(d / 30))) : f("y", Math.floor(d / 365));
+    el.textContent = AGO.updated.replace("{t}", rel);
+  })();
+
+  /* 縮圖抓不到（沒截圖或離線）就換另一個來源 */
+  document.querySelectorAll(".wp .thumb img").forEach((img) => {
+    img.addEventListener("error", () => {
+      const fb = img.dataset.fallback;
+      if (fb) { img.dataset.fallback = ""; img.src = fb; }
+      else { img.remove(); }
+    });
+  });
+
+  /* 繼續做：看這一站走到哪，選一個目標，複製 prompt 貼到 Claude Code */
+  const STEPS = JSON.parse(document.getElementById("steps-data").textContent);
+  const NS = document.getElementById("nextstep");
+  const NSTR = {"copied": "\u2713 \u5df2\u8907\u88fd", "copy": "\u8907\u88fd prompt", "done": "\u5b8c\u6210", "partial": "\u6c92\u505a\u5b8c", "running": "\u9032\u884c\u4e2d", "skip": "\u4e0d\u9700\u8981", "todo": "\u9084\u6c92\u505a"};
+  const MARK = { done: "✔", partial: "◐", todo: "○", skip: "·", running: "◔" };
+  const copyText = async (text, btn) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {                                   // file:// 開啟時 clipboard API 會被擋，用舊招
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (__) {}
+      ta.remove();
+    }
+    btn.textContent = NSTR.copied;
+    setTimeout(() => { btn.textContent = NSTR.copy; }, 1600);
+  };
+  document.querySelectorAll(".wp .go").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const wp = btn.closest(".wp");
+      const d = STEPS[wp.dataset.id];
+      if (!d) return;
+      NS.querySelector(".head h3").textContent = d.title;
+      NS.querySelector(".prog-slot").replaceChildren(
+        ...[...(wp.querySelector(".wp-prog")?.children || [])].map((n) => n.cloneNode(true)));
+      NS.querySelector("ol.steps").replaceChildren(...d.stages.map((st) => {
+        const li = document.createElement("li");
+        li.className = st.state;
+        li.append(Object.assign(document.createElement("span"), { className: "m", textContent: MARK[st.state] }));
+        li.append(`${st.n}. ${st.name}`);
+        const tail = st.note || (st.state === "done" ? "" : NSTR[st.state]);
+        if (tail) li.append(Object.assign(document.createElement("span"), { className: "note", textContent: "— " + tail }));
+        return li;
+      }));
+      const out = NS.querySelector(".out"), pre = NS.querySelector(".out pre");
+      out.hidden = true;
+      NS.querySelector(".opts").replaceChildren(...d.actions.map((a) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.append(a.label, Object.assign(document.createElement("span"), { textContent: a.desc }));
+        b.addEventListener("click", () => {
+          NS.querySelectorAll(".opts button").forEach((x) => x.classList.remove("on"));
+          b.classList.add("on");
+          pre.textContent = a.prompt;
+          out.hidden = false;
+          copyText(a.prompt, NS.querySelector(".copy"));
+          out.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+        return b;
+      }));
+      NS.showModal();
+    });
+  });
+  NS.querySelector(".copy").addEventListener("click", (e) => copyText(NS.querySelector(".out pre").textContent, e.currentTarget));
+  NS.querySelector("[data-close]").addEventListener("click", () => NS.close());
+  NS.addEventListener("click", (e) => { if (e.target === NS) NS.close(); });
+
+  /* 詳細 → 置中視窗 */
+  const DLG = document.getElementById("wpinfo");
+  function showInfo(wp) {
+    const h3 = DLG.querySelector(".head h3");
+    h3.innerHTML = "";
+    h3.append(wp.dataset.title,
+      Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
+    const shot = wp.querySelector(".thumb img");
+    const body = [];
+    if (shot) {                                  // 節點上看到的縮圖，視窗裡放大一點
+      const fig = document.createElement("a");
+      fig.className = "shot";
+      fig.href = wp.querySelector("h4 a").getAttribute("href");
+      fig.append(Object.assign(document.createElement("img"), { src: shot.currentSrc || shot.src, alt: "" }));
+      body.push(fig);
+    }
+    body.push(...[...wp.querySelector(".wp-info").children].map((n) => n.cloneNode(true)));
+    DLG.querySelector(".body").replaceChildren(...body);
+    DLG.showModal();
+  }
+  document.querySelectorAll(".wp .more-btn").forEach((btn) => {
+    btn.addEventListener("click", () => showInfo(btn.closest(".wp")));
+  });
+  DLG.addEventListener("click", (e) => { if (e.target === DLG || e.target.closest("[data-close]")) DLG.close(); });
+
+  /* 勘誤膠囊 → 這支影片的勘誤表（同樣是置中視窗） */
+  const EDLG = document.getElementById("errinfo");
+  document.querySelectorAll(".wp button.err[data-err]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const wp = btn.closest(".wp"), tbl = wp.querySelector(".wp-err");
+      if (!tbl) return;
+      const h3 = EDLG.querySelector("h3");
+      h3.innerHTML = "";
+      h3.append("\u52d8\u8aa4" + " · " + wp.dataset.title,
+        Object.assign(document.createElement("span"), { className: "by", textContent: wp.dataset.channel }));
+      EDLG.querySelector(".body").replaceChildren(...[...tbl.children].map((n) => n.cloneNode(true)));
+      EDLG.showModal();
+    });
+  });
+  EDLG.addEventListener("click", (e) => { if (e.target === EDLG || e.target.closest("[data-close]")) EDLG.close(); });
+
+  /* 側欄的勘誤篩選：透過 extra_ok 併進搜尋條件（跟 chip 條件 AND）。
+     必須在 search.js() 之前宣告，它會在初始化時抓這個函式。 */
+  let errFilter = "";
+  function extra_ok(el) {
+    if (!errFilter) return true;
+    const n = +(el.dataset.err || 0);
+    return errFilter === "err" ? n > 0 : n === 0;
+  }
+
+
+  /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND（templates/_search.html.j2） ---------- */
+  const card_sel = ".wp", group_sel = null;
+  const UI = JSON.parse(document.getElementById("ui-data").textContent);
+  const CARDS = [...document.querySelectorAll(card_sel)].map((el) => ({
+    el, id: el.dataset.id || "", title: el.dataset.title || "",
+    channel: el.dataset.channel || "", category: el.dataset.category || "",
+    text: el.dataset.text || "",
+  }));
+  const extraOk = typeof extra_ok === "function" ? extra_ok : () => true;
+  const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
+        acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
+        clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
+  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any, vid: UI.video };
+  const chips = [];
+  let acItems = [], acIdx = -1;
+
+  const uniq = (key) => {
+    const m = new Map();
+    CARDS.forEach((c) => { const v = c[key]; if (v) m.set(v, (m.get(v) || 0) + 1); });
+    return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  };
+  const AUTHORS = uniq("channel"), CATS = uniq("category");
+  const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
+  const match = (c, ch) => ch.kind === "vid" ? c.id === ch.value
+    : ch.kind === "author" ? has(c.channel, ch.value)
+    : ch.kind === "category" ? has(c.category, ch.value)
+    : ch.kind === "title" ? has(c.title, ch.value)
+    : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value) || has(c.text, ch.value);
+
+  const refilter = () => {
+    let shown = 0;
+    CARDS.forEach((c) => {
+      const ok = extraOk(c.el) && chips.every((ch) => match(c, ch));
+      c.el.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (group_sel) document.querySelectorAll(group_sel).forEach((sec) => {
+      sec.hidden = ![...sec.querySelectorAll(card_sel)].some((w) => !w.hidden);
+    });
+    countEl.textContent = UI.showing.replace("{n}", shown).replace("{total}", CARDS.length);
+    clearEl.hidden = chips.length === 0;
+    noMatch.hidden = shown > 0;
+  };
+
+  const drawChips = () => {
+    box.querySelectorAll(".chip").forEach((e) => e.remove());
+    chips.forEach((ch, i) => {
+      const el = document.createElement("span");
+      el.className = "chip";
+      el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
+      el.querySelector(".k").textContent = KIND[ch.kind] + "：";
+      el.querySelector(".v").textContent = ch.label || ch.value;
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); dropUrlState(); drawChips(); refilter(); input.focus(); });
+      box.insertBefore(el, input);
+    });
+  };
+  const addChip = (kind, value, label) => {
+    value = value.trim();
+    if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
+    chips.push({ kind, value, label });
+    input.value = "";
+    dropUrlState();
+    drawChips(); refilter(); hideAc();
+  };
+
+  /* ?only= 與 #hash 只是「進頁面時的初始狀態」。使用者一改條件，網址就不再代表畫面上的東西，
+     而且重新整理會把 ?only= 又套回去。所以任何手動改動都把網址洗乾淨（不留歷史紀錄）。 */
+  let seeded = false;
+  const dropUrlState = () => {
+    if (!seeded || (!location.search && !location.hash)) return;
+    history.replaceState(null, "", location.pathname);
+  };
+
+  const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
+  const drawAc = () => {
+    const q = input.value.trim();
+    acItems = [];
+    if (q) acItems.push({ kind: "any", value: q, n: null });
+    AUTHORS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "author", value: v, n }));
+    CATS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "category", value: v, n }));
+    if (!acItems.length) return hideAc();
+    acEl.replaceChildren(...acItems.map((it, i) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.innerHTML = `<span class="k"></span><span class="v"></span>`;
+      li.querySelector(".k").textContent = KIND[it.kind];
+      li.querySelector(".v").textContent = it.value;
+      if (it.n !== null) { const n = document.createElement("span"); n.className = "n"; n.textContent = it.n; li.appendChild(n); }
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); addChip(it.kind, it.value); });
+      li.addEventListener("mouseenter", () => { acIdx = i; paintAc(); });
+      return li;
+    }));
+    acIdx = q ? 0 : -1;
+    paintAc();
+    acEl.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  };
+  const paintAc = () => [...acEl.children].forEach((li, i) => li.classList.toggle("on", i === acIdx));
+  const commit = () => {
+    if (acIdx >= 0 && acItems[acIdx]) addChip(acItems[acIdx].kind, acItems[acIdx].value);
+    else if (input.value.trim()) addChip("any", input.value);
+  };
+
+  box.addEventListener("click", (e) => { if (!e.target.closest(".chip")) input.focus(); });
+  input.addEventListener("input", drawAc);
+  input.addEventListener("focus", drawAc);
+  input.addEventListener("blur", () => setTimeout(hideAc, 120));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (acEl.hidden) return drawAc();
+      acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acItems.length) % acItems.length;
+      paintAc();
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (e.key === " " && !input.value.trim() && acIdx < 0) return;
+      e.preventDefault(); commit();
+    } else if (e.key === "Escape") { hideAc(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); dropUrlState(); drawChips(); refilter(); }
+  });
+  clearEl.addEventListener("click", () => { chips.length = 0; dropUrlState(); drawChips(); refilter(); input.focus(); });
+
+  /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
+     autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
+  const only = new URLSearchParams(location.search).get("only");
+  if (only) {
+    const c = CARDS.find((x) => x.id === only);
+    chips.push({ kind: "vid", value: only, label: c ? c.title : only });
+    drawChips();
+  }
+  refilter();
+  seeded = true;
+
+  /* 分類可點：加一個篩選條件（跟 listen.html 一樣的行為） */
+  document.querySelectorAll(".wp .cat").forEach((el) =>
+    el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+
+  /* ---- 側欄：分類同步交給 shell，這裡只處理 atlas 自己的勘誤篩選 ---- */
+
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (b.dataset.cat) chips.push({ kind: "category", value: b.dataset.cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+  /* chip 從哪裡被加掉都要同步側欄：盯著 #sbox 的子節點變動最保險 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+
+  side.querySelectorAll("[data-err-filter]").forEach((b) => b.addEventListener("click", () => {
+    const want = b.dataset.errFilter;
+    errFilter = errFilter === want ? "" : want;
+    side.querySelectorAll("[data-err-filter]").forEach((x) =>
+      x.classList.toggle("on", x.dataset.errFilter === errFilter));
+    refilter(); closeNav();
+  }));
+
+  /* 窄螢幕：側欄變抽屜（templates/_shell.html.j2） */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    const si = document.getElementById("sinput");
+    if (e.key === "/" && !typing && si) { e.preventDefault(); si.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
+
+
+</script>
+</body>
+</html>

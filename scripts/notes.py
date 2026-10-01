@@ -18,11 +18,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas import fmt_ymd
 from common import (
     DEFAULT_WORKSPACE,
-    default_output_lang,
     fmt_dur,
     is_blog,
     load_json,
+    set_ui_lang,
     sibling_pages,
+    station_lang,
     template_dirs,
     write_text,
 )
@@ -59,7 +60,7 @@ def load_stations(ws: Path) -> list[dict]:
             "has_lesson": (d / "lesson.mp3").exists(),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{vid}/mqdefault.jpg",
-            "output_lang": norm_lang(meta.get("output_lang") or default_output_lang(ws)),
+            "output_lang": norm_lang(station_lang(meta, ws)),
             "notes": [dict(n, key=f"{vid}:{n['id']}", seg_title=seg_titles.get(n["seg_id"], ""),
                            href=f"{quote(d.name)}/plan.html#{vid}-s{n['seg_id']}") for n in notes["notes"]],
         })
@@ -98,7 +99,10 @@ def render(ws: Path) -> Path:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE)
+    ap.add_argument("--ui-lang", default=None,
+                    help="強制 HTML 介面語言（例如 en），蓋過各站 meta.json 的 output_lang；只換介面字串不翻內文")
     args = ap.parse_args(argv)
+    set_ui_lang(args.ui_lang)
     render(args.workspace)
 
 

@@ -1,0 +1,1403 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Practice</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; --ok:#1a7f37; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; --ok:#3fb950; }
+  }
+  body { margin:0; padding:1.4rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 820px; margin: 0 auto; }
+  h1 { font-size:1.7rem; margin:.2rem 0 .3rem; }
+  h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:2.2rem; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  a { color:var(--accent); }
+  /* 捲軸：平常隱形，滑鼠進到那塊區域才淡入（側欄、置中視窗、表格橫捲都一樣） */
+  * { scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  *:hover { scrollbar-color:var(--muted) transparent; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:transparent; border-radius:99px;
+                              border:2px solid transparent; background-clip:content-box; }
+  *:hover::-webkit-scrollbar-thumb { background:var(--muted); background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--fg); background-clip:content-box; }
+
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  .stats { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; margin:.2rem 0 1rem; }
+
+
+  :root { --top:3.6rem; --content:64rem; }
+  body { padding:0; }
+  /* 置頂列：三欄，左右等寬，搜尋框才會真的置中（右側在窄螢幕收起也不會偏） */
+  .topbar { position:sticky; top:0; z-index:40; display:grid; align-items:center; gap:.8rem;
+            grid-template-columns:minmax(0,1fr) minmax(0,46rem) minmax(0,1fr);
+            height:var(--top); box-sizing:border-box; padding:0 .9rem;
+            background:var(--bg); border-bottom:1px solid var(--line); }
+  .topbar .tl { display:flex; align-items:center; gap:.4rem; min-width:0; }
+  .topbar .tr { display:flex; align-items:center; justify-content:flex-end; gap:1rem;
+                color:var(--muted); font-size:.82rem; white-space:nowrap; }
+  .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
+                   color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .search { margin:0; min-width:0; }
+  /* 條件一多就換行的話會把置頂列撐高、整個版面跟著跳；改成單行、超出就橫向捲 */
+  .topbar .sbox { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
+  .topbar .sbox .ico { flex:none; }
+  .topbar .sbox input { min-width:7rem; }
+  .topbar .chip { flex:none; max-width:11rem; }
+  .topbar .chip .v { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
+              line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
+  .menu-btn:hover { background:var(--card); }
+
+  .layout { display:grid; grid-template-columns:15rem minmax(0, 1fr); align-items:start; }
+  .layout main { max-width:var(--content); width:100%; margin:0 auto; padding:1.2rem 1.4rem 4rem; box-sizing:border-box; }
+  .layout main > :is(h1,h2):first-child { margin-top:0; }
+
+  /* 左側導覽。捲軸平常看不見，滑到側欄上才淡入（YouTube 的做法） */
+  .side { position:sticky; top:var(--top); max-height:calc(100vh - var(--top));
+          overflow-y:auto; overflow-x:hidden; box-sizing:border-box;
+          padding:1.2rem .7rem 2rem; border-right:1px solid var(--line); }
+  .side a, .side button { display:flex; align-items:center; gap:.55rem; width:100%; box-sizing:border-box;
+                          min-width:0; text-align:left;
+                          padding:.4rem .7rem; border-radius:8px; border:none; background:none;
+                          color:var(--fg); font:inherit; font-size:.92rem; text-decoration:none; cursor:pointer; }
+  .side a:hover, .side button:hover { background:var(--card); }
+  .side a.on { background:var(--card); font-weight:700; }
+  .side button.on { background:var(--accent); color:#fff; }
+  .side button.on .n { color:#fff; opacity:.8; }
+  .side .grp { margin:1.1rem 0 .3rem; padding:0 .7rem; box-sizing:border-box; font-size:.78rem; font-weight:700;
+               letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
+  .side hr { border:none; border-top:1px solid var(--line); margin:1rem .4rem; }
+  .side i { display:inline-block; width:.6rem; height:.6rem; border-radius:3px; flex:none; }
+  .side .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .side .lab { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .side .tool { font-size:.85rem; color:var(--muted); }
+
+  .scrim { display:none; }
+  @media (max-width: 900px) {
+    .topbar { grid-template-columns:auto minmax(0,1fr); }
+    .topbar .tr { display:none; }
+    .layout { grid-template-columns:minmax(0, 1fr); }
+    .layout main { padding:1rem .9rem 5rem; }
+    .menu-btn { display:block; }
+    .side { position:fixed; inset:var(--top) auto 0 0; width:15rem; background:var(--bg); z-index:45;
+            transform:translateX(-100%); transition:transform .18s ease;
+            max-height:none; height:calc(100vh - var(--top)); }
+    body.nav-open .side { transform:none; }
+    body.nav-open .scrim { display:block; position:fixed; inset:var(--top) 0 0; background:var(--overlay); z-index:44; }
+  }
+
+  :root { --content:66rem; }
+  /* 篩選搬進側欄：在那裡是直向的一排按鈕 */
+  .side .filters { display:block; margin:0; padding:0; position:static; border:none; background:none; }
+  .side .filters button { border:none; background:none; border-radius:8px; font-size:.92rem;
+                          padding:.4rem .7rem; width:100%; justify-content:flex-start; }
+  .side .filters button:hover { background:var(--card); }
+  .side .filters button.on { background:var(--accent); color:#fff; }
+  .side .filters .sp { display:none; }
+  
+  /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
+  .search { position:relative; margin:.6rem 0 .3rem; }
+  .sbox { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.45rem .6rem;
+          background:var(--card); border:1px solid var(--line); border-radius:10px; cursor:text; }
+  .sbox:focus-within { border-color:var(--accent); }
+  .sbox .ico { color:var(--muted); }
+  .sbox input { flex:1; min-width:11rem; border:none; outline:none; background:none; color:var(--fg); font:inherit; padding:.15rem 0; }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--accent); color:#fff;
+          border-radius:999px; padding:.1rem .3rem .1rem .55rem; font-size:.83rem; white-space:nowrap; }
+  .chip .k { opacity:.75; font-size:.75rem; }
+  .chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:.95rem; line-height:1; padding:0 .2rem; }
+  .ac { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; margin:0; padding:.25rem 0; list-style:none;
+        background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+        max-height:17rem; overflow:auto; }
+  .ac[hidden] { display:none; }
+  .ac li { display:flex; align-items:center; gap:.5rem; padding:.35rem .7rem; cursor:pointer; font-size:.92rem; }
+  .ac li.on { background:var(--card); }
+  .ac .k { font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3rem; }
+  .ac .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .shint { font-size:.8rem; color:var(--muted); display:flex; gap:1rem; flex-wrap:wrap; margin:.35rem .2rem 1.4rem; }
+  .shint button { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+  #no-match { color:var(--muted); }
+
+  .search { margin-bottom:0; }
+  /* ---- 今天 ---- */
+  .today { display:flex; flex-wrap:wrap; gap:.6rem 1.2rem; align-items:center; }
+  .today .big { font-size:1.05rem; font-weight:700; }
+  .today button { font:inherit; padding:.3rem .9rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  .today button:disabled { opacity:.45; cursor:default; }
+  .filters { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.4rem 0 1.2rem; position:sticky; top:0;
+             background:var(--bg); padding:.5rem 0; z-index:5; border-bottom:1px solid var(--line); }
+  .filters button { font:inherit; font-size:.85rem; padding:.2rem .7rem; border-radius:999px; border:1px solid var(--line);
+                    background:var(--card); color:var(--fg); cursor:pointer; }
+  .filters button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .filters .sp { flex:1; } .filters .tool { border-style:dashed; font-size:.8rem; }
+  /* ---- 轉移到 Claude Code ---- */
+  .cc { margin:.8rem 0 1.2rem; }
+  .cc h2 { margin:0 0 .3rem; font-size:1rem; border:none; padding:0; }
+  .cc p { margin:.25rem 0; font-size:.88rem; }
+  .cc .steps { color:var(--muted); font-size:.82rem; }
+  .cc .row { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.5rem; }
+  .cp { font:inherit; font-size:.8rem; padding:.2rem .7rem; border-radius:999px; cursor:pointer;
+        border:1px solid var(--accent); background:transparent; color:var(--accent); white-space:nowrap; }
+  .cp:hover { background:var(--accent); color:#fff; }
+  .cc .row .cp { font-size:.85rem; }
+  .st .meta .cp, .grp h3 .cp { font-size:.75rem; padding:.1rem .55rem; }
+  .it .btns .cp { border-radius:999px; }
+  /* ---- 一站 ---- */
+  .st { margin:1.6rem 0; }
+  .st .hd { display:grid; grid-template-columns: 5.2rem 1fr; gap:.7rem; align-items:center; margin-bottom:.4rem; }
+  .st .hd img { width:5.2rem; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:var(--card); }
+  .st h2 { margin:0; border:none; padding:0; font-size:1.05rem; line-height:1.35; }
+  .st h2 a { color:var(--fg); text-decoration:none; } .st h2 a:hover { color:var(--accent); }
+  .st .meta { font-size:.8rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.2rem .7rem; }
+  .st .meta a { color:var(--muted); } .st .meta a:hover { color:var(--accent); }
+  .st .meta .cat { cursor:pointer; border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st .meta .cat:hover { border-color:var(--accent); color:var(--accent); }
+  .st[hidden], .grp[hidden], .it[hidden] { display:none; }
+  .st .prog { font-size:.8rem; color:var(--muted); }
+  /* ---- 未讀：工作單只是準備，讀完才進消化期 ---- */
+  .st .read { display:flex; flex-wrap:wrap; gap:.4rem .7rem; align-items:center; font-size:.8rem; color:var(--muted); margin-top:.25rem; }
+  .st .read button { font:inherit; font-size:.8rem; padding:.15rem .7rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; }
+  .st:not(.unread) .read button { background:transparent; color:var(--muted); border-color:var(--line); }
+  .st .read .badge { border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st.unread .read .badge { color:var(--warn, #b8860b); border-color:currentColor; }
+  .st.unread .hd img, .st.unread h2 { opacity:.6; }
+  /* ---- 一類 ---- */
+  .grp { margin:.9rem 0 .4rem; }
+  .grp h3 { margin:0 0 .3rem; font-size:.95rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:baseline; }
+  .grp h3 .why { font-weight:400; font-size:.8rem; color:var(--muted); }
+  .k { font-size:.72rem; font-weight:700; border-radius:4px; padding:.05rem .4rem; color:#fff; white-space:nowrap; }
+  [data-kind="P"] .k { background:#59a14f; } [data-kind="A"] .k { background:#b07aa1; } [data-kind="C"] .k { background:#4e79a7; }
+  [data-kind="E"] .k { background:#e49444; } [data-kind="R"] .k { background:#76b7b2; }
+  .act { font-size:.85rem; }
+  /* ---- 一筆 ---- */
+  .it { display:grid; grid-template-columns: 1fr auto; gap:.3rem .7rem; align-items:start;
+        padding:.55rem .7rem; border-left:3px solid var(--line); margin:.3rem 0; border-radius:0 8px 8px 0; background:var(--card); }
+  .it .tx { font-size:.98rem; line-height:1.55; }
+  .it .sub { font-size:.86rem; color:var(--muted); margin-top:.15rem; }
+  .it .sub b { color:var(--fg); font-weight:600; }
+  .it .src { font-size:.78rem; margin-top:.2rem; } .it .src a { text-decoration:none; }
+  .it .terms code { font-size:.75rem; }
+  .it ol { margin:.2rem 0 .2rem 1.2rem; padding:0; font-size:.88rem; }
+  .it .task { margin:.3rem 0; padding:.35rem .6rem; border-radius:6px; background:var(--bg); border:1px dashed var(--line); font-size:.92rem; }
+  .it .task b { color:var(--accent); }
+  .it textarea { width:100%; box-sizing:border-box; font:inherit; font-size:.88rem; min-height:2.4rem; margin:.25rem 0;
+                 background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:.3rem .5rem; resize:vertical; }
+  .it label { font-size:.8rem; color:var(--muted); display:block; margin-top:.3rem; }
+  .it .btns { display:flex; flex-direction:column; gap:.25rem; align-items:stretch; }
+  .it .btns button { font:inherit; font-size:.8rem; padding:.15rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--fg); cursor:pointer; white-space:nowrap; }
+  .it .btns button:hover { border-color:var(--accent); color:var(--accent); }
+  .it .btns .st-line { font-size:.75rem; color:var(--muted); text-align:center; }
+  .it .key { margin-top:.3rem; font-size:.86rem; border-top:1px dashed var(--line); padding-top:.3rem; }
+  .it .key[hidden] { display:none; }
+  .it .rel { display:inline-block; margin:.1rem .4rem .1rem 0; font-size:.85rem; }
+  .it .rel code { font-size:.82rem; }
+  .it.done { border-left-color:var(--ok); opacity:.6; }
+  .it.done .tx { text-decoration:line-through; text-decoration-color:var(--muted); }
+  .it.due { border-left-color:var(--debat); }
+  .it .a { display:none; }
+  @media (max-width:520px) { .it { grid-template-columns:1fr; } .it .btns { flex-direction:row; flex-wrap:wrap; } }
+  /* ---- 回想視窗 ---- */
+  dialog.recall { border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--fg); max-width:34rem; width:calc(100vw - 2rem); padding:1.2rem 1.4rem; }
+  dialog.recall::backdrop { background:var(--overlay); }
+  dialog.recall .n { font-size:.8rem; color:var(--muted); }
+  dialog.recall .q { font-size:1.15rem; margin:.8rem 0; line-height:1.5; }
+  dialog.recall .ans { font-size:1.05rem; margin:.6rem 0; padding:.6rem .8rem; background:var(--card); border-radius:8px; min-height:2rem; }
+  dialog.recall .ans[hidden] { display:none; }
+  dialog.recall .row { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+  dialog.recall button { font:inherit; padding:.35rem .9rem; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  dialog.recall button.g0 { border-color:var(--wrong); color:var(--wrong); } dialog.recall button.g3 { border-color:var(--debat); color:var(--debat); } dialog.recall button.g5 { border-color:var(--ok); color:var(--ok); }
+  dialog.recall .close { float:right; border:none; background:none; font-size:1.1rem; }
+
+</style>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="tl">
+    <button class="menu-btn" type="button" id="menu" aria-label="Menu" aria-expanded="false">☰</button>
+    <a class="brand" href="atlas.html">PACER Learn</a>
+  </div>
+  
+<div class="search">
+  <div class="sbox" id="sbox">
+    <span class="ico">🔍</span>
+    <input id="sinput" type="text" placeholder="Search author, title, category…" autocomplete="off"
+           aria-label="Search author, title, category…" aria-expanded="false" role="combobox" aria-controls="ac">
+  </div>
+  <ul class="ac" id="ac" role="listbox" hidden></ul>
+</div>
+
+  <div class="tr"><span>1 station(s)</span><span id="n-items"></span><span>updated 2026-10-01 23:49</span></div>
+</header>
+
+
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+
+<nav class="side">
+  
+  <a  href="atlas.html">📄 All videos</a>
+  
+  <a  href="notes.html">📝 Notes</a>
+  <a class="on" href="digest.html">✍️ Practice</a>
+
+  
+  <hr>
+  
+  
+  
+  
+  <p class="grp">Filters</p>
+  <div class="filters" id="filters">
+    <button type="button" data-f="todo" class="on">Undone only</button>
+    <button type="button" data-f="all">All</button>
+    <button type="button" data-f="done">Done</button>
+    <span class="sp"></span>
+  </div>
+  <hr>
+  
+  <p class="grp">Regions</p>
+  <button type="button" class="cat-all on" data-cat="">All write-ups<span class="n">1</span></button>
+  
+  <button type="button" class="cat-f" data-cat="Sleep"><i style="background:var(--line)"></i><span class="lab">Sleep</span><span class="n">1</span></button>
+  
+
+  <hr>
+  <button type="button" class="tool" id="export" title="Downloads digest.state.json; put it in workspace/ and rerun digest.py to persist. /learn reads it for the backlog gate">⬇ Export progress</button>
+  <button type="button" class="tool" id="export-anki">⬇ Export Anki (tsv)</button>
+  <button type="button" class="tool" id="reset">Clear local state</button>
+  
+</nav>
+<main>
+
+
+
+
+<p class="shint"><span id="count">Showing 1 of 1</span><span>Press space or Enter to add another condition; conditions are ANDed</span><button id="clear" type="button" hidden>Clear all</button></p>
+<p id="no-match" hidden>No station matches these conditions.</p>
+
+<div class="card today" id="today">
+  <span class="big">Today</span>
+  <span id="t-cards"></span><span id="t-reh"></span><span id="t-back" class="muted"></span>
+  <button type="button" id="start-recall">Start recall</button>
+</div>
+
+<section class="card cc">
+  <h2>🤖 Want to be walked through it? Practice inside Claude Code</h2>
+  <p>The page is good for flipping cards and ticking things off; P/A/C/E need back-and-forth. Copy a prompt below into Claude Code and it will walk you through one blank at a time, then write your progress back.</p>
+  <p class="steps">① Hit “⬇ Export progress” first and drop digest.state.json into workspace/ (otherwise Claude Code can&#39;t see what you did here)　② copy a prompt　③ paste it into Claude Code</p>
+  <div class="row">
+    <button type="button" class="tool" id="export-2" title="Downloads digest.state.json; put it in workspace/ and rerun digest.py to persist. /learn reads it for the backlog gate">⬇ Export progress</button>
+    <button type="button" class="cp" data-cp="/atlas:learn-digest today" title="Copy the prompt, paste it into Claude Code">📋 Copy: what should I do today</button>
+    <button type="button" class="cp" data-cp="/atlas:learn-digest do due" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through everything due</button>
+  </div>
+</section>
+
+
+<section class="st" id="t0kACis_dJE" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED"
+         data-category="Sleep" data-rehearse-from="2026-10-02" data-read=""
+         data-text="A master 24-hour clock in the brain expects regularity.
+Fix one bed time and one wake time, and defend them on weekends too.
+Set a to-bed alarm, the half of the alarm nobody sets.
+Almost everyone sets a wake-up alarm; almost nobody sets a to-bed alarm.
+Sleep starts only after core body temperature drops about 1 °C.
+Core temperature has to fall about 1 °C (2–3 °F) to start and to stay asleep.
+The recommended bedroom is around 65 °F, a little over 18 °C.
+Lower the bedroom instead of adding blankets.
+Evening darkness releases melatonin, which schedules sleep.
+Melatonin is a starting gun, not the race — it says when, not how.
+Dim the house in the last hour, not just the phone.
+Walker ranks screens above room lighting; lux usually reverses it.
+The brain is associative: a bed you lie awake in comes to mean wakefulness.
+Leave the bed when sleep will not come, and come back only when sleepy.
+Walker&#39;s own framing: the bed is a trigger the brain has been trained on.
+The talk says 25 minutes; clinical manuals usually say 15–20.
+Alcohol and caffeine both attack the passage into sleep, from opposite ends.
+Cut the caffeine deadline, and stop treating a nightcap as help.
+Sedation is not sleep — alcohol produces the first and costs you the second.
+Sleep onset is a descent that takes time, not a switch you flip.
+The talk&#39;s best image: falling asleep is landing a plane, not flipping a switch.
+Build one wind-down routine and then stop redesigning it.
+Sleep hygiene optimises a working system; a disorder needs treatment.
+Walker&#39;s boundary: coaching cannot fix a broken ankle.
+Insomnia and sleep apnea are the two disorders Walker names as out of scope.
+The talk targets quantity and quality together, not just hours.">
+  <div class="hd">
+    <img src="https://i.ytimg.com/vi/t0kACis_dJE/mqdefault.jpg" alt="" loading="lazy">
+    <div>
+      <h2>6 tips for better sleep | Sleeping with Science, a TED series</h2>
+      <div class="meta">
+        <span>TED</span>
+        <span class="cat" data-cat="Sleep" title="Category">Sleep</span>
+        <span>produced 2026-10-01</span>
+        <span class="prog"></span>
+        
+        
+        <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">🔗 Watch on YouTube</a>
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this station</button>
+      </div>
+      <div class="read"><span class="badge"></span><button type="button" data-do="read" title="The worksheet is only preparation. Read the write-up first, then press this to enter digestion; unread stations don&#39;t count as backlog."></button></div>
+    </div>
+  </div>
+  
+  <div class="grp" data-kind="P">
+    <h3><span class="k">P procedural</span><span class="act">→ Practice</span><span class="why">How-to information: use it in a real context as early as possible; cramming is wasted.</span>
+      <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this type</button></h3>
+    
+    <div class="it" id="t0kACis_dJE-d2" data-key="t0kACis_dJE:2" data-kind="P">
+      <div>
+        <div class="tx">Fix one bed time and one wake time, and defend them on weekends too.</div>
+        
+          <ol><li>Pick the wake time first — it is the one you can actually enforce</li><li>Count back the hours you need to get the bed time</li><li>Keep both within about 30 minutes, weekday or weekend</li><li>Hold the wake time even after a bad night; do not sleep in to repay it</li></ol>
+          <div class="task"><b>Do today</b> Open your calendar now and put one fixed wake time on all seven days of next week, including Saturday and Sunday.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 2 →
+          <span class="muted">Tip 1: regularity, weekends included</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 2 筆開始：Fix one bed time and one wake time, and defend them on weekends too." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d3" data-key="t0kACis_dJE:3" data-kind="P">
+      <div>
+        <div class="tx">Set a to-bed alarm, the half of the alarm nobody sets.</div>
+        
+          <ol><li>Set a recurring alarm 30–60 minutes before your target bed time</li><li>Label it with the first action of your wind-down, not the word &#39;bed&#39;</li><li>When it fires, stop what you are doing even if unfinished</li></ol>
+          <div class="task"><b>Do today</b> Set that to-bed alarm on your phone today and label it with one concrete action, e.g. &#39;put the laptop in the drawer&#39;.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 2 →
+          <span class="muted">Tip 1: regularity, weekends included</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 3 筆開始：Set a to-bed alarm, the half of the alarm nobody sets." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d8" data-key="t0kACis_dJE:8" data-kind="P">
+      <div>
+        <div class="tx">Lower the bedroom instead of adding blankets.</div>
+        
+          <ol><li>Measure the actual bedroom temperature at bed time for three nights</li><li>Move it toward 18 °C with a window, a fan, or the thermostat</li><li>Keep extremities warm if that feels too cold — the core is what must fall</li></ol>
+          <div class="task"><b>Do today</b> Put a thermometer in your bedroom tonight and write down the number at lights-out; decide tomorrow whether it needs to come down.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 3 →
+          <span class="muted">Tip 2: keep it cool</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 8 筆開始：Lower the bedroom instead of adding blankets." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d11" data-key="t0kACis_dJE:11" data-kind="P">
+      <div>
+        <div class="tx">Dim the house in the last hour, not just the phone.</div>
+        
+          <ol><li>One hour before bed, switch off half the lights in the house</li><li>Prefer low lamps at eye level over overhead ceiling lights</li><li>Then deal with screens; add an eye mask or blackout shades if light leaks in</li></ol>
+          <div class="task"><b>Do today</b> Tonight, turn off the overhead light in whichever room you spend the last hour in and use a single lamp instead.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 4 →
+          <span class="muted">Tip 3: darkness, starting in the evening</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 11 筆開始：Dim the house in the last hour, not just the phone." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d14" data-key="t0kACis_dJE:14" data-kind="P">
+      <div>
+        <div class="tx">Leave the bed when sleep will not come, and come back only when sleepy.</div>
+        
+          <ol><li>Notice you have been lying awake for roughly 20–25 minutes</li><li>Get up and leave the bedroom</li><li>Do something quiet in dim light — not screens, not work</li><li>Return only when you feel sleepy, not merely when you feel tired of waiting</li></ol>
+          <div class="task"><b>Do today</b> Decide tonight, before you get in, exactly what you will go and do if you are still awake after 20 minutes — and put that thing where you will find it.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 5 →
+          <span class="muted">Tip 4: walk it out</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 14 筆開始：Leave the bed when sleep will not come, and come back only when sleepy." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d18" data-key="t0kACis_dJE:18" data-kind="P">
+      <div>
+        <div class="tx">Cut the caffeine deadline, and stop treating a nightcap as help.</div>
+        
+          <ol><li>Set a daily caffeine cut-off in the early afternoon</li><li>Count the hidden sources too — tea, cola, dark chocolate, some painkillers</li><li>Keep alcohol away from the last hours before bed</li></ol>
+          <div class="task"><b>Do today</b> Write down every caffeinated thing you drank today with its time; if anything lands after 2 pm, move it earlier tomorrow.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 6 →
+          <span class="muted">Tip 5: alcohol and caffeine</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 18 筆開始：Cut the caffeine deadline, and stop treating a nightcap as help." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d22" data-key="t0kACis_dJE:22" data-kind="P">
+      <div>
+        <div class="tx">Build one wind-down routine and then stop redesigning it.</div>
+        
+          <ol><li>Reserve the last 20–60 minutes before bed</li><li>Disengage from computer and phone at the start of that window</li><li>Do the same relaxing thing each night — reading, stretching, a shower</li><li>Once something works, keep it; the repetition is part of the mechanism</li></ol>
+          <div class="task"><b>Do today</b> Choose one thing you will do for the last 20 minutes tonight, and do the identical thing tomorrow and the night after.</div>
+          <textarea data-field="note" placeholder="What you did and the result (optional)"></textarea>
+        
+        <div class="src">Segment 7 →
+          <span class="muted">Tip 6: sleep is a landing, not a switch</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE P
+先從第 22 筆開始：Build one wind-down routine and then stop redesigning it." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="grp" data-kind="A">
+    <h3><span class="k">A analogous</span><span class="act">→ Critique</span><span class="why">Information that resembles what you know: find where it matches, where it doesn&#39;t, and when it breaks, so new knowledge attaches to the old network.</span>
+      <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE A" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this type</button></h3>
+    
+    <div class="it" id="t0kACis_dJE-d10" data-key="t0kACis_dJE:10" data-kind="A">
+      <div>
+        <div class="tx">Melatonin is a starting gun, not the race — it says when, not how.</div>
+        
+          <div class="sub"><b>new</b> melatonin as a timing signal for sleep &nbsp;⇄&nbsp; <b>like</b> a starting gun at a race: it sets the moment things begin but does nothing to run the race</div>
+          <label>Where alike</label><textarea data-field="alike"></textarea>
+          <label>Where different</label><textarea data-field="unlike"></textarea>
+          <label>When it breaks</label><textarea data-field="breaks"></textarea>
+          
+          <div class="key" hidden>
+            <div><b>Where alike</b> Both are signals that start something without doing any of the work, and both can fire at the wrong time.</div>
+            <div><b>Where different</b> A starting gun is one discrete bang; melatonin rises over hours and stays up all night, so late light does not just delay the gun, it flattens the whole curve.</div>
+            <div><b>When it breaks</b> Completely, for anyone taking melatonin as a supplement expecting to be knocked out. It schedules sleep; it does not sedate.</div>
+          </div>
+          
+        
+        <div class="src">Segment 4 →
+          <span class="muted">Tip 3: darkness, starting in the evening</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        <button type="button" data-do="key">Compare with AI</button>
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE A
+先從第 10 筆開始：Melatonin is a starting gun, not the race — it says when, not how." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d15" data-key="t0kACis_dJE:15" data-kind="A">
+      <div>
+        <div class="tx">Walker&#39;s own framing: the bed is a trigger the brain has been trained on.</div>
+        
+          <div class="sub"><b>new</b> lying awake in bed teaching the brain that bed means wakefulness &nbsp;⇄&nbsp; <b>like</b> a dog learning that a particular sound means food — the cue acquires the meaning through repetition</div>
+          <label>Where alike</label><textarea data-field="alike"></textarea>
+          <label>Where different</label><textarea data-field="unlike"></textarea>
+          <label>When it breaks</label><textarea data-field="breaks"></textarea>
+          
+          <div class="key" hidden>
+            <div><b>Where alike</b> Both are repeated pairings of a context with a state, and both weaken once the pairing stops.</div>
+            <div><b>Where different</b> Classical conditioning needs a biologically significant outcome; the bed association is closer to contextual learning. The fix is not extinguishing a reflex but withdrawing the context — which is exactly what leaving the bed does.</div>
+            <div><b>When it breaks</b> For someone kept awake by pain or apnea: re-pairing cannot fix a cue that was never the cause.</div>
+          </div>
+          
+        
+        <div class="src">Segment 5 →
+          <span class="muted">Tip 4: walk it out</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        <button type="button" data-do="key">Compare with AI</button>
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE A
+先從第 15 筆開始：Walker&#39;s own framing: the bed is a trigger the brain has been trained on." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d21" data-key="t0kACis_dJE:21" data-kind="A">
+      <div>
+        <div class="tx">The talk&#39;s best image: falling asleep is landing a plane, not flipping a switch.</div>
+        
+          <div class="sub"><b>new</b> sleep onset as a gradual physiological descent &nbsp;⇄&nbsp; <b>like</b> an aircraft descending over many minutes onto a runway rather than stopping instantly</div>
+          <label>Where alike</label><textarea data-field="alike"></textarea>
+          <label>Where different</label><textarea data-field="unlike"></textarea>
+          <label>When it breaks</label><textarea data-field="breaks"></textarea>
+          
+          <div class="key" hidden>
+            <div><b>Where alike</b> Both take real time, both need a prepared approach, and both go wrong if you try to arrive too steeply.</div>
+            <div><b>Where different</b> A landing is actively flown and can be aborted and retried; sleep onset is the one thing that resists effort — trying harder reliably makes it worse.</div>
+            <div><b>When it breaks</b> The video&#39;s own animation quietly admits it: the viewer is at the terminal window watching, not in the cockpit.</div>
+          </div>
+          
+        
+        <div class="src">Segment 7 →
+          <span class="muted">Tip 6: sleep is a landing, not a switch</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        <button type="button" data-do="key">Compare with AI</button>
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE A
+先從第 21 筆開始：The talk&#39;s best image: falling asleep is landing a plane, not flipping a switch." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d24" data-key="t0kACis_dJE:24" data-kind="A">
+      <div>
+        <div class="tx">Walker&#39;s boundary: coaching cannot fix a broken ankle.</div>
+        
+          <div class="sub"><b>new</b> sleep tips not helping someone with insomnia or apnea &nbsp;⇄&nbsp; <b>like</b> a sports coach&#39;s performance advice being useless to an athlete with a broken ankle until the ankle is treated</div>
+          <label>Where alike</label><textarea data-field="alike"></textarea>
+          <label>Where different</label><textarea data-field="unlike"></textarea>
+          <label>When it breaks</label><textarea data-field="breaks"></textarea>
+          
+          <div class="key" hidden>
+            <div><b>Where alike</b> Both separate optimisation from repair, and both insist on the order: treat first, optimise after.</div>
+            <div><b>Where different</b> A broken ankle is visible and unambiguous; insomnia is self-reported and shades into ordinary bad sleep, so the clean either/or hides the hard part — knowing which side you are on.</div>
+            <div><b>When it breaks</b> It undersells the overlap: stimulus control, tip four here, is itself a component of CBT-I. Some of the &#39;coaching&#39; is the treatment.</div>
+          </div>
+          
+        
+        <div class="src">Segment 8 →
+          <span class="muted">These tips do not treat a disorder</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Done</button>
+        
+        <button type="button" data-do="key">Compare with AI</button>
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE A
+先從第 24 筆開始：Walker&#39;s boundary: coaching cannot fix a broken ankle." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="grp" data-kind="C">
+    <h3><span class="k">C conceptual</span><span class="act">→ Map</span><span class="why">What/why information: knowledge is a network, not a list — draw the links between concepts yourself.</span>
+      <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this type</button></h3>
+    
+    <div class="it" id="t0kACis_dJE-d1" data-key="t0kACis_dJE:1" data-kind="C">
+      <div>
+        <div class="tx">A master 24-hour clock in the brain expects regularity.</div>
+        
+          <div class="sub"><code>master 24-hour clock</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>master 24-hour clock</code> —generates→ <code>circadian rhythm</code></span><span class="rel"><code>master 24-hour clock</code> —times→ <code>melatonin</code></span>
+          </div>
+        
+        <div class="src">Segment 2 →
+          <span class="muted">Tip 1: regularity, weekends included</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 1 筆開始：A master 24-hour clock in the brain expects regularity." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d5" data-key="t0kACis_dJE:5" data-kind="C">
+      <div>
+        <div class="tx">Sleep starts only after core body temperature drops about 1 °C.</div>
+        
+          <div class="sub"><code>core body temperature</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>core body temperature</code> —gates→ <code>sleep onset</code></span><span class="rel"><code>core body temperature</code> —set by→ <code>thermoregulation</code></span>
+          </div>
+        
+        <div class="src">Segment 3 →
+          <span class="muted">Tip 2: keep it cool</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 5 筆開始：Sleep starts only after core body temperature drops about 1 °C." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d9" data-key="t0kACis_dJE:9" data-kind="C">
+      <div>
+        <div class="tx">Evening darkness releases melatonin, which schedules sleep.</div>
+        
+          <div class="sub"><code>melatonin</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>melatonin</code> —signal of→ <code>master 24-hour clock</code></span><span class="rel"><code>melatonin</code> —cut by light→ <code>lux</code></span>
+          </div>
+        
+        <div class="src">Segment 4 →
+          <span class="muted">Tip 3: darkness, starting in the evening</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 9 筆開始：Evening darkness releases melatonin, which schedules sleep." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d13" data-key="t0kACis_dJE:13" data-kind="C">
+      <div>
+        <div class="tx">The brain is associative: a bed you lie awake in comes to mean wakefulness.</div>
+        
+          <div class="sub"><code>associative learning</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>associative learning</code> —basis of→ <code>stimulus control</code></span>
+          </div>
+        
+        <div class="src">Segment 5 →
+          <span class="muted">Tip 4: walk it out</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 13 筆開始：The brain is associative: a bed you lie awake in comes to mean wakefulness." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d17" data-key="t0kACis_dJE:17" data-kind="C">
+      <div>
+        <div class="tx">Alcohol and caffeine both attack the passage into sleep, from opposite ends.</div>
+        
+          <div class="sub"><code>adenosine</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>adenosine</code> —drives→ <code>sleep onset</code></span><span class="rel"><code>adenosine</code> —separate→ <code>REM sleep</code></span>
+          </div>
+        
+        <div class="src">Segment 6 →
+          <span class="muted">Tip 5: alcohol and caffeine</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 17 筆開始：Alcohol and caffeine both attack the passage into sleep, from opposite ends." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d20" data-key="t0kACis_dJE:20" data-kind="C">
+      <div>
+        <div class="tx">Sleep onset is a descent that takes time, not a switch you flip.</div>
+        
+          <div class="sub"><code>sleep latency</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>sleep latency</code> —shortened by→ <code>wind-down routine</code></span><span class="rel"><code>sleep latency</code> —time to→ <code>sleep onset</code></span>
+          </div>
+        
+        <div class="src">Segment 7 →
+          <span class="muted">Tip 6: sleep is a landing, not a switch</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 20 筆開始：Sleep onset is a descent that takes time, not a switch you flip." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d23" data-key="t0kACis_dJE:23" data-kind="C">
+      <div>
+        <div class="tx">Sleep hygiene optimises a working system; a disorder needs treatment.</div>
+        
+          <div class="sub"><code>sleep hygiene</code></div>
+          <div class="key" hidden><div class="muted">Draw yours first — this concept links to:</div>
+            <span class="rel"><code>sleep hygiene</code> —not for→ <code>insomnia</code></span><span class="rel"><code>sleep hygiene</code> —yields to→ <code>CBT-I</code></span>
+          </div>
+        
+        <div class="src">Segment 8 →
+          <span class="muted">These tips do not treat a disorder</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="done">Mapped</button><button type="button" data-do="key">Check answer</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE C
+先從第 23 筆開始：Sleep hygiene optimises a working system; a disorder needs treatment." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="grp" data-kind="E">
+    <h3><span class="k">E evidence</span><span class="act">→ Store + rehearse</span><span class="why">Details that support a concept: store now, later ask what it proves and how you would use it.</span>
+      <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE E" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this type</button></h3>
+    
+    <div class="it" id="t0kACis_dJE-d6" data-key="t0kACis_dJE:6" data-kind="E">
+      <div>
+        <div class="tx">Core temperature has to fall about 1 °C (2–3 °F) to start and to stay asleep.</div>
+        
+          <div class="sub">About 1 degree Celsius, or roughly 2–3 degrees Fahrenheit, is the drop needed to initiate sleep and then maintain it.</div>
+          <div class="sub"><b>supports</b> <code>core body temperature</code></div>
+          <div class="task"><b>Rehearse</b> What does this number explain about why a too-hot room keeps you awake but a too-cold one does not?</div>
+          <textarea data-field="answer" placeholder="Your answer" hidden></textarea>
+        
+        <div class="src">Segment 3 →
+          <span class="muted">Tip 2: keep it cool</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="rehearse">Rehearse</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE E
+先從第 6 筆開始：Core temperature has to fall about 1 °C (2–3 °F) to start and to stay asleep." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d7" data-key="t0kACis_dJE:7" data-kind="E">
+      <div>
+        <div class="tx">The recommended bedroom is around 65 °F, a little over 18 °C.</div>
+        
+          <div class="sub">Current recommendation: bedroom temperature around 65 °F / just over 18 °C — colder than most people set it.</div>
+          <div class="sub"><b>supports</b> <code>core body temperature</code></div>
+          <div class="task"><b>Rehearse</b> Is your own bedroom above or below this, and what is the cheapest change that would move it?</div>
+          <textarea data-field="answer" placeholder="Your answer" hidden></textarea>
+        
+        <div class="src">Segment 3 →
+          <span class="muted">Tip 2: keep it cool</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="rehearse">Rehearse</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE E
+先從第 7 筆開始：The recommended bedroom is around 65 °F, a little over 18 °C." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d12" data-key="t0kACis_dJE:12" data-kind="E">
+      <div>
+        <div class="tx">Walker ranks screens above room lighting; lux usually reverses it.</div>
+        
+          <div class="sub">The talk names computer screens, tablets and phones as the thing to avoid in the last hour, and only then mentions dimming the lights — the ranking most lux measurements reverse.</div>
+          <div class="sub"><b>supports</b> <code>melatonin</code></div>
+          <div class="task"><b>Rehearse</b> In your own last hour, which actually puts more light into your eyes — the screen or the ceiling?</div>
+          <textarea data-field="answer" placeholder="Your answer" hidden></textarea>
+        
+        <div class="src">Segment 4 →
+          <span class="muted">Tip 3: darkness, starting in the evening</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="rehearse">Rehearse</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE E
+先從第 12 筆開始：Walker ranks screens above room lighting; lux usually reverses it." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d16" data-key="t0kACis_dJE:16" data-kind="E">
+      <div>
+        <div class="tx">The talk says 25 minutes; clinical manuals usually say 15–20.</div>
+        
+          <div class="sub">Walker says &#39;it&#39;s been 25 minutes or so&#39;. Bootzin&#39;s stimulus-control instructions and AASM materials generally use 15–20 minutes, and the practical instruction is to judge by feel rather than watch the clock.</div>
+          <div class="sub"><b>supports</b> <code>associative learning</code></div>
+          <div class="task"><b>Rehearse</b> Does the exact number matter here, or is the point just &#39;leave before lying awake becomes the habit&#39;?</div>
+          <textarea data-field="answer" placeholder="Your answer" hidden></textarea>
+        
+        <div class="src">Segment 5 →
+          <span class="muted">Tip 4: walk it out</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="rehearse">Rehearse</button>
+        
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE E
+先從第 16 筆開始：The talk says 25 minutes; clinical manuals usually say 15–20." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="grp" data-kind="R">
+    <h3><span class="k">R reference</span><span class="act">→ Store + recall</span><span class="why">Trivial but look-up-later facts: put them in flashcards and recall with spaced repetition.</span>
+      <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE R" title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this type</button></h3>
+    
+    <div class="it" id="t0kACis_dJE-d4" data-key="t0kACis_dJE:4" data-kind="R">
+      <div>
+        <div class="tx">Almost everyone sets a wake-up alarm; almost nobody sets a to-bed alarm.</div>
+        
+          <div class="sub q">Which half of the sleep schedule do people usually leave unalarmed?</div>
+          <div class="sub a">Going to bed — we alarm the wake-up but not the bed time.</div>
+        
+        <div class="src">Segment 2 →
+          <span class="muted">Tip 1: regularity, weekends included</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="recall">Recall now</button>
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE R
+先從第 4 筆開始：Almost everyone sets a wake-up alarm; almost nobody sets a to-bed alarm." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d19" data-key="t0kACis_dJE:19" data-kind="R">
+      <div>
+        <div class="tx">Sedation is not sleep — alcohol produces the first and costs you the second.</div>
+        
+          <div class="sub q">Why does alcohol not count as a sleep aid even though it makes you drowsy?</div>
+          <div class="sub a">It sedates rather than inducing real sleep, and it fragments the night and suppresses REM.</div>
+        
+        <div class="src">Segment 6 →
+          <span class="muted">Tip 5: alcohol and caffeine</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="recall">Recall now</button>
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE R
+先從第 19 筆開始：Sedation is not sleep — alcohol produces the first and costs you the second." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d25" data-key="t0kACis_dJE:25" data-kind="R">
+      <div>
+        <div class="tx">Insomnia and sleep apnea are the two disorders Walker names as out of scope.</div>
+        
+          <div class="sub q">Which two sleep disorders does the talk say these tips will not help?</div>
+          <div class="sub a">Insomnia and sleep apnea — see a doctor first.</div>
+        
+        <div class="src">Segment 8 →
+          <span class="muted">These tips do not treat a disorder</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="recall">Recall now</button>
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE R
+先從第 25 筆開始：Insomnia and sleep apnea are the two disorders Walker names as out of scope." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+    <div class="it" id="t0kACis_dJE-d26" data-key="t0kACis_dJE:26" data-kind="R">
+      <div>
+        <div class="tx">The talk targets quantity and quality together, not just hours.</div>
+        
+          <div class="sub q">Which two things does the talk set out to improve?</div>
+          <div class="sub a">Both the quantity and the quality of sleep.</div>
+        
+        <div class="src">Segment 1 →
+          <span class="muted">A bad night is normal — but fixable</span>
+          
+        </div>
+      </div>
+      <div class="btns">
+        <button type="button" data-do="recall">Recall now</button>
+        
+        <button type="button" class="cp" data-cp="/atlas:learn-digest do t0kACis_dJE R
+先從第 26 筆開始：The talk targets quantity and quality together, not just hours." title="Copy the prompt, paste it into Claude Code">📋 Copy: walk me through this one</button>
+        <span class="st-line"></span>
+      </div>
+    </div>
+    
+  </div>
+  
+</section>
+
+
+<dialog class="recall" id="recall">
+  <button type="button" class="close" data-close aria-label="Close (Esc)">✕</button>
+  <div class="n"></div>
+  <div class="q"></div>
+  <div class="ans" hidden></div>
+  <div class="row">
+    <button type="button" class="flip">Show answer</button>
+    <button type="button" class="g0" data-g="0" hidden>Forgot</button>
+    <button type="button" class="g3" data-g="3" hidden>Hard</button>
+    <button type="button" class="g5" data-g="5" hidden>Easy</button>
+  </div>
+</dialog>
+
+</main>
+
+</div>
+
+
+
+
+<script id="ui-data" type="application/json">{"any": "Any", "author": "Author", "category": "Category", "showing": "Showing {n} of {total}", "title": "Title", "video": "Video"}</script>
+
+<script id="d-state" type="application/json">{}</script>
+<script id="ui-str" type="application/json">{"backlog": "Undone: P {p} \u00b7 A {a} \u00b7 C {c}", "card_n": "{i} / {n}", "copied": "\u2713 Copied", "done_btn": "Done", "due_cards": "{n} card(s) due", "due_reh": "{n} to rehearse", "mapped": "Mapped", "n_items": "{n} note(s)", "new_card": "New", "next_due": "Next {t}", "nothing": "Nothing due today. Do a practice task or draw a map above.", "read_btn": "\ud83d\udcd6 Done reading, start digesting", "read_on": "Read {t}", "rehearse": "Rehearse", "rehearsed": "Rehearsed", "session_done": "Recall session finished.", "stored": "Stored", "undo": "Undo", "unread": "Unread", "unread_btn": "Mark unread"}</script>
+
+<script>
+
+(() => {
+  const T = JSON.parse(document.getElementById("ui-str").textContent);
+  const f = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+  // 「🤖 帶我做…」：把 prompt 複製到剪貼簿，使用者自己貼進 Claude Code
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".cp");
+    if (!btn) return;
+    const text = btn.dataset.cp, label = btn.textContent;
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (__) {}
+      ta.remove();
+    }
+    btn.textContent = T.copied;
+    setTimeout(() => { btn.textContent = label; }, 1600);
+  });
+  const LS_KEY = "digest-state";
+  const LS = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+               del: (k) => { try { localStorage.removeItem(k); } catch (_) {} } };
+  // 預設狀態來自 workspace/digest.state.json（已內嵌），瀏覽器裡的操作蓋在上面
+  let base = {}, local = {};
+  try { base = JSON.parse(document.getElementById("d-state").textContent) || {}; } catch (_) {}
+  try { local = JSON.parse(LS.get(LS_KEY) || "{}"); } catch (_) { local = {}; }
+  const items = [...document.querySelectorAll(".it")];
+  if (!items.length) return;
+  const stateOf = (el) => local[el.dataset.key] || base[el.dataset.key] || {};
+  const save = (el, st) => { local[el.dataset.key] = st; LS.set(LS_KEY, JSON.stringify(local)); };
+  const today = () => new Date().toISOString().slice(0, 10);
+  const plusDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const nowIso = () => new Date().toISOString().slice(0, 19);
+  let filter = "todo";
+
+  // 一筆的「做完了嗎」：P/A/C 看 done；E 看 rehearsed；R 看 due 是否還沒到
+  const isDone = (el, st) => {
+    const k = el.dataset.kind;
+    if (k === "E") return !!st.rehearsed;
+    if (k === "R") return !!st.due && st.due > today();
+    return !!st.done;
+  };
+  // 整站「讀完了」：key <vid>:read；沒讀的站不算「今天」、預設收起。E 的隔一天從讀完那天起算。
+  const readKey = (sec) => `${sec.dataset.id}:read`;
+  const readOf = (sec) => (local[readKey(sec)] || base[readKey(sec)] || {}).read || "";
+  const isRead = (sec) => !!readOf(sec);
+  const rehearseFrom = (sec) => { const r = readOf(sec); if (!r) return sec.dataset.rehearseFrom;
+    const d = new Date(r.slice(0, 10)); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
+  const canRehearse = (el) => rehearseFrom(el.closest(".st")) <= today();
+  const cardDue = (el) => { const st = stateOf(el); return !st.due || st.due <= today(); };
+
+  const paint = (el) => {
+    const st = stateOf(el), k = el.dataset.kind, done = isDone(el, st);
+    el.classList.toggle("done", done);
+    el.classList.toggle("due", (k === "E" && !done && canRehearse(el)) || (k === "R" && cardDue(el)));
+    el.querySelectorAll("textarea[data-field]").forEach((ta) => { if (st[ta.dataset.field] != null && document.activeElement !== ta) ta.value = st[ta.dataset.field]; });
+    const line = el.querySelector(".st-line"), btn = el.querySelector("[data-do=done],[data-do=rehearse]");
+    if (k === "R") line.textContent = st.due ? f(T.next_due, { t: st.due }) : T.new_card;
+    else if (k === "E") { line.textContent = done ? `${T.rehearsed} ${st.rehearsed.slice(0, 10)}` : T.stored; btn.textContent = done ? T.undo : T.rehearse; }
+    else { line.textContent = done ? st.done.slice(0, 10) : ""; btn.textContent = done ? T.undo : (k === "C" ? T.mapped : T.done_btn); }
+    el.hidden = !(filter === "all" || (filter === "done") === done) || (filter !== "all" && !isRead(el.closest(".st")));
+  };
+
+  const applyAll = () => {
+    const n = { P: 0, A: 0, C: 0, E: 0, R: 0 };
+    document.querySelectorAll(".st").forEach((sec) => {
+      const r = readOf(sec); sec.classList.toggle("unread", !r);
+      sec.querySelector(".read .badge").textContent = r ? f(T.read_on, { t: r.slice(0, 10) }) : T.unread;
+      sec.querySelector(".read button").textContent = r ? T.unread_btn : T.read_btn;
+    });
+    items.forEach((el) => {
+      paint(el);
+      const k = el.dataset.kind, st = stateOf(el);
+      if (!isRead(el.closest(".st"))) return;
+      if (k === "R") { if (cardDue(el)) n.R++; }
+      else if (k === "E") { if (!st.rehearsed && canRehearse(el)) n.E++; }
+      else if (!isDone(el, st)) n[k]++;
+    });
+    document.querySelectorAll(".grp").forEach((g) => { g.hidden = ![...g.querySelectorAll(".it")].some((x) => !x.hidden); });
+    document.querySelectorAll(".st").forEach((s) => {
+      const all = [...s.querySelectorAll(".it")], d = all.filter((x) => isDone(x, stateOf(x))).length;
+      s.querySelector(".prog").textContent = `${d} / ${all.length} ✓`;
+    });
+    document.getElementById("n-items").textContent = f(T.n_items, { n: items.length });
+    document.getElementById("t-cards").textContent = f(T.due_cards, { n: n.R });
+    document.getElementById("t-reh").textContent = f(T.due_reh, { n: n.E });
+    document.getElementById("t-back").textContent = f(T.backlog, { p: n.P, a: n.A, c: n.C });
+    document.getElementById("start-recall").disabled = n.R === 0;
+    refilter();
+  };
+  /* #11 的坑：paint() 會把「還沒按讀完了」那些站的每一筆都 hidden（設計上不計入今天），
+     如果 extra_ok 照字面回 false，整站就會被 refilter 藏掉——53 站只剩 2 站，搜尋看起來全壞。
+     未讀的站要留在列表裡（收起來、可以按 📖 讀完了），只有「讀過而且這次篩選沒命中」才隱藏。 */
+  function extra_ok(sec) {
+    if (!isRead(sec)) return true;
+    return [...sec.querySelectorAll(".it")].some((n) => !n.hidden);
+  }
+
+  /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND（templates/_search.html.j2） ---------- */
+  const card_sel = ".st", group_sel = null;
+  const UI = JSON.parse(document.getElementById("ui-data").textContent);
+  const CARDS = [...document.querySelectorAll(card_sel)].map((el) => ({
+    el, id: el.dataset.id || "", title: el.dataset.title || "",
+    channel: el.dataset.channel || "", category: el.dataset.category || "",
+    text: el.dataset.text || "",
+  }));
+  const extraOk = typeof extra_ok === "function" ? extra_ok : () => true;
+  const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
+        acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
+        clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
+  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any, vid: UI.video };
+  const chips = [];
+  let acItems = [], acIdx = -1;
+
+  const uniq = (key) => {
+    const m = new Map();
+    CARDS.forEach((c) => { const v = c[key]; if (v) m.set(v, (m.get(v) || 0) + 1); });
+    return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  };
+  const AUTHORS = uniq("channel"), CATS = uniq("category");
+  const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
+  const match = (c, ch) => ch.kind === "vid" ? c.id === ch.value
+    : ch.kind === "author" ? has(c.channel, ch.value)
+    : ch.kind === "category" ? has(c.category, ch.value)
+    : ch.kind === "title" ? has(c.title, ch.value)
+    : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value) || has(c.text, ch.value);
+
+  const refilter = () => {
+    let shown = 0;
+    CARDS.forEach((c) => {
+      const ok = extraOk(c.el) && chips.every((ch) => match(c, ch));
+      c.el.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (group_sel) document.querySelectorAll(group_sel).forEach((sec) => {
+      sec.hidden = ![...sec.querySelectorAll(card_sel)].some((w) => !w.hidden);
+    });
+    countEl.textContent = UI.showing.replace("{n}", shown).replace("{total}", CARDS.length);
+    clearEl.hidden = chips.length === 0;
+    noMatch.hidden = shown > 0;
+  };
+
+  const drawChips = () => {
+    box.querySelectorAll(".chip").forEach((e) => e.remove());
+    chips.forEach((ch, i) => {
+      const el = document.createElement("span");
+      el.className = "chip";
+      el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
+      el.querySelector(".k").textContent = KIND[ch.kind] + "：";
+      el.querySelector(".v").textContent = ch.label || ch.value;
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); dropUrlState(); drawChips(); refilter(); input.focus(); });
+      box.insertBefore(el, input);
+    });
+  };
+  const addChip = (kind, value, label) => {
+    value = value.trim();
+    if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
+    chips.push({ kind, value, label });
+    input.value = "";
+    dropUrlState();
+    drawChips(); refilter(); hideAc();
+  };
+
+  /* ?only= 與 #hash 只是「進頁面時的初始狀態」。使用者一改條件，網址就不再代表畫面上的東西，
+     而且重新整理會把 ?only= 又套回去。所以任何手動改動都把網址洗乾淨（不留歷史紀錄）。 */
+  let seeded = false;
+  const dropUrlState = () => {
+    if (!seeded || (!location.search && !location.hash)) return;
+    history.replaceState(null, "", location.pathname);
+  };
+
+  const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
+  const drawAc = () => {
+    const q = input.value.trim();
+    acItems = [];
+    if (q) acItems.push({ kind: "any", value: q, n: null });
+    AUTHORS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "author", value: v, n }));
+    CATS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "category", value: v, n }));
+    if (!acItems.length) return hideAc();
+    acEl.replaceChildren(...acItems.map((it, i) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.innerHTML = `<span class="k"></span><span class="v"></span>`;
+      li.querySelector(".k").textContent = KIND[it.kind];
+      li.querySelector(".v").textContent = it.value;
+      if (it.n !== null) { const n = document.createElement("span"); n.className = "n"; n.textContent = it.n; li.appendChild(n); }
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); addChip(it.kind, it.value); });
+      li.addEventListener("mouseenter", () => { acIdx = i; paintAc(); });
+      return li;
+    }));
+    acIdx = q ? 0 : -1;
+    paintAc();
+    acEl.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  };
+  const paintAc = () => [...acEl.children].forEach((li, i) => li.classList.toggle("on", i === acIdx));
+  const commit = () => {
+    if (acIdx >= 0 && acItems[acIdx]) addChip(acItems[acIdx].kind, acItems[acIdx].value);
+    else if (input.value.trim()) addChip("any", input.value);
+  };
+
+  box.addEventListener("click", (e) => { if (!e.target.closest(".chip")) input.focus(); });
+  input.addEventListener("input", drawAc);
+  input.addEventListener("focus", drawAc);
+  input.addEventListener("blur", () => setTimeout(hideAc, 120));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (acEl.hidden) return drawAc();
+      acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acItems.length) % acItems.length;
+      paintAc();
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (e.key === " " && !input.value.trim() && acIdx < 0) return;
+      e.preventDefault(); commit();
+    } else if (e.key === "Escape") { hideAc(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); dropUrlState(); drawChips(); refilter(); }
+  });
+  clearEl.addEventListener("click", () => { chips.length = 0; dropUrlState(); drawChips(); refilter(); input.focus(); });
+
+  /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
+     autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
+  const only = new URLSearchParams(location.search).get("only");
+  if (only) {
+    const c = CARDS.find((x) => x.id === only);
+    chips.push({ kind: "vid", value: only, label: c ? c.title : only });
+    drawChips();
+  }
+  refilter();
+  seeded = true;
+
+  document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+  applyAll();
+
+  // ---- SM-2：q = 0 忘了 / 3 難 / 5 會 ----
+  const sm2 = (st, q) => {
+    let { ef = 2.5, reps = 0, interval = 0 } = st;
+    if (q < 3) { reps = 0; interval = 1; }
+    else { reps += 1; interval = reps === 1 ? 1 : reps === 2 ? 6 : Math.round(interval * ef); }
+    ef = Math.max(1.3, ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+    return { ef: Math.round(ef * 100) / 100, reps, interval, due: plusDays(interval), last: today() };
+  };
+  const dlg = document.getElementById("recall");
+  let queue = [], cur = null;
+  const showCard = () => {
+    cur = queue.shift();
+    if (!cur) { dlg.querySelector(".q").textContent = T.session_done; dlg.querySelector(".n").textContent = ""; dlg.querySelector(".ans").hidden = true;
+      dlg.querySelector(".flip").hidden = true; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = true); return; }
+    dlg.querySelector(".n").textContent = f(T.card_n, { i: cur.i, n: cur.n });
+    dlg.querySelector(".q").textContent = cur.el.querySelector(".q").textContent;
+    const ans = dlg.querySelector(".ans"); ans.textContent = cur.el.querySelector(".a").textContent; ans.hidden = true;
+    dlg.querySelector(".flip").hidden = false; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = true);
+  };
+  const startSession = (els) => {
+    queue = els.map((el, i) => ({ el, i: i + 1, n: els.length }));
+    showCard(); dlg.showModal();
+  };
+  dlg.querySelector(".flip").addEventListener("click", () => { dlg.querySelector(".ans").hidden = false; dlg.querySelector(".flip").hidden = true; dlg.querySelectorAll("[data-g]").forEach((b) => b.hidden = false); });
+  dlg.querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => { save(cur.el, sm2(stateOf(cur.el), +b.dataset.g)); applyAll(); showCard(); }));
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("keydown", (ev) => { if (ev.key === " " && !dlg.querySelector(".flip").hidden) { ev.preventDefault(); dlg.querySelector(".flip").click(); }
+    const G = { "1": 0, "2": 3, "3": 5 };
+    if (G[ev.key] != null) dlg.querySelector(`[data-g="${G[ev.key]}"]`)?.click(); });
+  document.getElementById("start-recall").addEventListener("click", () => startSession(items.filter((el) => el.dataset.kind === "R" && cardDue(el) && isRead(el.closest(".st")))));
+
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-do]");
+    if (b) {
+      const el = b.closest(".it"), st = { ...stateOf(el) }, k = el.dataset.kind, act = b.dataset.do;
+      if (act === "key") { const key = el.querySelector(".key"); key.hidden = !key.hidden; return; }
+      if (act === "recall") { startSession([el]); return; }
+      if (act === "rehearse") {
+        const ta = el.querySelector("textarea[data-field=answer]");
+        if (st.rehearsed) { delete st.rehearsed; ta.hidden = true; }
+        else if (ta.hidden) { ta.hidden = false; ta.focus(); return; }   // 第一下：展開作答；第二下：記錄
+        else { st.rehearsed = nowIso(); st.answer = ta.value; ta.hidden = true; }
+        save(el, st); applyAll(); return;
+      }
+      if (act === "done") {
+        if (st.done) delete st.done; else { st.done = nowIso(); el.querySelectorAll("textarea[data-field]").forEach((ta) => { st[ta.dataset.field] = ta.value; }); }
+        save(el, st); applyAll(); return;
+      }
+    }
+    const fb = ev.target.closest("[data-f]");
+    if (fb) { filter = fb.dataset.f; document.querySelectorAll("[data-f]").forEach((x) => x.classList.toggle("on", x === fb)); applyAll(); }
+  });
+  // 打字就存（不必按做完）
+  document.addEventListener("input", (ev) => {
+    const ta = ev.target.closest("textarea[data-field]"); if (!ta) return;
+    const el = ta.closest(".it"), st = { ...stateOf(el) }; st[ta.dataset.field] = ta.value; save(el, st);
+  });
+
+  const download = (name, text, type) => {
+    const blob = new Blob([text], { type }); const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+  };
+  document.querySelectorAll('.st [data-do="read"]').forEach((b) => b.addEventListener("click", () => {
+    const sec = b.closest(".st");
+    local[readKey(sec)] = isRead(sec) ? {} : { read: nowIso() };
+    LS.set(LS_KEY, JSON.stringify(local)); applyAll();
+  }));
+  /* 匯出進度：側邊欄與「到 Claude Code 練習」卡片各有一顆（步驟①就在那裡，不該叫人去別處找） */
+  const exportState = () => {
+    const out = {}; items.forEach((el) => { const st = stateOf(el); if (Object.keys(st).length) out[el.dataset.key] = st; });
+    document.querySelectorAll(".st").forEach((sec) => { const r = readOf(sec); if (r) out[readKey(sec)] = { read: r }; });
+    download("digest.state.json", JSON.stringify(out, null, 2), "application/json");
+  };
+  document.querySelectorAll("#export, #export-2").forEach((b) => b.addEventListener("click", exportState));
+  document.getElementById("export-anki")?.addEventListener("click", () => {
+    const esc = (s) => s.replace(/\t/g, " ").replace(/\n/g, "<br>");
+    const rows = items.filter((el) => el.dataset.kind === "R").map((el) =>
+      [esc(el.querySelector(".q").textContent), esc(el.querySelector(".a").textContent), el.closest(".st").dataset.title.replace(/\s+/g, "_")].join("\t"));
+    download("digest.anki.tsv", rows.join("\n") + "\n", "text/tab-separated-values");
+  });
+  document.getElementById("reset")?.addEventListener("click", () => {
+    local = {}; LS.del(LS_KEY);
+    location.reload();   // applyAll() 不會清掉已經打進 textarea 的字，整頁重載才乾淨
+  });
+
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+
+  const side = document.querySelector(".side");
+  const catBtns = [...side.querySelectorAll("[data-cat]")];
+  const paintCats = () => {
+    const picked = chips.filter((c) => c.kind === "category").map((c) => c.value);
+    catBtns.forEach((b) => b.classList.toggle("on",
+      b.dataset.cat ? picked.includes(b.dataset.cat) : picked.length === 0));
+  };
+  catBtns.forEach((b) => b.addEventListener("click", () => {
+    for (let i = chips.length - 1; i >= 0; i--) if (chips[i].kind === "category") chips.splice(i, 1);
+    if (b.dataset.cat) chips.push({ kind: "category", value: b.dataset.cat });
+    drawChips(); refilter(); paintCats(); closeNav();
+  }));
+  /* chip 從哪裡被加掉都要同步側欄：盯著 #sbox 的子節點變動最保險 */
+  new MutationObserver(paintCats).observe(document.getElementById("sbox"), { childList: true });
+  paintCats();
+
+})();
+
+  /* 窄螢幕：側欄變抽屜（templates/_shell.html.j2） */
+  const menuBtn = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const closeNav = () => { document.body.classList.remove("nav-open"); menuBtn.setAttribute("aria-expanded", "false"); };
+  menuBtn.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    menuBtn.setAttribute("aria-expanded", String(open));
+  });
+  scrim.addEventListener("click", closeNav);
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    const si = document.getElementById("sinput");
+    if (e.key === "/" && !typing && si) { e.preventDefault(); si.focus(); }
+    else if (e.key === "Escape" && document.body.classList.contains("nav-open")) closeNav();
+  });
+
+
+</script>
+</body>
+</html>
