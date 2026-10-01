@@ -15,11 +15,12 @@
   .region h3 { margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem; }
   .region h3 i { display:inline-block; width:.9rem; height:.9rem; border-radius:3px; }
   .region .blurb { color:var(--muted); margin:0 0 .8rem; }
-  /* auto-fit：空出來的軌道會被收掉，剩餘寬度平均分給卡片，所以右邊不會留一塊空白。
-     min(100%, …) 讓窄螢幕一排一張；.wp 的 max-width 是為了只有一兩站時不要被拉成巨幅。 */
+  /* auto-fit：空出來的軌道會被收掉，剩餘寬度平均分給卡片，所以站數夠多時右邊不會留白。
+     .wp 的 max-width 是上限：站數少於一排的格數時，卡片維持正常大小、右邊留白，
+     而不是被拉成一張巨幅海報（跟 YouTube 一樣）。 */
   .wps { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
          gap:1.8rem 1.1rem; align-items:start; }
-  .wp { display:flex; flex-direction:column; gap:.45rem; min-width:0; max-width:34rem; }
+  .wp { display:flex; flex-direction:column; gap:.45rem; min-width:0; max-width:24rem; }
   .wp[hidden] { display:none; }
   .wp .thumb { position:relative; display:block; aspect-ratio:16/9; border-radius:10px; overflow:hidden;
                background:var(--card); border:1px solid var(--line); }
