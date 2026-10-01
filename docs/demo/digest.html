@@ -46,7 +46,13 @@
                 color:var(--muted); font-size:.82rem; white-space:nowrap; }
   .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
                    color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .topbar .search { margin:0; }
+  .topbar .search { margin:0; min-width:0; }
+  /* 條件一多就換行的話會把置頂列撐高、整個版面跟著跳；改成單行、超出就橫向捲 */
+  .topbar .sbox { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
+  .topbar .sbox .ico { flex:none; }
+  .topbar .sbox input { min-width:7rem; }
+  .topbar .chip { flex:none; max-width:11rem; }
+  .topbar .chip .v { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
               line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
   .menu-btn:hover { background:var(--card); }
@@ -219,7 +225,7 @@
 <header class="topbar">
   <div class="tl">
     <button class="menu-btn" type="button" id="menu" aria-label="選單" aria-expanded="false">☰</button>
-    <a class="brand" href="digest.html">PACER Learn</a>
+    <a class="brand" href="atlas.html">PACER Learn</a>
   </div>
   
 <div class="search">
@@ -231,7 +237,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 站</span><span id="n-items"></span><span>更新於 2026-10-01 22:27</span></div>
+  <div class="tr"><span>1 站</span><span id="n-items"></span><span>更新於 2026-10-01 22:40</span></div>
 </header>
 
 

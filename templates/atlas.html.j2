@@ -127,7 +127,7 @@
   .routes .via { color:var(--muted); }
 {% endblock %}
 {% block body %}
-{% call shell.top(S, S.atlas_h1, "atlas.html") %}<span>{{ S.f("n_wp", n=waypoints|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span>{% endcall %}
+{% call shell.top(S, S.atlas_h1, home_page) %}<span>{{ S.f("n_wp", n=waypoints|length) }}</span><span id="updated" data-ts="{{ generated_iso }}" title="{{ generated }}">{{ S.f("updated", t=generated) }}</span>{% endcall %}
 {{ shell.layout_open() }}
 <nav class="side">
   {{ shell.nav(S, "atlas", true, has_listen, has_notes, has_digest) }}
@@ -142,7 +142,6 @@
   <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">{{ S.only_clean }}</span></button>
 </nav>
 <main>
-<p class="err-legend">{{ S.err_legend }}<span class="w">{{ ic.danger() }}{{ S.lvl_wrong }}</span><span class="d">{{ ic.warn() }}{{ S.lvl_debatable }}</span></p>
 {{ search.hint(S, waypoints|length) }}
 
 {% macro card(w, color, cat) %}

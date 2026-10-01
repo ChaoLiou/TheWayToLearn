@@ -106,7 +106,8 @@ def test_topnav_does_not_depend_on_render_order(tmp_path):
     (d / "digest.json").write_text(json.dumps(
         {"video_id": "zzzzzzzzzzz", "items": []}, ensure_ascii=False), encoding="utf-8")
     sib = common.sibling_pages(ws)
-    assert sib == {"has_listen": True, "has_notes": True, "has_digest": True, "has_atlas": True}
+    assert sib == {"has_listen": True, "has_notes": True, "has_digest": True, "has_atlas": True,
+                   "home_page": "atlas.html"}
     # listen 先產（此時四個 html 都還不存在）→ topnav 仍然四個都在
     html = listen.render(ws).read_text()
     for href in ("notes.html", "digest.html", "atlas.html"):
@@ -116,7 +117,8 @@ def test_topnav_does_not_depend_on_render_order(tmp_path):
     (bare / "X vid").mkdir(parents=True)
     (bare / "X vid" / "meta.json").write_text('{"video_id":"x"}')
     assert common.sibling_pages(bare) == {
-        "has_listen": False, "has_notes": False, "has_digest": False, "has_atlas": False}
+        "has_listen": False, "has_notes": False, "has_digest": False, "has_atlas": False,
+        "home_page": "atlas.html"}
 
 
 def test_listen_empty_workspace(tmp_path):

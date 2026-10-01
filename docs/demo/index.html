@@ -107,7 +107,13 @@
                 color:var(--muted); font-size:.82rem; white-space:nowrap; }
   .topbar .brand { display:flex; align-items:center; gap:.45rem; font-weight:700; text-decoration:none;
                    color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .topbar .search { margin:0; }
+  .topbar .search { margin:0; min-width:0; }
+  /* 條件一多就換行的話會把置頂列撐高、整個版面跟著跳；改成單行、超出就橫向捲 */
+  .topbar .sbox { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; }
+  .topbar .sbox .ico { flex:none; }
+  .topbar .sbox input { min-width:7rem; }
+  .topbar .chip { flex:none; max-width:11rem; }
+  .topbar .chip .v { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .menu-btn { display:none; background:none; border:none; color:var(--fg); font-size:1.3rem;
               line-height:1; cursor:pointer; padding:.2rem .35rem; border-radius:6px; }
   .menu-btn:hover { background:var(--card); }
@@ -314,7 +320,7 @@
   <ul class="ac" id="ac" role="listbox" hidden></ul>
 </div>
 
-  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T22:27:22+08:00" title="2026-10-01 22:27">更新於 2026-10-01 22:27</span></div>
+  <div class="tr"><span>1 站</span><span id="updated" data-ts="2026-10-01T22:40:31+08:00" title="2026-10-01 22:40">更新於 2026-10-01 22:40</span></div>
 </header>
 
 
@@ -345,7 +351,6 @@
   <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">只看沒勘誤的</span></button>
 </nav>
 <main>
-<p class="err-legend">勘誤件數（這支影片）：<span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span></p>
 
 <p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
 <p id="no-match" hidden>沒有符合條件的站。</p>

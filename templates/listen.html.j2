@@ -76,7 +76,7 @@
 {% endblock %}
 
 {% block body %}
-{% call shell.top(S, S.listen_h1, "listen.html") %}<span>{{ S.f("n_episode", n=episodes|length) }}</span><span>{{ S.f("total_len", t=total|dur) }}</span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
+{% call shell.top(S, S.listen_h1, home_page) %}<span>{{ S.f("n_episode", n=episodes|length) }}</span><span>{{ S.f("total_len", t=total|dur) }}</span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
 {{ shell.layout_open() }}
 <nav class="side">
   {{ shell.nav(S, "listen", has_atlas, true, has_notes, has_digest) }}

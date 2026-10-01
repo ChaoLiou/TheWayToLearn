@@ -282,12 +282,16 @@ def sibling_pages(ws: Path) -> dict[str, bool]:
     def any_of(name: str) -> bool:
         return any((d / name).exists() for d in stations)
 
-    return {
+    out = {
         "has_listen": (ws / "listen.html").exists() or any_of("lesson.mp3"),
         "has_notes": (ws / "notes.html").exists() or any_of("notes.json"),
         "has_digest": (ws / "digest.html").exists() or any_of("digest.json"),
         "has_atlas": (ws / "atlas.html").exists() or (ws / "atlas.json").exists(),
     }
+    # 左上角的品牌連到哪：順位跟 publish.py 的 index.html 一樣（atlas > listen > digest > notes）
+    out["home_page"] = next((f"{k}.html" for k in ("atlas", "listen", "digest", "notes")
+                             if out[f"has_{k}"]), "atlas.html")
+    return out
 
 
 STEPS: list[tuple[str, str]] = [

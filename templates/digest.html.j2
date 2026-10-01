@@ -105,7 +105,7 @@
 {% endblock %}
 
 {% block body %}
-{% call shell.top(S, S.digest_h1, "digest.html") %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span id="n-items"></span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
+{% call shell.top(S, S.digest_h1, home_page) %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span id="n-items"></span><span>{{ S.f("updated", t=generated) }}</span>{% endcall %}
 {{ shell.layout_open() }}
 <nav class="side">
   {{ shell.nav(S, "digest", has_atlas, has_listen, has_notes, true) }}

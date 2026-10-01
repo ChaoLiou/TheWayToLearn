@@ -54,7 +54,7 @@
 {% endblock %}
 
 {% block body %}
-{% call shell.top(S, S.notes_h1, "notes.html") %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span>{{ S.f("n_notes", n=n_notes) }}</span><span id="kept"></span>{% endcall %}
+{% call shell.top(S, S.notes_h1, home_page) %}<span>{{ S.f("n_wp", n=stations|length) }}</span><span>{{ S.f("n_notes", n=n_notes) }}</span><span id="kept"></span>{% endcall %}
 {{ shell.layout_open() }}
 <nav class="side">
   {{ shell.nav(S, "notes", has_atlas, has_listen, true, has_digest) }}
