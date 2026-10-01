@@ -1,6 +1,6 @@
 {
   "name": "pacer",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "PACER：YouTube 連結或部落格文章 → 抓字幕與關鍵截圖 → 線性推進的文字解析（plan.html）→ PACER 練習、語音解析，再把每支影片連成一份影片解析列表。",
   "author": {
     "name": "chaol"
