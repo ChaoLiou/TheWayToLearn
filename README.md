@@ -4,8 +4,8 @@
 
 ### 🔗 [See it for yourself](https://chaoliou.github.io/TheWayToLearn/demo/en/)
 
-A real run on a TED talk about sleep — read the explainer, press play on the 12-minute audio version, flip through the practice cards. Nothing to install.
-Everything you see there was produced from the talk's English transcript: the write-up, the notes, the practice sheet and the narration.
+A real run on a TED talk about sleep — read the text breakdown, press play on the 12-minute audio breakdown, flip through the practice. Nothing to install.
+Everything you see there was produced from the talk's English transcript: the text breakdown, the notes, the practice and the narration.
 <sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)</sub>
 
 **This is a [Claude Code](https://claude.com/claude-code) plugin.** Once installed, hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
@@ -20,11 +20,11 @@ PACER Learn turns that hour into something that stays with you.
 
 | You get a… | Which is really… | Good for |
 | --- | --- | --- |
-| 📄 **Written explainer** | A web page. How the speaker reasons their way to each conclusion, what every section says, screenshots of the moments that matter, unfamiliar terms explained and errors flagged right where they appear | Going back over a video you watched — or skipping the video entirely |
-| 🎧 **Audio version** | An mp3. A spoken walkthrough, cut with clips of the speaker's own voice, with chapters and captions | Commuting, walking, doing the dishes |
+| 📄 **Text breakdown** | A web page. How the speaker reasons their way to each conclusion, what every section says, screenshots of the moments that matter, unfamiliar terms explained and errors flagged right where they appear | Going back over a video you watched — or skipping the video entirely |
+| 🎧 **Audio breakdown** | An mp3. A spoken walkthrough, cut with clips of the speaker's own voice, with chapters and captions | Commuting, walking, doing the dishes |
 | ✍️ **Practice** | A web page. Every piece of information in the video turned into something to *do*: run through the steps, come up with your own example, draw the concept map, drill the flashcard | Actually remembering it, instead of having "seen it" |
 | 📝 **Notes** | A web page. 3–8 one-line takeaways per video — the things you only know after watching. Click one to jump back to the part that said it; keep or delete each one yourself | Keeping just the conclusions, or moving them into your own note app |
-| 🗂 **Index of every video** | A web page. One card per video you've studied, searchable, showing which one leads into which | Three months later, finding "that video about fixing jet lag" |
+| 📄 **All videos** | A web page. One card per video you've studied, searchable, showing which one leads into which | Three months later, finding "that video about fixing jet lag" |
 
 All of it is plain web pages stored on your own computer. They work offline, and one command publishes them online so you can read and listen on your phone.
 
@@ -154,7 +154,7 @@ Say it to Claude Code in whatever language you prefer:
 | Just find out what it'll cost first | `/pacer:learn-estimate <url>` |
 | What should I review today? | `/pacer:learn-digest today` |
 | Walk me through the practice | `/pacer:learn-digest do` |
-| Make the audio version | `/pacer:learn-narrate` |
+| Make the audio breakdown | `/pacer:learn-narrate` |
 | Pull out the notes | `/pacer:learn-notes` |
 | Publish it online (to read on my phone) | `/pacer:learn-publish` |
 
