@@ -1,185 +1,189 @@
-# TheWayToLearn
+# The Way To Learn - PACER Learn
 
 [English](../README.md) · **繁體中文**
 
-把一串 YouTube 連結變成一份有結構的學習規劃：逐字稿、關鍵時間點截圖、作者一步步的推理、就地解釋的術語，以及一張把你看過的所有影片串起來的學習地圖。
+**這是一個 [Claude Code](https://claude.com/claude-code) plugin。** 安裝上去之後，你只要使用此 skill 接著一支 YouTube 影片（或一篇部落格文章）的網址，它幫你把內容整理成讀得懂、能複習、也能用聽的學習資源。
 
-本專案以 [Claude Code](https://claude.com/claude-code) 的 skill 形式交付，並附上這些 skill 會呼叫的確定性程式。
+用的方式就是在 Claude Code 裡打一行字（`/pacer:learn <網址>`），不用寫程式。沒用過 Claude Code 也沒關係，下面〈[開始用](#開始用)〉從安裝它開始帶你完成。
+
+
+
+為什麼需要它：看完一支一小時的教學影片標題是「為何睡眠很重要」，看的當下頻頻點頭，隔天回想卻只剩一句「嗯，睡眠很重要」。
+
+PACER Learn 的工作就是把那一小時變成你留得住的東西。
+
+## 你會拿到五樣東西
+
+
+| 拿到一份...        | 實際上是...                                        | 什麼時候用               |
+| -------------- | ---------------------------------------------- | ------------------- |
+| 📄 **文字解析**    | 一頁網頁。作者怎麼一步步推出結論、每一段在說什麼、關鍵畫面的截圖、不懂的名詞就地解釋     | 看完影片想回頭確認，或根本不想看完整支 |
+| 🎧 **語音解析**    | 一個 mp3。AI 的口語講解，中間穿插作者的原聲片段，有章節、有字幕            | 通勤、走路、洗碗            |
+| ✍️ **練習**      | 一頁網頁。把影片裡每一筆資訊變成一個「去做」的動作：步驟照做一次、自己舉例、畫概念圖、背卡片 | 想真的記住，而不是「看過」       |
+| 📝 **筆記**      | 一頁網頁。每支影片挑出 3–8 條「看完才知道的」心得，一條一句話，點了跳回影片講那件事的那一段，你自己按留或刪 | 只想留結論，或想把重點丟進自己的筆記軟體 |
+| 🗂 **全部影片的列表** | 一頁網頁。你學過的每支影片一張卡，可搜尋，看得到哪支接哪支                  | 三個月後想找「那支講時差怎麼調的影片」 |
+
+
+全部都是網頁檔，存在你自己電腦裡，離線也能開，也可以一鍵發佈到網路上用手機看。
 
 ---
 
-## 為什麼做這個
+## 跟「叫 AI 幫我摘要」差在哪
 
-看完一支技術影片，留下的往往只有「好像懂了」的感覺，沒有任何可以回頭翻的東西。手抄筆記會漏掉推理過程；自動摘要把論證壓成條列，把概念出場的順序也一併抹掉。
+**1. 它不是只把重點列出來。**  
+一般的摘要只給你重點，但你有想過主講者是怎麼一路想到那裡的嗎？PACER Learn 會按照原本的順序一段接一段，用你這個觀眾的視角告訴你段落之間是怎麼連起來的。例如：影片第 3 段丟出一個疑問（「那為什麼有人睡滿八小時還是很累？」），第 4 段就從那個疑問接著回答。看到沒聽過的名詞，當場就解釋。用起來就像有個好朋友坐在你旁邊，陪你一起看台上主講者那場精采的演說。
 
-這個專案保留順序。每一段的說明都**線性推進**：第 N 段留下的線索就是第 N+1 段的出發點；術語在第一次出現的那一段就地定義；禁止引用尚未出現的段落。讀起來像影片本身在論證，而不是一份目錄。
+**2. 看到哪一句，都能跳回影片的那一秒。**
+每一段都標著「影片第幾分幾秒」，旁邊配那個時間點的畫面截圖。覺得「這句怪怪的」，點一下就跳回去聽他原話怎麼說。
 
-## 你會得到什麼
+**3. 看完 ≠ 學會，所以它會逼你動手。**
+看到、聽到一個知識，只是把它吃進去；要留下來，還得再「消化」一次。而知識是有分類的，每一種分類的消化方式都不一樣。用錯方法，花再多時間也留不住。
 
-每支影片在 `workspace/<影片標題>/` 下有一份獨立的 `plan.html`，固定五個部分。以下截圖來自實際跑過的 [Message Queues in System Design Interviews w/ Meta Staff Engineer](https://www.youtube.com/watch?v=1ISRd0bS714)（Hello Interview，27 分鐘，13 段）。
+這就是這個工具名字的由來。做法來自《How to Remember Everything You Read》的 PACER 法：把影片裡的每一筆資訊歸到五類中的一類，再照那一類的方式消化。PACER 就是這五類英文字的字首
 
-**1. 前情提要 & Outline** —— 看之前需要先懂的背景、影片大綱、學習地圖上相鄰站的連結，以及各階段預估 vs 實際耗時。
 
-![前情提要與 Outline](img/01-outline.png)
+以一支講睡眠的影片為例：
 
-**2. YouTuber 的思維推導** —— 一段文字推導，加上 Mermaid 推理鏈：每段一個節點，邊上寫這段留給下一段的線索。
+| 哪一類               | 這是什麼         | 影片裡的例子                | 你要如何消化             |
+| ----------------- | ------------ | --------------------- | ------------------ |
+| **P**rocedural 程序 | 一個做法、一串步驟    | 睡前 90 分鐘泡個熱水澡         | 今晚就照做一次            |
+| **A**nalogous 類比  | 「這就像是…」      | 咖啡因就像把「想睡」的訊號貼住       | 想想哪裡像、哪裡不像、什麼時候會失效 |
+| **C**onceptual 概念 | 互相有關係的一組想法   | 生理時鐘、深睡、光照三者怎麼互相影響    | 自己畫成一張圖，再跟答案對      |
+| **E**vidence 證據   | 支持某個概念的例子、數據 | 那個「少睡兩小時，反應變慢等同微醺」的實驗 | 隔一天，不看筆記講一次        |
+| **R**eference 參考  | 純記憶的事實、數字    | 一個睡眠週期大約 90 分鐘        | 做成卡片，隔幾天複習一次（自動排程） |
 
-<img src="img/02-reasoning-chain.png" width="340" alt="推理鏈">
 
-**3. 逐段說明** —— 每段包含：作者說了什麼、附時間戳的截圖、承上（上一段留下的線索）、推理、AI 補充、就地解釋的術語（hover 看翻譯，點 ⓘ 看更多），以及有逐字引文佐證的**勘誤／過時**標記。
+分類、還有每一筆該做什麼，都是 PACER Learn 幫你寫好的，你只要照著做。做過的它會記住，該複習的時候再提醒你。
 
-![單一段落](img/03-segment.png)
+它也會幫你紀錄：如果沒消化的東西積太多（預設 20 筆），下次你再貼新影片，它會先叫你停下來，把舊的做完再說。
 
-**4. 總結** —— 一段話串起整條線、勘誤總整理表、心智圖（主題 → 各段 → 術語），以及術語關聯圖。
+**4. 它會唸給你聽，而且穿插主講者本人的聲音。**
+摘要只能用眼睛讀。這裡會把整份講解做成一段 mp3：AI 的口語講解，講到關鍵的地方就切進主講者說那句話的原聲，像在聽一集 podcast。有章節可以跳，螢幕上有逐句字幕，走路、開車、洗碗的時候都能複習。原片是外語的話，原聲那段還能切成中文配音。
 
-![總結、勘誤表與心智圖](img/04-summary-mindmap.png)
+**5. 它會留下一份你自己挑過的筆記。**
+摘要看完就關掉了。這裡每支影片會挑出 3–8 條「看完才知道的」心得，一條一句話；你按留或刪，不想要的就不再出現。留下的每一條都連得回影片講那件事的那一段，也可以整包匯出，丟進你自己的筆記軟體。
 
-**5. 推薦三個下一步** —— 往下挖深、往旁邊對照、往上應用，各附 YouTube 搜尋關鍵字。
+---
 
-![推薦三個下一步](img/05-next-steps.png)
+## 開始用
 
-**學習地圖（Atlas）** —— 有兩支以上影片後，`workspace/atlas.html` 把每支影片畫成一站，站與站之間的 route 有型別（prerequisite / deepens / contrasts / applies / related），並依主題分成 region。每份 plan 頂部都能回到地圖、跳到相鄰站。
+需要一台電腦（Mac / Windows / Linux 都行）和 Claude Code。大約 10 分鐘。
 
-![學習地圖](img/06-atlas.png)
+### 1. 裝 Claude Code
 
-中間產物（`transcript.json`、`segments.json`、`frames/`、`analysis.json`、`timings.json`）都落地成檔案，任何階段都能重跑，不必重抓影片。
+照 [官方安裝說明](https://claude.com/claude-code) 做完，能在終端機打 `claude` 進得去就行。
 
-## 怎麼用
+### 2. 裝兩個小工具
 
-### 在 Claude Code 裡（設計上的主要用法）
+複製貼上到終端機：
 
-用 Claude Code 開啟本 repo，貼連結：
-
-```
-/learn https://www.youtube.com/watch?v=XXXXXXXXXXX https://youtu.be/YYYYYYYYYYY
-/learn input.yaml
-```
-
-第 0 步一定先印出分階段與總和的成本估算（時間、token、磁碟），等你確認。之後每支影片依序跑 fetch → segment → shot → analyze → render；有兩支以上影片時再更新學習地圖。
-
-選項：
-
-```
-/learn <url> --vision true|false|auto   # agent 是否逐張讀截圖（預設 true）；只影響前一個 URL
-/learn --from <stage> <video_id>        # 從某階段往後重跑：fetch | segment | shot | analyze | render
-/learn --dry-run <url> ...              # 只列各階段會執行或跳過
-```
-
-每個階段也是獨立 skill（`/learn-estimate`、`/learn-fetch`、`/learn-segment`、`/learn-shot`、`/learn-analyze`、`/learn-render`、`/learn-atlas`），慣例是 `/learn-<stage> <video_id> [--force]`。既有輸出預設不覆蓋，要重做加 `--force`。
-
-批次輸入（`input.example.yaml`）：
-
-```yaml
-lang: [zh-TW, zh, en]   # 字幕語言優先序
-out: workspace
-videos:
-  - url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-    vision: true         # true | false | auto
-  - url: https://youtu.be/xxxxxxxxxxx
-    vision: false
-```
-
-### 直接跑程式
-
-確定性的階段是純 Python，不需要 agent 也能用：
-
-| 指令 | 做什麼 |
-|---|---|
-| `uv run scripts/estimate.py <url> ...` | 分階段估時間／token／磁碟，不下載。 |
-| `uv run scripts/fetch.py <url>` | 抓字幕（含時間戳）與 metadata，不下載影片。 |
-| `uv run scripts/screenshot.py <id>` | 下載影片一次、依 `segments.json` 用 ffmpeg 抽幀、抽完刪影片（`--keep-video` 保留）。 |
-| `uv run scripts/validate.py <segments\|analysis\|overview> <file.json>` | 用 schema 與線性推進規則驗證 agent 產出的 JSON。 |
-| `uv run scripts/render.py [ids...]` | 每支影片各自產 `plan.html`；`--combined` 合併成一份。 |
-| `uv run scripts/atlas.py --status` / `uv run scripts/atlas.py` | 列新站與共同術語／驗證 `atlas.json` 並產 `atlas.html`。 |
-
-segment、analyze、overview 三個階段需要 LLM，由 agent 依 `rules/*.md` 執行。
-
-## 依賴
-
-| 依賴 | 用途 | 怎麼裝 |
-|---|---|---|
-| Python ≥ 3.11 | 程式 | 見下方 |
-| [uv](https://docs.astral.sh/uv/) | 依賴與 venv 管理 | 見下方 |
-| yt-dlp | 字幕、metadata、下載影片 | Python 套件，`uv sync` 會裝 |
-| ffmpeg | 抽幀 | **系統套件，要另外裝** |
-| Claude Code | 執行 `/learn-*` skill | [安裝說明](https://docs.claude.com/en/docs/claude-code) |
-
-Python 套件（`pyproject.toml`）：`yt-dlp`、`pyyaml`、`jinja2`、`jsonschema`；開發用：`pytest`、`ruff`。
-
-## 環境安裝
-
-開發與測試環境是 WSL2（Ubuntu）。原生 macOS 與 Windows 應可運作；唯一跟作業系統有關的是把 `ffmpeg` 放進 `PATH`。
-
-### Linux
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh     # uv（需要時會自動裝 Python）
-sudo apt install ffmpeg                             # Debian / Ubuntu
-# sudo dnf install ffmpeg                           # Fedora（需啟用 RPM Fusion）
-git clone <本 repo> && cd TheWayToLearn
-uv sync
-```
-
-### macOS
+**Mac**
 
 ```bash
 brew install uv ffmpeg
-git clone <本 repo> && cd TheWayToLearn
-uv sync
 ```
 
-### Windows
+**Ubuntu / WSL**
 
-方法 A —— WSL2（建議，與測試環境相同）：從 Microsoft Store 裝 Ubuntu，然後在裡面照 Linux 步驟做。
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+sudo apt install ffmpeg
+```
 
-方法 B —— 原生 PowerShell：
+**Windows（PowerShell）**
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-winget install Gyan.FFmpeg        # 或：choco install ffmpeg
-# 開一個新的終端機讓 PATH 生效
-git clone <本 repo>; cd TheWayToLearn
-uv sync
+winget install Gyan.FFmpeg
 ```
 
-### 確認可用
+（`uv` 負責自動把程式要用的東西裝好，`ffmpeg` 負責從影片裡截圖。）
 
-```bash
-uv run yt-dlp --version
-ffmpeg -version
-uv run pytest -q          # 不碰網路；用 tests/fixtures/ws 當樣本 workspace
-uv run scripts/estimate.py https://www.youtube.com/watch?v=dQw4w9WgXcQ
+### 3. 安裝這個 plugin
+
+開 `claude`，打這兩行：
+
+```
+/plugin marketplace add https://github.com/ChaoLiou/TheWayToLearn
+/plugin install pacer@thewaytolearn
 ```
 
-最後一個指令印出分階段表格就代表環境 OK。
+### 4. 貼連結
 
-## 改行為不改程式
-
-| 想改… | 改哪裡 |
-|---|---|
-| 切段、截圖挑選、`vision: auto` 判斷 | `rules/segment.md` |
-| 線性推進規則與說明風格 | `rules/narrative.md`（硬規則由 `scripts/validate.py` 執行；新增硬規則要同步加檢查與測試） |
-| 彙整、takeaways、三個下一步 | `rules/overview.md` |
-| 學習地圖的 route / region 判斷 | `rules/atlas.md` |
-| 文件版面 | `rules/output.md` + `templates/plan.html.j2` |
-| 估算係數 | `config/estimate.yaml` |
-| agent 輸出格式 | `schemas/*.json` |
-
-## 開發
-
-```bash
-uv run pytest -q                         # 全部測試，不碰網路
-uv run pytest tests/test_validate.py -k forward
-uv run ruff check scripts tests
+```
+/pacer:learn https://youtu.be/你想學的那支
 ```
 
-## 翻譯
+它會**先告訴你這支大概要花多久、用掉多少額度、佔多少硬碟**，你說好才開始。一支 30 分鐘的影片大約 10–20 分鐘跑完，中間你可以去做別的事。
 
-英文版 `README.md` 是原始版本，其他語言放在 `docs/README.<lang>.md`，`<lang>` 用 [BCP 47](https://en.wikipedia.org/wiki/IETF_language_tag) 標籤；每個版本頂部都有同一列語言切換連結。
+成果會放在你當下那個資料夾的 `workspace/` 裡，用瀏覽器打開 `plan.html` 就能看。
 
-新增語言：把 `README.md` 複製成 `docs/README.<lang>.md` 翻譯，然後在**每一份** README 的語言列加上連結（包含這一份）。
+### 5.（建議）一個主題開一個資料夾
 
-| 語言 | 檔案 |
-|---|---|
-| English（原始版本） | `README.md` |
-| 繁體中文 | `docs/README.zh-TW.md` |
+成果是存在「你下指令時所在的那個資料夾」底下，所以你想怎麼分類都可以，很彈性。
+
+最順的用法是**一個主題一個資料夾**：今天想研究睡眠，就開一個 `睡眠/` 資料夾，在裡面跑 `/pacer:learn`，之後所有跟睡眠有關的影片都丟這裡；哪天改研究料理，再開一個 `料理/`。
+
+```
+我的學習/
+├── 睡眠/     ← 在這裡面下指令，睡眠的影片都存在這
+└── 料理/     ← 換個主題就換個資料夾
+```
+
+這樣做的好處：每個資料夾各自有一份「全部影片的列表」和一份練習清單，不會把睡眠跟料理混在一起，要整包備份或分享給別人也方便。不想分也沒關係，全部都放同一個資料夾一樣能跑。
+
+---
+
+## 常用的幾句話
+
+直接打給 Claude Code，中文就可以：
+
+
+| 你想做的        | 打這句                          |
+| ----------- | ---------------------------- |
+| 學一支影片（整套）   | `/pacer:learn <網址>`          |
+| 只想先知道要花多久   | `/pacer:learn-estimate <網址>` |
+| 今天該複習什麼     | `/pacer:learn-digest today`  |
+| 陪我做練習       | `/pacer:learn-digest do`     |
+| 做成可以用聽的     | `/pacer:learn-narrate`       |
+| 整理成筆記       | `/pacer:learn-notes`         |
+| 發佈到網路上（手機看） | `/pacer:learn-publish`       |
+
+
+整個播放清單也可以貼，它會問你要做幾支，一支一支做完。部落格文章網址一樣可以。
+
+---
+
+## 幾個你可能想調的
+
+跑之前它會問一次，也可以直接寫在指令後面：
+
+- **要不要截圖** `--shots auto|none|many`：預設只截「看了才懂」的畫面。純講話的影片設 `none` 比較快。
+- **要不要讓 AI 逐張看截圖** `--vision true|false`：看圖比較懂，但比較花額度。想省就關掉。
+- **輸出語言**：預設跟著你下指令的語言走（中文問就寫中文），網頁介面也會跟著換。想固定下來就說「以後都用英文」，或自己跑一次
+  `uv run scripts/options.py learn --save output_lang=en`（記進該資料夾的 `settings.json`，所以「睡眠/ 用中文、cooking/ 用英文」可以各自記）。目前介面有繁體中文與英文兩套。
+
+---
+
+## 常見問題
+
+**要花錢嗎？**
+用到你的 Claude Code 額度（看影片長度，一支約幾十分鐘的量）。語音合成用的是免費服務，不另外付費。
+
+**影片會被下載到我電腦嗎？**
+只有需要截圖時會暫時下載一次，截完就刪。設 `--shots none` 就完全不下載。
+
+**我的學習紀錄存在哪？**
+你跑指令那個資料夾的 `workspace/` 底下，一支影片一個資料夾，全部是普通的 HTML 和 mp3。想搬走、備份、丟進 Obsidian 都可以（`/pacer:learn-digest` 會順便產一份 Obsidian 筆記庫）。
+
+**可以不要每次都開 Claude Code 嗎？**
+`/pacer:learn-publish` 會把成果整理好，可以部署到 Cloudflare Pages，之後手機瀏覽器直接看、直接聽。
+
+**出來的內容不滿意怎麼辦？**
+每個階段都能單獨重跑，不用從頭來：覺得段落切得爛就 `/pacer:learn-segment`，覺得解說寫得爛就 `/pacer:learn-analyze`。想改它的寫作風格，`rules/` 底下都是白話寫的規則檔，改文字就會改行為，不用碰程式。
+
+---
+
+## 想知道底層怎麼做的
+
+→ [底層怎麼做的（技術版）](how-it-works.zh-TW.md)：完整管線、每一階段誰做什麼、幾個工程上的取捨、怎麼單獨跑各階段的程式、怎麼改規則。

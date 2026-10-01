@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>睡得更好的六條科學建議，以及它們管用的邊界 — 文字解析</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; }
+  }
+  body { margin:0; padding:2rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size:1.9rem; } h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:3rem; }
+  h3 { margin-top:2rem; } h4 { margin:1.5rem 0 .3rem; color:var(--accent); }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  table { border-collapse:collapse; font-size:.9rem; } td,th { border:1px solid var(--line); padding:.2rem .6rem; }
+  a { color:var(--accent); }
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  /* mermaid：可點開全視窗 */
+  .mm-wrap { position:relative; border:1px dashed var(--line); border-radius:8px; padding:.5rem; cursor:zoom-in; overflow-x:auto; }
+  .mm-wrap::after { content:"⤢ 點擊放大"; position:absolute; right:.6rem; top:.4rem; font-size:.75rem; color:var(--muted); }
+  .mm-wrap:hover { border-color:var(--accent); }
+  .mm-wrap svg { max-width:100%; height:auto; }
+  .mm-wrap svg[width] { max-width:none; height:auto; }   /* flowchart：不縮小，寬了就橫向捲 */
+  .legend { display:flex; flex-wrap:wrap; gap:.3rem .9rem; font-size:.85rem; color:var(--muted); margin:.2rem 0 .5rem; }
+  .legend i { display:inline-block; width:.8rem; height:.8rem; border-radius:3px; margin-right:.3rem; vertical-align:-.05em; }
+  .mindmap-node text, .mindmap-node tspan { font-size:15px !important; }
+  .mindmap-node .section-root text { font-size:18px !important; font-weight:700; }
+  /* 圖的文字描述，預設收合 */
+  details.desc { margin:.4rem 0 1.2rem; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+  details.desc summary { cursor:pointer; padding:.4rem .8rem; color:var(--muted); font-size:.9rem; user-select:none; }
+  details.desc[open] summary { border-bottom:1px solid var(--line); }
+  details.desc > div { padding:.6rem 1rem; font-size:.92rem; overflow-x:auto; }
+  details.desc ol, details.desc ul { margin:.2rem 0; padding-left:1.4rem; }
+  /* 全視窗 viewer（mermaid + lightbox 共用） */
+  #viewer { position:fixed; inset:0; background:var(--overlay); z-index:100; display:flex; flex-direction:column; }
+  #viewer[hidden] { display:none; }
+  .v-bar { display:flex; align-items:center; gap:.4rem; padding:.5rem .8rem; color:#fff; font-size:.9rem;
+           background:rgba(0,0,0,.4); }
+  .v-bar .cap { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .v-bar button { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.3);
+                  border-radius:4px; padding:.2rem .6rem; cursor:pointer; font-size:.9rem; }
+  .v-bar button:hover { background:rgba(255,255,255,.25); }
+  .v-stage { flex:1; overflow:hidden; position:relative; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .v-stage.drag { cursor:grabbing; }
+  .v-content { position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .v-content img { display:block; max-width:none; }
+  .v-content svg { display:block; background:var(--bg); border-radius:6px; }
+  .v-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.5); color:#fff;
+           border:none; font-size:2rem; padding:.4rem .7rem; cursor:pointer; border-radius:6px; }
+  .v-nav.prev { left:.5rem; } .v-nav.next { right:.5rem; }
+  .v-nav[hidden] { display:none; }
+
+  /* 勘誤／過時：plan.html 與 atlas.html 共用同一套外觀
+     紅八角 = 確定錯誤／已過時；橘三角 = 見仁見智 */
+  .err-legend { font-size:.8rem; color:var(--muted); margin:.3rem .2rem .6rem; display:flex; align-items:center;
+                gap:.3rem; flex-wrap:wrap; }
+  .err-legend svg { width:.9rem; height:.9rem; vertical-align:-.15em; }
+  .err-legend span { display:inline-flex; align-items:center; gap:.25rem; margin-right:.6rem; }
+  .err-legend .w { color:var(--wrong); } .err-legend .d { color:var(--debat); }
+  .issue { border-left:4px solid; border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .issue.wrong { border-color:var(--wrong); background:var(--wrong-bg); }
+  .issue.debatable { border-color:var(--debat); background:var(--debat-bg); }
+  .issue .lvl { display:inline-flex; align-items:center; gap:.25rem; font-size:.72rem; font-weight:700;
+                padding:.05rem .5rem; border-radius:999px; color:#fff; margin-right:.4rem; }
+  .issue .lvl svg { width:.9em; height:.9em; }
+  .issue.wrong .lvl { background:var(--wrong); } .issue.debatable .lvl { background:var(--debat); }
+  .issue blockquote { margin:.3rem 0; padding-left:.6rem; border-left:2px solid var(--line); color:var(--muted); font-style:italic; }
+  .issue .ev { font-size:.85rem; color:var(--muted); }
+  table.issues-sum { width:100%; }
+  table.issues-sum th { background:var(--card); text-align:left; font-weight:600; }
+  table.issues-sum td { vertical-align:top; }
+  table.issues-sum td.q { color:var(--muted); font-style:italic; max-width:24rem; }
+  table.issues-sum tr.wrong td:first-child { border-left:4px solid var(--wrong); }
+  table.issues-sum tr.debatable td:first-child { border-left:4px solid var(--debat); }
+  table.issues-sum .lv { display:inline-flex; vertical-align:-.15em; margin-right:.25rem; }
+  table.issues-sum .lv svg { width:.95em; height:.95em; }
+  table.issues-sum tr.wrong .lv { color:var(--wrong); } table.issues-sum tr.debatable .lv { color:var(--debat); }
+  table.issues-sum .ev { font-size:.85rem; color:var(--muted); }
+
+
+  .seg { border-left:3px solid var(--accent); padding-left:1rem; margin:2rem 0; }
+  .bridge { background:var(--card); border-radius:6px; padding:.5rem .8rem; margin:.5rem 0; }
+  .bridge b { color:var(--accent); }
+  .tag { display:inline-block; font-size:.72rem; font-weight:600; letter-spacing:.02em; padding:.05rem .5rem;
+         border-radius:999px; margin-right:.4rem; vertical-align:.1em; white-space:nowrap; }
+  .tag.r { background:var(--accent); color:#fff; }
+  .tag.ai { background:var(--card); color:var(--accent); border:1px solid var(--accent); }
+  /* PACER 標籤：這段的每筆資訊是哪一類、該做什麼消化（digest.json） */
+  .pacer { list-style:none; margin:.4rem 0; padding:0; display:flex; flex-direction:column; gap:.2rem; }
+  .pacer a { display:flex; gap:.5rem; align-items:baseline; text-decoration:none; color:var(--fg); font-size:.88rem; padding:.15rem .5rem; border-radius:6px; }
+  .pacer a:hover { background:var(--card); }
+  .pacer .k { font-size:.7rem; font-weight:700; border-radius:4px; padding:0 .4rem; color:#fff; flex:none; }
+  .pacer [data-kind="P"] .k { background:#59a14f; } .pacer [data-kind="A"] .k { background:#b07aa1; } .pacer [data-kind="C"] .k { background:#4e79a7; }
+  .pacer [data-kind="E"] .k { background:#e49444; } .pacer [data-kind="R"] .k { background:#76b7b2; }
+  .pacer .act { color:var(--muted); font-size:.78rem; margin-left:auto; flex:none; }
+  .atlas-nav ul { margin:.3rem 0 0; padding-left:1.2rem; }
+  .hub { display:flex; gap:.5rem; flex-wrap:wrap; margin:.2rem 0 .6rem; }
+  .hub a { font-size:.85rem; text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:.15rem .7rem; background:var(--card); color:var(--fg); }
+  .hub a:hover { border-color:var(--accent); color:var(--accent); }
+  .lesson audio { width:100%; margin:.5rem 0 .3rem; }
+  .lesson ol { margin:.2rem 0 0; padding-left:1.4rem; display:grid; gap:.1rem .9rem;
+               grid-template-columns:repeat(auto-fill, minmax(18rem, 1fr)); }
+  .lesson button { background:none; border:none; color:var(--accent); cursor:pointer; padding:0; font:inherit; text-align:left; }
+  .lesson .t { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:.4rem; }
+  .lesson .acts { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:.2rem; }
+  .lesson .acts button { background:var(--accent); color:#fff; border:none; border-radius:6px;
+                         padding:.25rem .7rem; cursor:pointer; font:inherit; }
+  /* 原聲 / 翻譯配音的切換（分段按鈕，亮起來的是目前這軌）*/
+  .modes { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .modes[hidden] { display:none; }
+  .modes button, .lesson .acts .modes button { background:var(--card); color:var(--muted); border:none;
+                  border-radius:0; padding:.25rem .8rem; cursor:pointer; font:inherit; }
+  .modes button + button { border-left:1px solid var(--line); }
+  .modes button.on, .lesson .acts .modes button.on { background:var(--accent); color:#fff; }
+  /* karaoke 講稿視窗 */
+  #kara { position:fixed; inset:0; z-index:110; background:var(--bg); display:flex; flex-direction:column; }
+  #kara[hidden] { display:none; }
+  #kara .bar { display:flex; align-items:center; gap:.5rem; padding:.6rem 1rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  #kara .bar .ttl { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #kara .bar button { background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:6px;
+                      padding:.25rem .7rem; cursor:pointer; font:inherit; }
+  #kara .bar button:hover { border-color:var(--accent); color:var(--accent); }
+  #kara .bar .time { color:var(--muted); font-variant-numeric:tabular-nums; }
+  #kara .bar select { background:var(--card); color:var(--fg); border:1px solid var(--line);
+                      border-radius:6px; padding:.25rem .4rem; font:inherit; cursor:pointer; }
+  #kara .body { flex:1; overflow-y:auto; padding:0 1rem; }
+  #kara .inner { max-width:760px; margin:0 auto; padding:30vh 0; }
+  #kara h4 { position:sticky; top:0; z-index:2; height:2.5rem; box-sizing:border-box; background:var(--bg); margin:1.6rem 0 .4rem;
+             padding:.4rem 0; color:var(--accent); box-shadow:0 6px 6px -6px var(--bg); }
+  #kara .clipbox { position:relative; }
+  #kara .cliphead { position:sticky; top:2.5rem; z-index:1; background:var(--bg); }
+  #kara .trans { position:sticky; top:4.2rem; z-index:1; color:var(--muted); font-size:.92rem; line-height:1.8;
+                 background:var(--card); border:1px solid var(--line); border-radius:8px;
+                 padding:.6rem .8rem; margin:.2rem 0 .6rem; max-height:26vh; overflow-y:auto; }
+  #kara p { margin:.35rem 0; padding:.35rem .6rem; border-radius:6px; cursor:pointer;
+            color:var(--muted); line-height:1.9; transition:color .15s, background .15s; }
+  #kara p:hover { background:var(--card); }
+  #kara p.done { color:var(--fg); }
+  #kara p.now { color:var(--fg); background:color-mix(in srgb, var(--accent) 18%, transparent);
+                box-shadow:inset 3px 0 0 var(--accent); }
+  #kara p.clip { font-style:italic; }
+  #kara .cliphead { color:var(--muted); font-size:.85rem; margin:1rem 0 .2rem; font-style:normal; }
+  #kara p.clip { border-left:2px solid var(--line); }
+  #kara p.dub { font-style:normal; border-left:2px dashed var(--accent); }
+  #kara .back { position:absolute; right:1.2rem; bottom:1.2rem; background:var(--accent); color:#fff;
+                border:none; border-radius:999px; padding:.5rem 1rem; cursor:pointer; font:inherit; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  #kara .back[hidden] { display:none; }
+
+  .atlas-nav .rt { display:inline-block; font-size:.72rem; font-weight:700; padding:0 .45rem; border-radius:999px; background:var(--accent); color:#fff; margin-right:.4rem; }
+  /* 勘誤／過時的外觀在 _base.html.j2，跟 atlas.html 共用 */
+  .issues { margin:.8rem 0; }
+  .frames { display:flex; flex-wrap:wrap; gap:.6rem; }
+  .frames figure { margin:0; max-width:280px; }
+  .frames img { width:100%; border:1px solid var(--line); border-radius:4px; cursor:zoom-in; }
+  .frames figcaption { font-size:.8rem; color:var(--muted); }
+  /* 術語：就地標在文章裡（原文 + hover 中文 + ⓘ） */
+  .term { position:relative; border-bottom:1px dotted var(--accent); cursor:help; font-weight:600; }
+  .term::after { content:attr(data-zh); position:absolute; left:0; bottom:calc(100% + 4px); white-space:nowrap;
+                 background:var(--fg); color:var(--bg); font-size:.8rem; font-weight:400; padding:.15rem .5rem;
+                 border-radius:4px; opacity:0; pointer-events:none; transition:opacity .12s; z-index:5; }
+  .term:hover::after { opacity:1; }
+  .info { display:inline-flex; align-items:center; justify-content:center; width:1.15rem; height:1.15rem;
+          border-radius:50%; border:1px solid var(--accent); color:var(--accent); background:none;
+          font:700 .75rem/1 system-ui; cursor:pointer; padding:0; }
+  .info:hover { background:var(--accent); color:#fff; }
+  p .info { margin:0 .15rem 0 .1rem; vertical-align:.05em; transform:scale(.8); }
+  /* 文中沒出現的術語：收在段末一行，仍可點 ⓘ 看定義 */
+  .terms-extra { font-size:.88rem; margin:.3rem 0; }
+  .terms-extra .term { margin-left:.3rem; }
+  dialog { border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--fg);
+           max-width:560px; width:calc(100% - 2rem); padding:1.2rem 1.5rem; }
+  dialog::backdrop { background:rgba(0,0,0,.5); }
+  dialog h3 { margin:0 0 .2rem; } dialog .zh { color:var(--muted); margin-bottom:.8rem; }
+  dialog .close { float:right; border:none; background:none; color:var(--muted); font-size:1.2rem; cursor:pointer; }
+
+</style>
+</head>
+<body>
+
+<div id="kara" hidden>
+  <div class="bar">
+    <span class="ttl">講稿</span>
+    <span class="time"><span id="k-cur">0:00</span> / <span id="k-tot">0:00</span></span>
+    <label class="muted">速度
+      <select id="k-rate">
+        <option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option>
+      </select></label>
+    
+    <button data-k="restart">⏮ 重頭</button>
+    <button data-k="toggle">⏸ 暫停</button>
+    <button data-k="close">✕</button>
+  </div>
+  <div class="body"><div class="inner"></div></div>
+  <button class="back" hidden>回到目前</button>
+</div>
+<main>
+<h1>睡得更好的六條科學建議，以及它們管用的邊界</h1>
+<p class="muted">文字解析 · 1 支影片 · 產生於 2026-10-01 18:36</p>
+
+<p class="hub"><a href="../digest.html?only=t0kACis_dJE#t0kACis_dJE">✍️ 練習</a></p>
+
+
+
+
+<!-- 1 -->
+<h2>1. Outline</h2>
+<ol>
+
+  
+  <li><b>起點</b> · <a href="#v-t0kACis_dJE">6 tips for better sleep | Sleeping with Science, a TED series</a><br>睡眠科學家 Matt Walker 用五分半給出六條有研究支持的助眠做法，從體內的時鐘講到房間的溫度與光，再講到躺上床之後的行為，最後自己畫出這些建議管不到的範圍。</li>
+
+</ol>
+
+<!-- 2 -->
+<h2>2. YouTuber 的思維推導</h2>
+
+<h3 id="v-t0kACis_dJE">6 tips for better sleep | Sleeping with Science, a TED series</h3>
+<p class="muted">
+  TED · 5m29s · 字幕 zh-TW ·
+  vision=on
+  （使用者未指定（預設 true）：影片是動畫輔助的口白，逐張讀截圖可確認動畫是否補充了口白沒說的資訊。） ·
+  <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">YouTube</a>
+</p>
+
+<details class="desc"><summary>預估 vs 實際耗時</summary><div>
+<table><tr><th>階段</th><th>預估</th><th>實際</th></tr>
+
+<tr><td>fetch</td>
+  <td>–</td>
+  <td>3s</td></tr>
+
+<tr><td>segment</td>
+  <td>–</td>
+  <td>–</td></tr>
+
+<tr><td>shot</td>
+  <td>–</td>
+  <td>4s</td></tr>
+
+<tr><td>analyze</td>
+  <td>–</td>
+  <td>5m00s</td></tr>
+
+<tr><td>render</td>
+  <td>–</td>
+  <td>–</td></tr>
+</table>
+</div></details>
+
+<p>作者是睡眠科學家，開場先把一個人人都有的經驗（偶爾睡不好）換成一個可以操作的問題：不是「昨晚睡得好不好」，而是「時數」與「品質」這兩個能分開調整的量。接著他宣布，接下來六個祕訣都有科學證據，等於先把舉證責任攤在桌上。六條的排列不是隨機的清單，而是由內往外、再由外往內走一圈：先是身體內建的時鐘（規律），再是房間的兩個物理條件（溫度、光），然後是人已經躺上床之後的行為（睡不著就下床），接著回頭清理上床前就吃進身體的化學物質（咖啡因與酒精），最後補上從清醒到睡著之間那段沒人教過的過渡（睡前慣例）。</p><p>貫穿六條的其實是同一個主張：睡眠不是一個可以按下去的開關，而是一個身體本來就會做的生理過程，你能做的只有排除障礙、把條件準備好，然後讓它發生。也因為全部建立在「睡眠機器本身是好的」這個前提上，他在最後主動把邊界畫出來——有失眠症或睡眠呼吸中止症的人，該做的不是更努力照做這六條，而是去看醫生。先修好受傷的腳踝，才談得上訓練體能。</p>
+<details class="desc"><summary>推理鏈：每段留給下一段的線索</summary><div>
+  <p class="muted">每一列是一段，箭頭後的字是這段留給下一段的線索。點段落標題跳到該段。</p>
+  <ol><li><a href="#t0kACis_dJE-s1">睡不好很正常，但可以改善</a> → <i>問題已經拆成時數與品質兩個量，接下來要從哪一條開始？作者挑的第一條，是唯一一條同時撐住這兩個量、聽起來卻最不像技巧的東西：規律。</i></li><li><a href="#t0kACis_dJE-s2">一：規律，連假日也一樣</a> → <i>規律決定了「什麼時候」睡，但時間到了躺下去不一定睡得著。下一個要補的，是身體啟動睡眠還需要的某個物理條件——而它藏在房間裡。</i></li><li><a href="#t0kACis_dJE-s3">二：溫度，涼一點才睡得著</a> → <i>房間涼下來了，但同一個房間還有第二個同樣物理、卻更容易被忽略的變數：亮度。而且管它的時間點，要比躺上床早得多。</i></li><li><a href="#t0kACis_dJE-s4">三：暗，傍晚就要開始</a> → <i>時間、溫度、光都安排好了，人卻還是可能躺在床上睜著眼。下一段處理的就是這個最難堪的情境：條件全對、但就是睡不著的那二十幾分鐘。</i></li><li><a href="#t0kACis_dJE-s5">四：睡不著就下床</a> → <i>下床處理的是「人已經在床上」之後的行為。但有兩樣東西在上床之前就決定好了，一旦進了身體，再怎麼下床也補救不回來。</i></li><li><a href="#t0kACis_dJE-s6">五：酒精與咖啡因</a> → <i>六條只剩最後一條了，而它要補的是前面每一條都預設、卻從來沒人教過的那段空白：從清醒到睡著之間的過渡，到底該怎麼過。</i></li><li><a href="#t0kACis_dJE-s7">六：睡前慣例，睡覺像降落不像關燈</a> → <i>六條都講完了，但它們共用同一個沒說出口的前提：你的睡眠機器本身是好的。最後作者要處理的，就是這個前提不成立的時候該怎麼辦。</i></li><li><a href="#t0kACis_dJE-s8">但這些祕訣治不了睡眠障礙</a></li></ol>
+</div></details>
+
+
+<!-- 3 -->
+<h2>3. 逐段說明</h2>
+
+<h3>6 tips for better sleep | Sleeping with Science, a TED series</h3>
+
+<section class="seg" id="t0kACis_dJE-s1">
+  <h4>1. 睡不好很正常，但可以改善 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=0s" target="_blank" rel="noopener">0:00</a>–0:21</span></h4>
+  <p>開場把問題定義清楚：睡不好是普遍經驗，重點不是「有沒有睡」，而是能不能同時改善睡眠的「時數」與「品質」。作者接著宣告，以下六個祕訣都有科學證據支持。</p>
+  
+  <div class="bridge"><b>承上</b> 前情提要只有影片本身的身分：這是 TED《Sleeping with Science》系列的一集，講者是睡眠科學家。開場就從這個身分出發——不從個人經驗談起，直接把問題交給科學證據處理。</div>
+  <p><span class="tag r">推理</span>作者先把「睡不好」正常化，解除讀者的防衛；但他沒有停在安慰，而是立刻把它改寫成一個可以操作的問題：要同時改善睡眠的時數與品質。把一件模糊的事拆成兩個可分開調整的量，後面每一條祕訣才有地方掛。最後他宣告這六條都經過科學證實，等於在開場就把舉證責任攤在桌上。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d1" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>六條祕訣都屬於睡眠衛生：保護本來健康的睡眠，不是治療。<span class="act">→ 畫地圖</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>把睡眠拆成「時數」與「品質」兩個量，是這支影片最被低估的一步。睡眠醫學裡標準的拆法還更細：Buysse 提出的 <span class="term" data-zh="睡眠健康六面向">RU-SATED</span><button class="info" data-term="t0kACis_dJE-1-2" title="更多說明" aria-label="更多說明">i</button> 把睡眠健康拆成規律、滿意度、清醒度、時機、效率、時數六個面向，彼此可以各自好壞——你可以躺滿八小時卻只有一半時間真的睡著（這叫睡眠效率低），也可以睡得很沉卻睡在錯的時段。知道可以分開看，才會明白為什麼後面六條聽起來天差地別：它們針對的根本不是同一個面向。另外要先校準期待：這六條屬於 <span class="term" data-zh="睡眠衛生">sleep hygiene</span><button class="info" data-term="t0kACis_dJE-1-1" title="更多說明" aria-label="更多說明">i</button>（睡眠衛生）這一類建議，它們的定位是「讓本來就健康的睡眠不被破壞」，不是治療。研究裡 sleep hygiene 經常被拿來當對照組，效果穩定但溫和。先把這個限制放在心上，不要期待它像藥一樣有力。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-1-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>sleep hygiene</h3>
+      <div class="zh">睡眠衛生</div>
+      <p>一組維持良好睡眠的日常習慣與環境建議，例如作息規律、臥房涼暗、睡前避開咖啡因。</p>
+      <p>這個詞在 1970 年代被提出，原意是「睡眠的衛生習慣」，跟刷牙一樣屬於日常保養。它的強項是門檻低、沒有副作用，適合本來睡得還行的人把睡眠守住。它的弱點是：在慢性失眠的臨床試驗裡，sleep hygiene 常常是那個「有做總比沒做好、但明顯弱於正式療法」的對照組。常見誤解是把它當成失眠的解方，於是照做幾週沒效就以為自己無藥可救——其實只是用錯了工具。</p>
+      <p class="muted">相關術語: RU-SATED (更細的拆法)、CBT-I (弱於)</p>
+      <p class="muted">出處：第 1 段「睡不好很正常，但可以改善」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-1-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>RU-SATED</h3>
+      <div class="zh">睡眠健康六面向</div>
+      <p>把睡眠健康拆成規律、滿意度、清醒度、時機、效率、時數六個可以各自評估的面向。</p>
+      <p>由睡眠研究者 Daniel Buysse 於 2014 年提出，首字母分別是 Regularity、Satisfaction、Alertness、Timing、Efficiency、Duration。它的用處是提醒大家「睡得好」不是一個分數而是一組分數：有人時數夠但規律差，有人規律好但效率低，要補的洞完全不同。這也是為什麼坊間只盯著「睡滿八小時」的說法會失準——八小時只回答了六個問題裡的一個。</p>
+      <p class="muted">相關術語: sleep hygiene (評估對象)</p>
+      <p class="muted">出處：第 1 段「睡不好很正常，但可以改善」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 問題已經拆成時數與品質兩個量，接下來要從哪一條開始？作者挑的第一條，是唯一一條同時撐住這兩個量、聽起來卻最不像技巧的東西：規律。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s2">
+  <h4>2. 一：規律，連假日也一樣 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=21s" target="_blank" rel="noopener">0:21</a>–1:04</span></h4>
+  <p>第一個祕訣是規律：固定時間上床、固定時間起床，週間假日都不變，即使前一晚睡不好也照舊。理由是大腦深處有一個 24 小時運轉的精密時鐘，它期待規律、也只有在規律下表現最好。作者順帶提出一個反直覺的做法：很多人設鬧鐘叫自己起床，卻沒人設鬧鐘提醒自己上床。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段把睡眠拆成時數與品質兩個量，並把舉證責任交給科學。這一段就拿第一個祕訣來兌現：規律不是生活紀律的口號，而是一個有生理基礎、同時影響時數與品質的變數。</div>
+  <p><span class="tag r">推理</span>因為上一段立下的標準是「要同時改善時數與品質」，所以作者把規律排在第一條——六條裡只有它兩邊都撐得住。接著他追問規律為什麼有效，而答案往身體裡找：大腦深處有一個 24 小時運轉的時鐘，於是「規律」從自律問題變成了配合硬體的問題，不照做不是意志力差，是跟自己的生理作對。既然是一個有兩端的時鐘，對齊就不該只做起床那一端，於是他推出一個幾乎沒人做的動作：設一個提醒上床的鬧鐘。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d2" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>體內有個約 24 小時的時鐘，規律之所以有效是在配合它。<span class="act">→ 畫地圖</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d3" title="怎麼做的資訊：盡早在真實情境用，硬背會白費。"><span class="k">P</span>固定起床時間，並設一個提醒自己上床的鬧鐘。<span class="act">→ 練習</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d4" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>人類內建週期平均約 24.2 小時，每天要靠光重新對時。<span class="act">→ 存＋演練</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d23" title="瑣碎但之後要查的：存進 flashcard，間隔重複回想。"><span class="k">R</span>替生理時鐘對時的外界訊號有專有名詞。<span class="act">→ 存＋回想</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d24" title="瑣碎但之後要查的：存進 flashcard，間隔重複回想。"><span class="k">R</span>那個 24 小時時鐘在大腦的位置與名字。<span class="act">→ 存＋回想</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>那個「大腦深處的時鐘」有名字：<span class="term" data-zh="視交叉上核">suprachiasmatic nucleus</span><button class="info" data-term="t0kACis_dJE-2-2" title="更多說明" aria-label="更多說明">i</button>（視交叉上核），位在下視丘，約兩萬個神經元，負責送出 <span class="term" data-zh="約日節律">circadian rhythm</span><button class="info" data-term="t0kACis_dJE-2-1" title="更多說明" aria-label="更多說明">i</button>（約日節律）這組大約一天一次的生理訊號。這裡有個作者為了簡潔而略過、但會改變你怎麼做的細節：這個時鐘的內建週期不是剛好 24 小時，人類平均約 24.2 小時，每天都會慢一點，必須靠外界訊號重新對時，這種對時訊號叫 <span class="term" data-zh="授時因子">zeitgeber</span><button class="info" data-term="t0kACis_dJE-2-3" title="更多說明" aria-label="更多說明">i</button>（授時因子），其中最強的是光。這一點直接影響優先順序——固定起床時間、起床後盡快見到明亮的光，比固定上床時間更有效，因為真正在替時鐘對時的是早上那道光；上床時間往往是跟著起床時間自己回正的。另一個被名字掩蓋的現象是 <span class="term" data-zh="社交時差">social jet lag</span><button class="info" data-term="t0kACis_dJE-2-4" title="更多說明" aria-label="更多說明">i</button>（社交時差）：週末往後挪兩小時再在週一硬拉回來，身體經歷的就跟每週飛兩個時區再飛回來差不多，這正是作者堅持「假日也一樣」的理由。規律本身的份量也比直覺大——英國 Biobank 以穿戴裝置追蹤數萬人的分析發現，作息規律度對死亡率的預測力甚至強過睡眠總時數。至於那個上床鬧鐘，它真正解決的是意志力問題：睡覺時間到的判斷，交給精神還好的下午的你，而不是正在追劇的晚上的你。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-2-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>circadian rhythm</h3>
+      <div class="zh">約日節律</div>
+      <p>身體內建、週期約 24 小時的生理節奏，決定睡意、體溫、荷爾蒙等在一天中的起伏時機。</p>
+      <p>字面意思是「大約一天」（circa + dies）。它是內生的：把人關進沒有時間線索的環境，節律照樣跑，只是每天漂移一點。它管的是「什麼時候」而不是「累不累」——想睡與否其實由兩套系統合力決定，一套是這個時鐘，另一套是清醒越久累積越多的睡眠壓力。常見誤解是以為熬夜只是欠睡眠，其實還同時把時鐘推後了，所以補眠補得回時數、補不回時機。</p>
+      <p class="muted">相關術語: suprachiasmatic nucleus (由它產生)、zeitgeber (靠它對時)、social jet lag (被打亂的後果)</p>
+      <p class="muted">出處：第 2 段「一：規律，連假日也一樣」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-2-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>suprachiasmatic nucleus</h3>
+      <div class="zh">視交叉上核</div>
+      <p>下視丘裡約兩萬個神經元組成的構造，是人體的主時鐘，直接接收來自眼睛的光訊號。</p>
+      <p>常縮寫成 SCN。它的位置剛好在視神經交叉的上方，所以能第一時間拿到視網膜送來的光量資訊，再把時間訊號分送到全身——肝臟、脂肪、肌肉其實各有自己的周邊時鐘，由它統一指揮。這解釋了為什麼光會這麼有力地改變睡眠時機，也解釋了為什麼時差與輪班的不舒服不只是想睡，還包括消化與情緒失調：全身的時鐘被拆開在不同時區。</p>
+      <p class="muted">相關術語: circadian rhythm (產生)</p>
+      <p class="muted">出處：第 2 段「一：規律，連假日也一樣」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-2-3">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>zeitgeber</h3>
+      <div class="zh">授時因子</div>
+      <p>能替體內時鐘重新對時的外界訊號，最強的是光，其次是進食、運動與社交作息。</p>
+      <p>德文原意是「給時間的人」。因為人類的內建週期平均略長於 24 小時，沒有 zeitgeber 每天校正就會一路往後漂，這也是為什麼完全照自己感覺作息的人通常越睡越晚。實務上最有用的一條推論是：早晨的戶外光（陰天也有數千勒克斯，遠勝室內照明）是最便宜的對時工具，而夜間的光則會往反方向推。</p>
+      <p class="muted">相關術語: circadian rhythm (校正)</p>
+      <p class="muted">出處：第 2 段「一：規律，連假日也一樣」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-2-4">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>social jet lag</h3>
+      <div class="zh">社交時差</div>
+      <p>平日與假日作息中點的落差，身體像每週飛了一趟時區又飛回來。</p>
+      <p>由時間生物學家 Till Roenneberg 提出，計算方式是假日睡眠中點減去平日睡眠中點，落差兩小時就相當於每週跨兩個時區。流行病學研究把它跟代謝指標、情緒與體重變化連在一起。它特別值得警覺的地方在於：當事人通常覺得自己假日「補眠補得很滿足」，完全沒有生病的感覺，所以不會把週一的遲鈍歸因到它身上。</p>
+      <p class="muted">相關術語: circadian rhythm (打亂)</p>
+      <p class="muted">出處：第 2 段「一：規律，連假日也一樣」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 規律決定了「什麼時候」睡，但時間到了躺下去不一定睡得著。下一個要補的，是身體啟動睡眠還需要的某個物理條件——而它藏在房間裡。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s3">
+  <h4>3. 二：溫度，涼一點才睡得著 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=64s" target="_blank" rel="noopener">1:04</a>–1:44</span></h4>
+  <p>第二個祕訣是保持涼爽。大腦與身體必須讓<span class="term" data-zh="核心體溫">核心體溫</span><button class="info" data-term="t0kACis_dJE-3-1" title="更多說明" aria-label="更多說明">i</button>下降約攝氏一度才能啟動並維持睡眠，這解釋了為什麼太冷的房間反而比太熱的房間好睡。作者給出可直接照做的數字：臥房溫度設在比攝氏 18 度高一點（華氏 65 度）。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段留下的缺口是：時間對了、躺下去卻不一定睡得著，身體還需要某個物理條件。這一段給出那個條件的第一個——溫度。</div>
+  <p><span class="tag r">推理</span>因為上一段已經把睡眠歸因到一套可以被外界訊號影響的生理機制，作者就能用同一套邏輯處理房間：睡眠不只要時機對，還要一個生理前提——核心體溫必須下降大約攝氏一度，身體才肯啟動並維持睡眠。機制一旦說破，一個常被當成個人體質的現象就自動被解釋掉了：太冷的房間確實比太熱的房間好睡。最後他把機制換算成一個可以今晚就照做的數字：華氏 65 度，約攝氏 18.3 度。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d5" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>核心體溫要先降約一度，身體才肯啟動並維持睡眠。<span class="act">→ 畫地圖</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d6" title="怎麼做的資訊：盡早在真實情境用，硬背會白費。"><span class="k">P</span>把臥室調涼，並用睡前熱水澡幫核心體溫降下來。<span class="act">→ 練習</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d7" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>睡前 1–2 小時洗熱水澡約可縮短入睡時間十分鐘。<span class="act">→ 存＋演練</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>身體怎麼把熱丟掉？靠的是 <span class="term" data-zh="末梢血管舒張">distal vasodilation</span><button class="info" data-term="t0kACis_dJE-3-2" title="更多說明" aria-label="更多說明">i</button>（末梢血管舒張）：手腳的皮下血管在入睡前擴張，把熱從軀幹帶到表面散掉，core body temperature（核心體溫）因此往下掉。認識這個機制可以解開一個看似矛盾的實證結果——睡前 1 到 2 小時洗個熱水澡反而讓人更快睡著。2019 年一篇整合十餘項研究的回顧估計，這能把入睡時間縮短約十分鐘：熱水讓末梢血管大開，洗完之後散熱效率變高，核心體溫掉得更快。所以「房間要涼」和「洗熱水澡」不是互相打架的兩套說法，它們做的是同一件事——加速核心的熱往外跑。同一個機制還給了兩個實用推論：手腳冰冷的人穿襪子睡反而更好入睡（末梢暖了才打得開散熱的閘門），而 18.3 度只是族群平均值，真正要確認的是棉被與室溫搭起來能不能讓你持續散熱。還有一個漂亮的收尾：核心體溫的最低點落在習慣起床前約兩小時，由 circadian rhythm（見第 2 段）排定——換句話說，這一段的體溫和上一段的時鐘根本是同一套系統的兩種讀數。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-3-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>core body temperature</h3>
+      <div class="zh">核心體溫</div>
+      <p>身體深處（內臟與腦）的溫度，在入睡前後必須下降約攝氏一度，睡眠才容易啟動與維持。</p>
+      <p>它跟皮膚溫度經常反向變動：入睡前皮膚變暖、核心變涼，正是因為熱被送到表面散掉了。核心體溫本身有明顯的日夜起伏，傍晚最高、清晨最低，所以它既是睡眠的條件，也是體內時鐘的一支指針。常見誤解是「房間越冷越好」，實際上太冷會讓末梢血管收縮、反而關掉散熱的通道，所以重點是涼而不是冷。</p>
+      <p class="muted">相關術語: distal vasodilation (靠它下降)、circadian rhythm (起伏由它排定)</p>
+      <p class="muted">出處：第 3 段「二：溫度，涼一點才睡得著」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-3-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>distal vasodilation</h3>
+      <div class="zh">末梢血管舒張</div>
+      <p>手腳皮下血管在入睡前擴張，把熱從身體核心帶到表面散出去。</p>
+      <p>睡眠研究裡常用「遠端與近端皮膚溫度梯度」當作入睡的生理指標，數值上升的時間點，往往比人自己覺得睏還早。這個機制解釋了三件平常看起來互不相干的事：熱水澡助眠、穿襪子助眠、以及房間要涼。它也解釋了為什麼悶熱的夜晚特別難睡——環境溫度太高時，熱送到皮膚也散不出去，核心體溫就降不下來。</p>
+      <p class="muted">相關術語: core body temperature (使其下降)</p>
+      <p class="muted">出處：第 3 段「二：溫度，涼一點才睡得著」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 房間涼下來了，但同一個房間還有第二個同樣物理、卻更容易被忽略的變數：亮度。而且管它的時間點，要比躺上床早得多。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s4">
+  <h4>4. 三：暗，傍晚就要開始 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=104s" target="_blank" rel="noopener">1:44</a>–2:28</span></h4>
+  <p>第三個祕訣是黑暗。現代社會缺乏黑暗，但傍晚的暗能促使身體釋放<span class="term" data-zh="褪黑激素">褪黑激素</span><button class="info" data-term="t0kACis_dJE-4-1" title="更多說明" aria-label="更多說明">i</button>，而褪黑激素負責調節入睡的時機。可做的事很具體：睡前一小時遠離螢幕、把屋裡的燈調暗一半，必要時加上眼罩或遮光窗簾。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段把房間調涼，並留下一句：同一個房間還有第二個被忽略的物理變數——光。這一段接手處理它，而且把起點往前拉到傍晚。</div>
+  <p><span class="tag r">推理</span>因為上一段的降溫是「身體自己會做、只是需要環境配合」的過程，作者用完全相同的句型處理光：黑暗本身不會讓人睡著，它的作用是讓身體釋放褪黑激素，而褪黑激素負責決定睡眠的時機。既然這是一個從傍晚就開始累積的訊號，動作就不能等到躺下才做——於是建議很自然地往前挪：睡前一小時遠離螢幕、把屋裡的燈調暗一半，真的擋不住再加上眼罩或遮光窗簾。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d8" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>褪黑激素是報時訊號，不是鎮靜劑——它管時機不管昏睡。<span class="act">→ 畫地圖</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d9" title="怎麼做的資訊：盡早在真實情境用，硬背會白費。"><span class="k">P</span>睡前一小時把環境調暗，優先關大燈而不只是收手機。<span class="act">→ 練習</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d10" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>褪黑激素起始（DLMO）約落在習慣就寢前兩小時。<span class="act">→ 存＋演練</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>這一段最值得記住的是作者用字的精確：他說 melatonin（褪黑激素）「調節睡眠的最佳時機」，而不是說它讓人睡著。melatonin 是一個報時訊號，不是鎮靜劑——它告訴身體「天黑了」，不負責把你敲昏。這一句話就解釋了一個常見的失望：拿褪黑激素當安眠藥吃的人往往覺得沒用，但用來對付時差或輪班卻相當有效，因為後者要修的正是時機（接回第 2 段的時鐘：褪黑激素就是那個時鐘對外發布的夜間公告）。臨床上甚至拿它的起始時間當指標，稱為 <span class="term" data-zh="昏暗光褪黑激素起始">dim light melatonin onset</span><button class="info" data-term="t0kACis_dJE-4-2" title="更多說明" aria-label="更多說明">i</button>（昏暗光褪黑激素起始），通常落在習慣就寢前約兩小時——這正是「睡前一小時就要開始調暗」的生理依據。還有一個優先順序問題值得翻案：被罵最兇的是手機，但一般家庭裡壓抑褪黑激素最嚴重的其實是頭頂的燈。2011 年一項研究發現，睡前曝露於一般室內照明（不到 200 勒克斯）就能把褪黑激素壓低約五成，並讓分泌起始延後。相較之下，手機螢幕面積小、亮度有限，送進眼睛的總光量通常遠低於整室照明。所以「把屋裡的燈亮度減半」不是陪襯的小動作，它可能是這一段裡投報率最高的一條。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-4-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>melatonin</h3>
+      <div class="zh">褪黑激素</div>
+      <p>天黑後由松果體分泌的荷爾蒙，負責通知全身「夜晚到了」，調節睡眠發生的時機。</p>
+      <p>它常被叫做「睡眠荷爾蒙」，這個綽號造成很多誤會：它不是鎮靜劑，不會直接製造睡意的強度，而是標定睡意該在什麼時候來。分泌受光強烈抑制，所以夜間的光等於在跟身體說天還沒黑。實務上的分野是：要調整睡眠時機（時差、輪班、睡眠相位延遲）時它有用，而且低劑量提早吃通常比高劑量睡前吃更合理；單純想睡得更沉，它多半不是對的工具。</p>
+      <p class="muted">相關術語: circadian rhythm (對外的訊號)、dim light melatonin onset (測量指標)</p>
+      <p class="muted">出處：第 4 段「三：暗，傍晚就要開始」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-4-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>dim light melatonin onset</h3>
+      <div class="zh">昏暗光褪黑激素起始</div>
+      <p>在昏暗環境下褪黑激素開始上升的時刻，是臨床上判定一個人體內時鐘走到幾點的標準指標。</p>
+      <p>常縮寫成 DLMO，做法是在暗光下每隔一段時間採唾液或血液，找出濃度跨過門檻的時間點。它之所以重要，是因為「幾點上床」只反映習慣，DLMO 才反映生理。對多數人它落在習慣就寢前約兩小時，這段時間正是最該把環境調暗的窗口。睡眠相位延遲（夜貓子）的人 DLMO 明顯偏晚，這也是為什麼叫他們「早點躺下」通常無效——時鐘沒動，只是躺著發呆而已。</p>
+      <p class="muted">相關術語: melatonin (測的是它)</p>
+      <p class="muted">出處：第 4 段「三：暗，傍晚就要開始」</p>
+    </dialog>
+    
+  
+  
+  <div class="issues">
+    
+    <div class="issue debatable">
+      <span class="lvl"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span>
+      <a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=124s" target="_blank" rel="noopener" class="muted">2:04</a>
+      <blockquote>「儘量遠離所有的電腦螢幕、」</blockquote>
+      <div>方向沒錯，但把螢幕當成頭號元凶可能放錯重點。螢幕的光確實會壓抑褪黑激素，不過在一般使用距離下，手機與平板送進眼睛的光量遠少於整室照明；近年多項隨機對照試驗測到的入睡延後幅度偏小，而且很難跟「內容讓人興奮」「滑著滑著就晚睡」這兩個行為因素分開。真正的大戶往往是頭頂那盞燈——所以「把屋裡的燈亮度減半」這一句的效益可能高於關掉手機。</div>
+      <div class="ev">依據: Gooley et al., J Clin Endocrinol Metab 2011（睡前室內照明壓抑褪黑激素約 50%）；Chang et al., PNAS 2015（電子閱讀器效果可測但幅度有限）</div>
+    </div>
+    
+  </div>
+  
+  <div class="bridge"><b>留給下一段</b> 時間、溫度、光都安排好了，人卻還是可能躺在床上睜著眼。下一段處理的就是這個最難堪的情境：條件全對、但就是睡不著的那二十幾分鐘。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s5">
+  <h4>5. 四：睡不著就下床 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=148s" target="_blank" rel="noopener">2:28</a>–3:21</span></h4>
+  <p>第四個祕訣違反直覺：躺著睡不著超過約 25 分鐘，就該下床去做別的事，睏了再回床上。理由是大腦非常擅長建立連結，一直躺在床上失眠，等於在教大腦「床＝睡不著的地方」；下床是為了切斷這個連結，讓大腦重新學會床只用來長時間熟睡。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段把入睡的三個外在條件（時機、溫度、光）都排好，卻留下一個它們解決不了的情境：條件都對了，人還是醒著躺在床上。這一段直接面對那個情境。</div>
+  <p><span class="tag r">推理</span>因為前面三條做的都是「替睡眠準備條件」，而條件備齊仍睡不著時再加碼只會更焦慮，所以作者在這裡轉向一個方向相反的動作：下床。他給的理由不是「休息夠了」，而是學習——大腦很擅長把反覆同時出現的兩件事綁在一起，在床上清醒的時間越長，「床」與「睡不著」這組連結就被練得越熟。既然是學來的，就能被重新學掉：下床是為了打斷配對，睏了再回來，床才會慢慢重新變回「用來長時間熟睡的地方」。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d11" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>在床上清醒太久，大腦會把床學成「睡不著的地方」。<span class="act">→ 畫地圖</span></a></li><li data-kind="C"><a href="../digest.html#t0kACis_dJE-d12" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>刺激控制：睡不著就離開床，把床與睡眠的連結重新練回來。<span class="act">→ 畫地圖</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d13" title="怎麼做的資訊：盡早在真實情境用，硬背會白費。"><span class="k">P</span>躺著睡不著約 25 分鐘就下床，睏了再回來。<span class="act">→ 練習</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d14" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>約 10–15% 的成人有慢性失眠（影片畫面上的字卡）。<span class="act">→ 存＋演練</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d25" title="瑣碎但之後要查的：存進 flashcard，間隔重複回想。"><span class="k">R</span>慢性失眠的第一線治療不是安眠藥。<span class="act">→ 存＋回想</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>這條建議不是生活小技巧，而是一套有名字的療法：<span class="term" data-zh="刺激控制">stimulus control</span><button class="info" data-term="t0kACis_dJE-5-1" title="更多說明" aria-label="更多說明">i</button>（刺激控制），1972 年由 Richard Bootzin 提出，是 <span class="term" data-zh="失眠認知行為治療">CBT-I</span><button class="info" data-term="t0kACis_dJE-5-3" title="更多說明" aria-label="更多說明">i</button>（失眠認知行為治療）的核心成分之一。作者描述的機制在文獻裡也有名字，叫 <span class="term" data-zh="制約性警醒">conditioned arousal</span><button class="info" data-term="t0kACis_dJE-5-2" title="更多說明" aria-label="更多說明">i</button>（制約性警醒）——床從睡眠線索變成了警醒線索，於是一躺下腦袋就自動開機，當事人常形容成「人很累但腦子很亮」。影片沒講、但照做之前一定要知道的一個細節是：那 25 分鐘要用感覺估，不要真的盯著鐘看。看時鐘本身會製造「又過了十分鐘」的壓力，正好餵養你想消除的那種警醒；臨床指引通常直接建議把鬧鐘轉到看不見的方向。下床之後做什麼也有講究：燈要維持昏暗、找件無聊或放鬆的事（不是工作、不是手機），睏了再回床上，必要時一晚可以重複好幾次。這一段的畫面補了一個口白完全沒提的數字：字卡上寫著「About 10–15% of adults say they have <span class="term" data-zh="慢性失眠">chronic insomnia</span><button class="info" data-term="t0kACis_dJE-5-4" title="更多說明" aria-label="更多說明">i</button>.」（約 10–15% 的成人表示自己有慢性失眠）——這等於替這條規則標出了它真正的對象有多大一群人，也透露它本來就是從臨床借來的工具，只是被改寫成了一般建議。順帶一提，那張字卡角落印著「Powered by Beautyrest」，是床墊品牌贊助的掛名；數字本身與主流流行病學估計一致，但知道誰出錢，是看任何健康影片都該有的習慣。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-5-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>stimulus control</h3>
+      <div class="zh">刺激控制</div>
+      <p>一套重建「床＝睡眠」連結的行為療法：床只用來睡覺，睡不著就離開，睏了才回去。</p>
+      <p>完整版有五條規則：只在想睡時上床、床與臥房只用於睡眠（與性）、睡不著就起身離開、不論前一晚如何都固定時間起床、白天不補眠。它背後是古典制約的邏輯——線索與反應被反覆配對就會自動化，所以修法也是行為上的：拆掉舊配對、重建新配對。單獨使用時它就已是療效最強的單一成分之一，但在臨床上通常與睡眠限制、認知重建一起打包成 CBT-I。</p>
+      <p class="muted">相關術語: conditioned arousal (要拆掉的對象)、CBT-I (它的成分之一)</p>
+      <p class="muted">出處：第 5 段「四：睡不著就下床」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-5-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>conditioned arousal</h3>
+      <div class="zh">制約性警醒</div>
+      <p>床與臥房被反覆跟「睡不著」配對後，光是躺下就自動引發清醒與警覺的反應。</p>
+      <p>典型的徵兆是：在沙發上看電視昏昏欲睡，一移動到床上立刻清醒；或是出差住旅館反而睡得比家裡好。這正說明問題不在身體不累，而在地點已經變成了觸發器。它也是慢性失眠從「一次壞事件」演變成「長期問題」的主要機制——最初的壓力源可能早就消失，被留下來的連結卻還在運作。</p>
+      <p class="muted">相關術語: chronic insomnia (維持機制)</p>
+      <p class="muted">出處：第 5 段「四：睡不著就下床」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-5-3">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>CBT-I</h3>
+      <div class="zh">失眠認知行為治療</div>
+      <p>針對慢性失眠的第一線治療，把刺激控制、睡眠限制、認知重建等成分組成數週的療程。</p>
+      <p>全名 cognitive behavioral therapy for insomnia。美國睡眠醫學會與美國內科醫師學會的指引都把它列在安眠藥之前，理由是療效相當、停止療程後維持得更久、而且沒有藥物依賴與宿醉效應。它通常要四到八週，過程中前期往往更累（因為睡眠限制會先壓縮躺床時間），所以半途而廢的人不少。數位版（app 或線上課程）在試驗裡也有不錯的成績，這讓它比以前容易取得得多。</p>
+      <p class="muted">相關術語: stimulus control (包含)、sleep hygiene (強於)</p>
+      <p class="muted">出處：第 5 段「四：睡不著就下床」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-5-4">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>chronic insomnia</h3>
+      <div class="zh">慢性失眠</div>
+      <p>每週至少三晚入睡或維持睡眠有困難、持續三個月以上，並造成白天功能受損。</p>
+      <p>關鍵在於後半句：只有夜裡睡不好而白天完全沒影響，診斷上不算失眠症。盛行率估計約一成上下，正好對應畫面字卡的 10–15%。它跟「偶爾睡不好」是兩回事——後者人人都有，前者是一個有診斷準則、有第一線療法的疾病。把兩者混為一談會造成兩種錯誤：真的有失眠症的人以為只要更努力做好睡眠衛生，沒有失眠的人卻開始擔心自己生病。</p>
+      <p class="muted">相關術語: CBT-I (第一線治療)</p>
+      <p class="muted">出處：第 5 段「四：睡不著就下床」</p>
+    </dialog>
+    
+  
+  
+  <div class="issues">
+    
+    <div class="issue debatable">
+      <span class="lvl"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智</span>
+      <a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=159s" target="_blank" rel="noopener" class="muted">2:39</a>
+      <blockquote>「但過了 25 分鐘左右都還沒入睡，」</blockquote>
+      <div>25 分鐘是作者的經驗法則，不是公認的數字。刺激控制的原始版本與多數 CBT-I 手冊給的是 15 到 20 分鐘，也有治療師主張不設數字、覺得清醒到不舒服就起身。更要緊的是另一件影片沒說的事：這段時間要用感覺估，不要真的看鐘——盯著時間本身就會提高警醒，反而讓人更睡不著。</div>
+      <div class="ev">依據: Bootzin 的刺激控制原始指引（1972）與常見 CBT-I 手冊多採 15–20 分鐘，並一致建議把時鐘轉開</div>
+    </div>
+    
+  </div>
+  
+  <div class="bridge"><b>留給下一段</b> 下床處理的是「人已經在床上」之後的行為。但有兩樣東西在上床之前就決定好了，一旦進了身體，再怎麼下床也補救不回來。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s6">
+  <h4>6. 五：酒精與咖啡因 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=201s" target="_blank" rel="noopener">3:21</a>–3:39</span></h4>
+  <p>第五個祕訣作者只用一句經驗之談帶過，因為該系列其他單元講過：下午與晚上避免咖啡因，上床前不要喝醉。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段的做法全是針對床上的行為，並留下一個伏筆：有些事在上床前就決定了，下床也救不回來。這一段點名那兩樣——咖啡因與酒精。</div>
+  <p><span class="tag r">推理</span>因為這個系列已經用整集講過這兩樣，作者在這裡只做一件事：把結論壓縮成一條可以直接執行的經驗法則——下午與晚上避開咖啡因、上床前不要喝醉。他刻意不重講機制，而是把這條放在六個祕訣的中段當作背景條件：前面幾條管的是你怎麼安排環境與行為，這一條管的是你血液裡還留著什麼。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d15" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>睏意來自腺苷累積；咖啡因只是佔住受體擋掉通知。<span class="act">→ 畫地圖</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d16" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>咖啡因半衰期 5–6 小時：下午三點的咖啡，半夜還剩四分之一。<span class="act">→ 存＋演練</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d17" title="跟已知很像的資訊：找出哪裡像、哪裡不像、何時失效，新知識才接得上舊網路。"><span class="k">A</span>咖啡因像冒牌鑰匙佔住鎖孔，睏意的通知進不來但照樣累積。<span class="act">→ 批判類比</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>既然作者略過了機制，這裡補上，因為機制決定了你該怎麼調整。咖啡因的作用對象是 <span class="term" data-zh="腺苷">adenosine</span><button class="info" data-term="t0kACis_dJE-6-1" title="更多說明" aria-label="更多說明">i</button>（腺苷）——清醒時間越長，腺苷在腦中累積越多，睏意就是這麼來的。咖啡因的分子長得像腺苷，會去佔住受體，所以它不是給你能量，而是把睏意的通知擋在門外；腺苷本身一直在累積，這也是藥效退去後突然很累的原因。重點是劑量怎麼算：咖啡因的 <span class="term" data-zh="半衰期">half-life</span><button class="info" data-term="t0kACis_dJE-6-2" title="更多說明" aria-label="更多說明">i</button>（半衰期）約 5 到 6 小時，意思是下午三點那杯咖啡，到了晚上十一點大約還剩四分之一在身上，而且個體差異很大（代謝基因 CYP1A2 的影響可以讓兩個人差上兩三倍），這就是為什麼「我喝了照睡」與「我下午喝晚上就完蛋」可以同時都是真話——照睡的人睡眠深度仍可能受影響。酒精的問題則不同，它根本不是助眠劑而是鎮靜劑，而鎮靜不等於睡眠：它會壓抑 <span class="term" data-zh="快速動眼睡眠">REM sleep</span><button class="info" data-term="t0kACis_dJE-6-3" title="更多說明" aria-label="更多說明">i</button>（快速動眼睡眠），並在後半夜被代謝掉的過程中讓睡眠一再片段化。所以喝酒入睡的人常常是睡滿了時數卻醒來毫無恢復感——正好對應第 1 段那組拆分：酒精買到的是時數，付出的是品質。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-6-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>adenosine</h3>
+      <div class="zh">腺苷</div>
+      <p>清醒期間在腦中持續累積的分子，濃度越高睏意越強，是睡眠壓力的化學訊號。</p>
+      <p>它是細胞用掉能量後的副產物，所以「醒著越久越睏」有實體基礎。睡眠的功能之一就是把它清掉，隔天重新開始累積。咖啡因的作用是佔住腺苷受體、擋住訊號，不是消除腺苷——所以咖啡只是把帳單延後，不是免除。這也是為什麼白天小睡太久會讓晚上難睡：睡眠壓力被提早放掉了一部分。</p>
+      <p class="muted">相關術語: half-life (咖啡因殘留)、circadian rhythm (另一套睏意來源)</p>
+      <p class="muted">出處：第 6 段「五：酒精與咖啡因」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-6-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>half-life</h3>
+      <div class="zh">半衰期</div>
+      <p>體內某物質濃度降到一半所需的時間；咖啡因約 5 到 6 小時。</p>
+      <p>半衰期是估算「幾點以後不能喝」的唯一靠譜方法：經過一個半衰期剩一半，兩個剩四分之一，依此類推。以 5 小時計，下午三點的一杯到晚上十一點還有約四分之一在體內。它受基因、懷孕、肝功能與某些藥物影響很大，所以沒有一個適用所有人的時間點——真要知道自己的界線，最乾脆的辦法是把最後一杯往前挪兩週，看看睡眠有沒有變化。</p>
+      <p class="muted">相關術語: adenosine (受體被擋住)</p>
+      <p class="muted">出處：第 6 段「五：酒精與咖啡因」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-6-3">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>REM sleep</h3>
+      <div class="zh">快速動眼睡眠</div>
+      <p>睡眠中眼球快速轉動、腦波近似清醒的階段，多數生動的夢發生於此，與情緒處理和記憶整合有關。</p>
+      <p>一夜之中深睡與 REM sleep 的比例會隨時間改變：深睡集中在前半夜，REM 的比例在後半夜大幅增加。這有個被低估的推論——提早一兩個小時起床，砍掉的主要是 REM，不是等比例地少睡。酒精與某些藥物會壓抑 REM，停用後還可能出現反彈（夢變得又多又鮮明），這也是戒酒初期特別多夢的原因。</p>
+      <p class="muted">相關術語: RU-SATED (品質的一環)</p>
+      <p class="muted">出處：第 6 段「五：酒精與咖啡因」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 六條只剩最後一條了，而它要補的是前面每一條都預設、卻從來沒人教過的那段空白：從清醒到睡著之間的過渡，到底該怎麼過。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s7">
+  <h4>7. 六：睡前慣例，睡覺像降落不像關燈 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=219s" target="_blank" rel="noopener">3:39</a>–4:33</span></h4>
+  <p>最後一個祕訣是建立放鬆的睡前慣例。作者點名一個普遍的誤解：以為睡覺就像關燈，躺下就該立刻睡著；實際上睡眠比較像飛機降落，需要時間讓大腦慢慢下沉。可做的事是睡前 20 分鐘到一小時放下電腦手機，找到適合自己的放鬆方式並固定下來。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段把身體裡的化學條件清乾淨，並留下一塊還沒處理的空白：從清醒到睡著中間的那段過渡。這一段就在講那段過渡。</div>
+  <p><span class="tag r">推理</span>因為前面五條都在調整「睡著的條件」，作者在最後要修掉一個會讓所有條件失效的預期：以為睡覺像關燈，躺下就該立刻斷電。他換上飛機降落的比喻——有下降航線、要距離、要對準——於是「躺下沒馬上睡著」就不再是方法失敗的證據，只是沒給降落留跑道。比喻一換，做法就自己掉出來了：睡前 20 分鐘到一小時放下電腦與手機，做點能放鬆的事，而且每天做同一件，讓它固定成慣例。</p>
+  
+  <ul class="pacer">
+    <li data-kind="C"><a href="../digest.html#t0kACis_dJE-d18" title="是什麼／為什麼的資訊：知識是網路不是清單，自己畫出概念間的連結。"><span class="k">C</span>失眠的主流模型是過度警醒：越努力想睡，努力本身就是警醒。<span class="act">→ 畫地圖</span></a></li><li data-kind="A"><a href="../digest.html#t0kACis_dJE-d19" title="跟已知很像的資訊：找出哪裡像、哪裡不像、何時失效，新知識才接得上舊網路。"><span class="k">A</span>睡覺像飛機降落，不像關燈：需要下降航線與跑道。<span class="act">→ 批判類比</span></a></li><li data-kind="P"><a href="../digest.html#t0kACis_dJE-d20" title="怎麼做的資訊：盡早在真實情境用，硬背會白費。"><span class="k">P</span>固定一套睡前慣例，每天做同一件放鬆的事。<span class="act">→ 練習</span></a></li><li data-kind="E"><a href="../digest.html#t0kACis_dJE-d21" title="支持概念的細節：當下存起來，之後想它證明了什麼、你會怎麼用。"><span class="k">E</span>健康成人躺下到睡著約 10–20 分鐘；五分鐘內斷電反而是警訊。<span class="act">→ 存＋演練</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>降落的比喻其實有可量化的對應物：<span class="term" data-zh="入睡潛伏期">sleep onset latency</span><button class="info" data-term="t0kACis_dJE-7-1" title="更多說明" aria-label="更多說明">i</button>（入睡潛伏期），也就是躺下到真正睡著的時間，健康成人大約 10 到 20 分鐘。知道這個數字能校正兩種誤判——躺了十五分鐘沒睡著完全正常，不必開始焦慮；反過來，每晚一沾枕頭就在五分鐘內斷電，經常不是睡得好，而是睡眠嚴重不足的警訊。那為什麼需要的是「慣例」，而不只是「放鬆一下」？因為失眠的主流模型是 <span class="term" data-zh="過度警醒">hyperarousal</span><button class="info" data-term="t0kACis_dJE-7-2" title="更多說明" aria-label="更多說明">i</button>（過度警醒）：大腦的警醒系統沒有按時關掉。這帶出一個棘手的矛盾——越努力想睡，努力本身就是一種警醒，所以「放鬆」不能用力去做。固定慣例之所以有效，正是繞過了這個矛盾：它給注意力一件具體的事做（而不是監控自己睡著了沒），同時因為天天重複，這件事本身變成了睡眠的線索。注意這跟第 5 段是同一個學習機制，只是用在相反方向：那裡要拆掉「床＝清醒」的連結，這裡要蓋出「這套動作＝準備睡覺」的連結。畫面也把比喻做到底：鏡頭站在深夜機場的窗邊，看著一架飛機沿著一整排跑道燈落地——重點不是降落這個瞬間，而是那段看得見的、長長的進場距離。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-7-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>sleep onset latency</h3>
+      <div class="zh">入睡潛伏期</div>
+      <p>從躺下熄燈到真正睡著所需的時間，健康成人約 10 到 20 分鐘。</p>
+      <p>它是睡眠檢查與失眠診斷的標準指標之一，超過 30 分鐘且經常發生才被視為有問題。兩個方向的極端都值得注意：太長通常伴隨警醒或時機不對，太短（持續少於 5 分鐘）則多半代表睡眠債累積。白天版的檢查叫多次入睡潛伏時間測試，會請受試者在白天數次嘗試小睡，用入睡速度來量嗜睡程度。</p>
+      <p class="muted">相關術語: hyperarousal (被它拉長)、RU-SATED (效率的一環)</p>
+      <p class="muted">出處：第 7 段「六：睡前慣例，睡覺像降落不像關燈」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-7-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>hyperarousal</h3>
+      <div class="zh">過度警醒</div>
+      <p>生理與認知的警醒程度在該睡的時候仍居高不下，是目前解釋慢性失眠最主流的模型。</p>
+      <p>證據包括失眠者在夜間的心率變異、代謝率與壓力荷爾蒙都偏高，以及腦影像顯示入睡時某些區域沒有如期降下來。它解釋了失眠最折磨人的特徵：人明明很累，卻怎麼也睡不著——睡眠壓力是夠的，被擋住的是警醒的剎車。治療上的推論也很直接：有效的做法多半是降低警醒（放下控制、把注意力移開），而不是增加努力。</p>
+      <p class="muted">相關術語: conditioned arousal (特定線索版本)、CBT-I (針對它設計)</p>
+      <p class="muted">出處：第 7 段「六：睡前慣例，睡覺像降落不像關燈」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 六條都講完了，但它們共用同一個沒說出口的前提：你的睡眠機器本身是好的。最後作者要處理的，就是這個前提不成立的時候該怎麼辦。</div>
+</section>
+
+<section class="seg" id="t0kACis_dJE-s8">
+  <h4>8. 但這些祕訣治不了睡眠障礙 <span class="muted"><a href="https://www.youtube.com/watch?v=t0kACis_dJE&amp;t=273s" target="_blank" rel="noopener">4:33</a>–5:29</span></h4>
+  <p>結尾作者替整份建議畫出適用邊界：若有失眠或睡眠呼吸中止症等睡眠障礙，這些方法不見得有用。他用健身教練與扭傷腳踝的類比說明——傷沒治好之前，再好的訓練方法都沒意義，該做的是先去看醫生。最後他把睡眠定位成生命維持器，甚至是一種超能力。</p>
+  
+  <div class="bridge"><b>承上</b> 上一段留下的前提是：以上所有做法都假設睡眠機器本身沒壞。這一段，作者自己動手把這個假設拆開來檢查。</div>
+  <p><span class="tag r">推理</span>因為六條建議全部建立在「健康睡眠者」這個前提上，作者在收尾時主動畫出適用邊界：有失眠症或睡眠呼吸中止症的人，照做不一定有幫助。他用健身教練與扭傷腳踝的類比說明差別——訓練方法本身沒有錯，但受傷的人需要的是治療而不是更好的訓練，而且順序不能顛倒。先畫邊界、再放結論，他才敢把話說滿：睡眠是生命維持器，甚至可以稱為一種超能力。</p>
+  
+  <ul class="pacer">
+    <li data-kind="A"><a href="../digest.html#t0kACis_dJE-d22" title="跟已知很像的資訊：找出哪裡像、哪裡不像、何時失效，新知識才接得上舊網路。"><span class="k">A</span>睡眠衛生像健身訓練，睡眠障礙像扭傷的腳踝：得先治傷。<span class="act">→ 批判類比</span></a></li><li data-kind="R"><a href="../digest.html#t0kACis_dJE-d26" title="瑣碎但之後要查的：存進 flashcard，間隔重複回想。"><span class="k">R</span>確診睡眠呼吸中止症要做的檢查。<span class="act">→ 存＋回想</span></a></li>
+  </ul>
+  
+  <p><span class="tag ai">AI 補充</span>這個類比比聽起來更精確。<span class="term" data-zh="阻塞型睡眠呼吸中止症">obstructive sleep apnea</span><button class="info" data-term="t0kACis_dJE-8-1" title="更多說明" aria-label="更多說明">i</button>（阻塞型睡眠呼吸中止症）是一個結構性的問題——睡著後上呼吸道反覆塌陷，身體必須短暫醒來才能恢復呼吸，一夜可能數十次。這種人把房間調到 18 度、燈全關掉也沒用，因為被破壞的不是入睡，而是睡眠的連續性；該查的訊號是響亮打鼾、旁人目擊的呼吸中斷、以及白天怎麼睡都還是累，確診靠睡眠檢查（<span class="term" data-zh="多項生理睡眠檢查">polysomnography</span><button class="info" data-term="t0kACis_dJE-8-2" title="更多說明" aria-label="更多說明">i</button> 或居家版本），治療是呼吸器或口腔裝置之類的手段。而慢性失眠（見第 5 段）的第一線治療是 CBT-I（見第 5 段）——注意第四個祕訣的「下床」只是它的其中一個成分，單獨拿一個零件來用，效果本來就比完整療程弱，這也是為什麼照做了卻沒好轉不代表失敗，而是該換工具了。再往回看第 1 段會更清楚：sleep hygiene 這一整包在失眠的臨床試驗裡，長期扮演的正是「有效但最弱」的對照組角色。所以這支影片真正的定位，在最後這一段才完整——它是給睡眠大致健康的人用來守住睡眠的保養手冊，不是修車廠。作者把這件事講明白，比多給一條祕訣更有價值。</p>
+  
+  
+    
+    <dialog id="term-t0kACis_dJE-8-1">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>obstructive sleep apnea</h3>
+      <div class="zh">阻塞型睡眠呼吸中止症</div>
+      <p>睡著後上呼吸道反覆塌陷造成呼吸暫停，身體必須短暫醒來恢復呼吸，使睡眠一夜片段化數十次。</p>
+      <p>它是盛行率很高卻大量未被診斷的疾病，典型線索是響亮打鼾、旁人目擊的呼吸停頓、晨起頭痛與怎麼睡都累。因為當事人幾乎不會記得自己醒過，所以常被誤會成「我睡得很沉只是白天容易累」。它跟高血壓、心律不整與代謝問題都有關聯，治療方式（持續氣道正壓呼吸器、口腔裝置、減重或手術）與失眠完全不同——這正是為什麼睡眠衛生建議對它無效。</p>
+      <p class="muted">相關術語: polysomnography (靠它確診)、sleep hygiene (無法處理)</p>
+      <p class="muted">出處：第 8 段「但這些祕訣治不了睡眠障礙」</p>
+    </dialog>
+    
+    <dialog id="term-t0kACis_dJE-8-2">
+      <button class="close" data-close aria-label="關閉 (Esc)">✕</button>
+      <h3>polysomnography</h3>
+      <div class="zh">多項生理睡眠檢查</div>
+      <p>在睡眠中同步記錄腦波、眼動、肌電、呼吸氣流、血氧與心電的檢查，是睡眠障礙診斷的黃金標準。</p>
+      <p>它能回答自我感覺答不出來的問題：你實際睡了多久、各睡眠階段的比例、一小時呼吸中斷幾次、血氧掉到多少。現在也有簡化的居家檢查，主要測呼吸與血氧，對典型的呼吸中止症就夠用。值得知道的是，失眠通常不需要做這項檢查——除非懷疑同時合併呼吸中止或其他疾病，否則診斷靠的是病史與睡眠日誌。</p>
+      <p class="muted">相關術語: obstructive sleep apnea (主要用途)</p>
+      <p class="muted">出處：第 8 段「但這些祕訣治不了睡眠障礙」</p>
+    </dialog>
+    
+  
+  
+  <div class="bridge"><b>留給下一段</b> 總結收束：六條祕訣從體內的時鐘走到房間、走到床上的行為、再走回睡前的那段過渡，最後由作者自己標出它們的適用範圍——睡眠不是一個開關，而是一個值得天天替它清出跑道的生理過程。</div>
+</section>
+
+
+
+<!-- 4 -->
+<h2>4. 總結</h2>
+<p>影片從一個拆解開始：睡不好要分成「時數」與「品質」兩件事來修，後面六條才有地方掛。第一條規律被排在最前面，因為只有它兩邊都撐得住，而它有效的原因在身體裡——大腦深處有個約 24 小時的時鐘，照規律走是在配合硬體而不是比意志力。接著作者把「準備睡著的條件」一層層往外推：時間對了還需要核心體溫下降約一度，所以房間要涼；溫度對了還需要黑暗，因為暗才會讓身體釋放褪黑激素，而褪黑激素管的是睡眠的時機。三個條件都排好之後，仍然可能躺著睡不著，於是第四條轉向相反的動作——下床，理由是大腦會把「床」和「睡不著」學成一組連結，必須靠離開床把它拆掉。第五條把範圍拉到上床之前：咖啡因與酒精是你血液裡還留著的東西，下床也救不回來。最後一條補上前面每一條都預設、卻沒人教過的那段空白：從清醒到睡著之間的過渡，作者用飛機降落取代關燈的比喻，說明為什麼需要固定的睡前慣例。六條講完，他主動畫出邊界：這些全都假設你的睡眠機器本身是好的，有失眠症或睡眠呼吸中止症的人該做的是看醫生，就像扭傷腳踝的人需要的是治療而不是更好的訓練菜單。</p>
+
+
+<h4>勘誤總整理</h4>
+<p class="err-legend"><span class="w"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5.4 1.6h5.2l3.8 3.8v5.2l-3.8 3.8H5.4l-3.8-3.8V5.4z" stroke-linejoin="round"/><path d="M8 4.7v4" stroke-linecap="round"/><circle cx="8" cy="11.4" r=".85" fill="currentColor" stroke="none"/></svg>確定錯誤／已過時</span><span class="d"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg>見仁見智（取決於版本或情境）</span></p>
+<div style="overflow-x:auto"><table class="issues-sum">
+<tr><th>段落</th><th>原話（transcript 逐字）</th><th>說明</th></tr>
+
+<tr class="debatable"><td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="#t0kACis_dJE-s4">4. 三：暗，傍晚就要開始</a><br><span class="muted">2:04</span></td>
+<td class="q">「儘量遠離所有的電腦螢幕、」</td><td>方向沒錯，但把螢幕當成頭號元凶可能放錯重點。螢幕的光確實會壓抑褪黑激素，不過在一般使用距離下，手機與平板送進眼睛的光量遠少於整室照明；近年多項隨機對照試驗測到的入睡延後幅度偏小，而且很難跟「內容讓人興奮」「滑著滑著就晚睡」這兩個行為因素分開。真正的大戶往往是頭頂那盞燈——所以「把屋裡的燈亮度減半」這一句的效益可能高於關掉手機。<br><span class="ev">依據: Gooley et al., J Clin Endocrinol Metab 2011（睡前室內照明壓抑褪黑激素約 50%）；Chang et al., PNAS 2015（電子閱讀器效果可測但幅度有限）</span></td></tr>
+
+<tr class="debatable"><td><span class="lv"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 1.9 15.1 14.1H.9z" stroke-linejoin="round"/><path d="M8 6.2v3.3" stroke-linecap="round"/><circle cx="8" cy="11.7" r=".85" fill="currentColor" stroke="none"/></svg></span><a href="#t0kACis_dJE-s5">5. 四：睡不著就下床</a><br><span class="muted">2:39</span></td>
+<td class="q">「但過了 25 分鐘左右都還沒入睡，」</td><td>25 分鐘是作者的經驗法則，不是公認的數字。刺激控制的原始版本與多數 CBT-I 手冊給的是 15 到 20 分鐘，也有治療師主張不設數字、覺得清醒到不舒服就起身。更要緊的是另一件影片沒說的事：這段時間要用感覺估，不要真的看鐘——盯著時間本身就會提高警醒，反而讓人更睡不著。<br><span class="ev">依據: Bootzin 的刺激控制原始指引（1972）與常見 CBT-I 手冊多採 15–20 分鐘，並一致建議把時鐘轉開</span></td></tr>
+
+</table></div>
+
+
+<!-- 5 -->
+<h2>5. 推薦三個下一步</h2>
+
+<div class="card">
+  <h4>1. 往下挖深：體內時鐘怎麼被光對時</h4>
+  <p>影片把規律歸因到一個 24 小時的時鐘就停住了，沒講這個時鐘怎麼被外界訊號校準——而這決定了固定起床時間與早晨光照為什麼比固定上床時間更有效。</p>
+  <p>YouTube 搜尋：<a href="https://www.youtube.com/results?search_query=circadian%20rhythm%20light%20entrainment" target="_blank" rel="noopener"><code>circadian rhythm light entrainment</code></a> <a href="https://www.youtube.com/results?search_query=suprachiasmatic%20nucleus%20explained" target="_blank" rel="noopener"><code>suprachiasmatic nucleus explained</code></a> <a href="https://www.youtube.com/results?search_query=morning%20light%20sleep%20timing" target="_blank" rel="noopener"><code>morning light sleep timing</code></a> </p>
+</div>
+
+<div class="card">
+  <h4>2. 往旁邊對照：睡眠衛生 vs CBT-I</h4>
+  <p>影片結尾說這些方法治不了失眠症，但沒說失眠症該用什麼。把這六條跟失眠的第一線治療擺在一起看，才知道「下床」只是完整療程裡的一個零件。</p>
+  <p>YouTube 搜尋：<a href="https://www.youtube.com/results?search_query=CBT-I%20insomnia%20treatment" target="_blank" rel="noopener"><code>CBT-I insomnia treatment</code></a> <a href="https://www.youtube.com/results?search_query=sleep%20hygiene%20vs%20CBT-I" target="_blank" rel="noopener"><code>sleep hygiene vs CBT-I</code></a> <a href="https://www.youtube.com/results?search_query=stimulus%20control%20therapy%20insomnia" target="_blank" rel="noopener"><code>stimulus control therapy insomnia</code></a> </p>
+</div>
+
+<div class="card">
+  <h4>3. 往上應用：把這些條件搬進輪班與時差</h4>
+  <p>六條建議預設你每天的作息大致固定。輪班工作與跨時區旅行正是這個前提被打破的情境，剛好可以檢驗你有沒有真的理解背後的機制。</p>
+  <p>YouTube 搜尋：<a href="https://www.youtube.com/results?search_query=jet%20lag%20circadian%20adjustment" target="_blank" rel="noopener"><code>jet lag circadian adjustment</code></a> <a href="https://www.youtube.com/results?search_query=shift%20work%20sleep%20strategies" target="_blank" rel="noopener"><code>shift work sleep strategies</code></a> <a href="https://www.youtube.com/results?search_query=melatonin%20timing%20jet%20lag" target="_blank" rel="noopener"><code>melatonin timing jet lag</code></a> </p>
+</div>
+
+
+
+
+</main>
+
+
+
+<!-- 全視窗 viewer -->
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <span class="cap"></span>
+    <button data-act="zoomout" title="縮小 (-)">−</button>
+    <button data-act="zoomin" title="放大 (+)">+</button>
+    <button data-act="fit" title="最佳視角 (F)">Fit</button>
+    <button data-act="reset" title="原始大小 (1)">1:1</button>
+    <button data-act="close" title="關閉 (Esc)">✕</button>
+  </div>
+  <div class="v-stage">
+    <div class="v-content"></div>
+    <button class="v-nav prev" data-act="prev" hidden title="上一張 (←)">‹</button>
+    <button class="v-nav next" data-act="next" hidden title="下一張 (→)">›</button>
+  </div>
+</div>
+
+<script id="tips-data" type="application/json">{}</script>
+
+
+
+
+<script id="shots-data" type="application/json">[[]]</script>
+<script id="shots-ids" type="application/json">["t0kACis_dJE"]</script>
+
+<script type="module">
+
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  // 只有頁面真的有圖才去 CDN 抓 mermaid；抓不到（離線）也不能讓下面的搜尋、視窗等失效
+  if (document.querySelector(".mermaid")) {
+    try {
+      const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+      mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "default",
+        flowchart: { useMaxWidth: false, htmlLabels: true }, mindmap: { useMaxWidth: true } });
+      await mermaid.run({ querySelector: ".mermaid" });
+    } catch (e) { console.warn("mermaid 沒載到：", e); }
+  }
+
+  /* mindmap 配色：不吃 mermaid 主題，依 section 上色，線與節點同色，深淺主題都看得清 */
+  const PALETTE = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f", "#bab0ac"];
+  const css = getComputedStyle(document.documentElement);
+  const fg = css.getPropertyValue("--fg").trim(), bg = css.getPropertyValue("--bg").trim(), accent = css.getPropertyValue("--accent").trim();
+  const sectionOf = (el) => { const m = (el.getAttribute("class") || "").match(/section-(?:edge-)?(-?\d+)/); return m ? +m[1] : null; };
+  const colorOf = (sec) => sec === null || sec < 0 ? accent : PALETTE[sec % PALETTE.length];
+  const setImp = (el, props) => Object.entries(props).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
+  const paintMindmap = (svg) => {
+    // mermaid 主題用 !important 上色，所以這裡也要 !important 才蓋得掉
+    svg.querySelectorAll(".mindmap-edges path, path.edge").forEach((p) => {
+      setImp(p, { stroke: colorOf(sectionOf(p)), "stroke-width": "2.5px", "stroke-opacity": ".75", fill: "none" });
+    });
+    svg.querySelectorAll(".mindmap-node").forEach((n) => {
+      const sec = sectionOf(n), c = colorOf(sec), isRoot = sec === null || sec < 0;
+      n.querySelectorAll("rect, circle, path, polygon").forEach((sh) => {
+        setImp(sh, { fill: isRoot ? c : `color-mix(in srgb, ${c} 28%, ${bg})`, "fill-opacity": "1", stroke: c, "stroke-width": "2px" });
+      });
+      n.querySelectorAll("text, tspan").forEach((t) => setImp(t, { fill: isRoot ? "#fff" : fg }));
+      n.querySelectorAll("foreignObject span, foreignObject div, foreignObject p").forEach((t) => setImp(t, { color: isRoot ? "#fff" : fg }));
+    });
+  };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => { if (svg.querySelector(".mindmap-node")) paintMindmap(svg); });
+
+  /* hover 顯示完整文字：短標籤 → 完整說明（render.py 產生的對照表），用 SVG <title> */
+  const TIPS = JSON.parse(document.getElementById("tips-data").textContent);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const addTitle = (g, text) => { const t = document.createElementNS(SVGNS, "title"); t.textContent = text; g.prepend(t); };
+  document.querySelectorAll(".mermaid svg").forEach((svg) => {
+    svg.querySelectorAll(".node, .mindmap-node, .edgeLabel, .cluster").forEach((g) => {
+      if (g.querySelector(":scope > title")) return;
+      const key = (g.textContent || "").replace(/\s+/g, "");
+      if (TIPS[key]) addTitle(g, TIPS[key]);
+    });
+    // mindmap 的線 = 上下層包含關係
+    svg.querySelectorAll(".mindmap-edges path, path.edge.section-edge-0, path[class*='section-edge-']").forEach((p) => {
+      if (!p.querySelector("title")) addTitle(p, "\u4e0a\u5c64 \u2192 \u4e0b\u5c64\uff1a\u6bb5\u843d\u5305\u542b\u5728\u6b64\u6bb5\u9996\u6b21\u5b9a\u7fa9\u7684\u8853\u8a9e");
+    });
+  });
+
+  /* ---------- viewer：pan / zoom / fit，mermaid 與截圖共用 ---------- */
+  const V = {
+    el: document.getElementById("viewer"),
+    stage: document.querySelector("#viewer .v-stage"),
+    content: document.querySelector("#viewer .v-content"),
+    cap: document.querySelector("#viewer .cap"),
+    prev: document.querySelector("#viewer .prev"),
+    next: document.querySelector("#viewer .next"),
+    items: [], idx: 0, s: 1, tx: 0, ty: 0, w: 0, h: 0,
+  };
+  const apply = () => V.content.style.transform = `translate(${V.tx}px,${V.ty}px) scale(${V.s})`;
+  const fit = () => {
+    const sw = V.stage.clientWidth, sh = V.stage.clientHeight;
+    V.s = Math.min(sw / V.w, sh / V.h) * 0.95;
+    V.tx = (sw - V.w * V.s) / 2; V.ty = (sh - V.h * V.s) / 2; apply();
+  };
+  const reset = () => { V.s = 1; V.tx = (V.stage.clientWidth - V.w) / 2; V.ty = (V.stage.clientHeight - V.h) / 2; apply(); };
+  const zoomAt = (f, cx, cy) => {
+    const ns = Math.min(20, Math.max(0.05, V.s * f));
+    V.tx = cx - (cx - V.tx) * (ns / V.s); V.ty = cy - (cy - V.ty) * (ns / V.s); V.s = ns; apply();
+  };
+  const show = (i) => {
+    V.idx = (i + V.items.length) % V.items.length;
+    const it = V.items[V.idx];
+    V.content.replaceChildren();
+    V.cap.textContent = (V.items.length > 1 ? `${V.idx + 1}/${V.items.length} · ` : "") + it.caption;
+    V.prev.hidden = V.next.hidden = V.items.length < 2;
+    if (it.type === "svg") {
+      const svg = it.node.cloneNode(true);
+      const vb = svg.viewBox.baseVal;
+      V.w = vb.width || svg.width.baseVal.value || 800; V.h = vb.height || svg.height.baseVal.value || 600;
+      svg.removeAttribute("style"); svg.setAttribute("width", V.w); svg.setAttribute("height", V.h);
+      V.content.appendChild(svg); fit();
+    } else {
+      const img = new Image();
+      img.onload = () => { V.w = img.naturalWidth; V.h = img.naturalHeight; V.content.appendChild(img); fit(); };
+      img.src = it.src;
+    }
+  };
+  const open = (items, i = 0) => { V.items = items; V.el.hidden = false; document.body.style.overflow = "hidden"; show(i); };
+  const close = () => { V.el.hidden = true; document.body.style.overflow = ""; V.content.replaceChildren(); };
+
+  V.el.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act) return;
+    ({ zoomin: () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       zoomout: () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+       fit, reset, close, prev: () => show(V.idx - 1), next: () => show(V.idx + 1) })[act]();
+  });
+  V.stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const r = V.stage.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  let drag = null;
+  V.stage.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    drag = { x: e.clientX - V.tx, y: e.clientY - V.ty }; V.stage.classList.add("drag"); V.stage.setPointerCapture(e.pointerId);
+  });
+  V.stage.addEventListener("pointermove", (e) => { if (drag) { V.tx = e.clientX - drag.x; V.ty = e.clientY - drag.y; apply(); } });
+  V.stage.addEventListener("pointerup", () => { drag = null; V.stage.classList.remove("drag"); });
+  V.stage.addEventListener("dblclick", (e) => { const r = V.stage.getBoundingClientRect(); zoomAt(1.6, e.clientX - r.left, e.clientY - r.top); });
+  addEventListener("keydown", (e) => {
+    if (V.el.hidden) return;
+    const k = { Escape: close, ArrowLeft: () => show(V.idx - 1), ArrowRight: () => show(V.idx + 1),
+                "+": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2), "=": () => zoomAt(1.25, V.stage.clientWidth / 2, V.stage.clientHeight / 2),
+                "-": () => zoomAt(0.8, V.stage.clientWidth / 2, V.stage.clientHeight / 2), f: fit, F: fit, "1": reset, "0": fit }[e.key];
+    if (k) { e.preventDefault(); k(); }
+  });
+  addEventListener("resize", () => { if (!V.el.hidden) fit(); });
+
+  /* mermaid → viewer */
+  document.querySelectorAll(".mm-wrap").forEach((w) => {
+    w.addEventListener("click", () => {
+      const svg = w.querySelector("svg"); if (!svg) return;
+      open([{ type: "svg", node: svg, caption: w.dataset.cap || "" }]);
+    });
+  });
+
+
+  /* 語音解析還在產生：定期探測 lesson.mp3，好了就自動重新整理 */
+  const pend = document.getElementById("lesson-pending");
+  if (pend && pend.dataset.state !== "failed") {
+    const probe = () => {
+      const a = new Audio(pend.dataset.src);
+      a.addEventListener("loadedmetadata", () => location.reload(), { once: true });
+      a.load();
+    };
+    document.getElementById("lesson-check").addEventListener("click", probe);
+    setInterval(probe, 20000);
+  }
+  const KSTR = { play: "\u25b6 \u64ad\u653e", pause: "\u23f8 \u66ab\u505c", orig: "\u539f\u6587" };
+  /* 語音解析：點章節跳到該時間 */
+  const lesson = document.getElementById("lesson");
+  /* metadata 還沒載入時直接設 currentTime 會被瀏覽器丟掉、變成從頭播，所以先等 loadedmetadata */
+  const seekTo = (t) => {
+    if (!lesson) return;
+    const go = () => { lesson.currentTime = t; lesson.play(); };
+    if (lesson.readyState >= 1) go();
+    else { lesson.addEventListener("loadedmetadata", go, { once: true }); lesson.load(); }
+  };
+  if (lesson) document.querySelectorAll(".lesson button[data-at]").forEach((b) => {
+    b.addEventListener("click", () => seekTo(+b.dataset.at));
+  });
+
+  /* 截圖 → lightbox：輪流同一支影片的所有截圖 */
+  const shotsByVideo = JSON.parse(document.getElementById("shots-data").textContent);
+  const videoIds = JSON.parse(document.getElementById("shots-ids").textContent);
+  const fmtTs = (s) => { s = Math.floor(s); const m = Math.floor(s / 60), r = s % 60; return `${m}:${String(r).padStart(2, "0")}`; };
+  document.querySelectorAll(".frames img").forEach((img) => {
+    img.addEventListener("click", () => {
+      const shots = shotsByVideo[videoIds.indexOf(img.dataset.video)];
+      open(shots.map((sh) => ({ type: "img", src: sh.href, caption: `${sh.seg_title} · ${fmtTs(sh.t)} · ${sh.why}` })), +img.dataset.idx);
+    });
+  });
+
+  /* 術語 ⓘ → dialog */
+  document.querySelectorAll(".info[data-term]").forEach((b) => {
+    b.addEventListener("click", () => document.getElementById("term-" + b.dataset.term).showModal());
+  });
+  document.querySelectorAll("dialog").forEach((d) => {
+    d.querySelector("[data-close]").addEventListener("click", () => d.close());
+    d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
+  });
+
+  /* ---------- 講稿 karaoke ---------- */
+  const kd = document.getElementById("lesson-data");
+  if (lesson && kd) {
+    const data = JSON.parse(kd.textContent);
+    const K = {
+      el: document.getElementById("kara"),
+      body: document.querySelector("#kara .body"),
+      inner: document.querySelector("#kara .inner"),
+      back: document.querySelector("#kara .back"),
+      cur: document.getElementById("k-cur"),
+      tot: document.getElementById("k-tot"),
+      toggle: document.querySelector('#kara [data-k="toggle"]'),
+      auto: true, idx: -1, nodes: [], lines: [],
+    };
+    const ts = (s) => { s = Math.max(0, Math.floor(s)); const m = Math.floor(s / 60); return `${m}:${String(s % 60).padStart(2, "0")}`; };
+
+    // 兩軌：orig = 作者原聲，dub = 另一個聲音唸翻譯。say 的部分兩軌是同一份音檔，只有 clip 不同。
+    const tracks = { orig: { href: data.href, timeline: data.timeline, duration: data.duration, chapters: data.chapters } };
+    if (data.dub) tracks.dub = { href: data.dub.href, timeline: data.dub.timeline, duration: data.dub.duration, chapters: data.dub.chapters };
+    let mode = "orig";
+
+    const buildScript = (tl) => {
+      K.inner.textContent = ""; K.nodes = []; K.lines = []; K.idx = -1;
+      let seg = null;
+      tl.forEach((e) => {
+        if (e.seg_id !== seg) {
+          seg = e.seg_id;
+          const h = document.createElement("h4");
+          h.textContent = `${e.seg_id}. ${e.seg_title}`;
+          K.inner.appendChild(h);
+        }
+        // 每段原聲自成一個 clipbox：標題與對照文字只在這段範圍內 sticky
+        let box = K.inner;
+        const isClip = e.kind === "clip" || e.kind === "dub";
+        if (isClip) {
+          box = document.createElement("section");
+          box.className = "clipbox";
+          K.inner.appendChild(box);
+          const h = document.createElement("div");
+          h.className = "cliphead";
+          h.textContent = (e.kind === "dub" ? "🗣 " : "🎙 ") + (e.label || "");
+          box.appendChild(h);
+          // 原聲軌上面放翻譯；翻譯軌上面放原文，兩邊都看得到對照
+          const other = e.kind === "dub" ? (e.orig_text ? `${KSTR.orig}：${e.orig_text}` : "") : e.translation;
+          if (other) {
+            const tr = document.createElement("div");
+            tr.className = "trans";
+            tr.textContent = other;
+            box.appendChild(tr);
+          }
+        }
+        (e.lines || []).forEach((l) => {
+          const p = document.createElement("p");
+          p.textContent = l.text;
+          if (isClip) p.classList.add(e.kind === "dub" ? "dub" : "clip");
+          p.addEventListener("click", () => { seekTo(l.at + 0.01); K.auto = true; K.back.hidden = true; });
+          box.appendChild(p);
+          K.nodes.push(p); K.lines.push(l);
+        });
+      });
+    };
+    buildScript(tracks.orig.timeline);
+    K.tot.textContent = ts(data.duration);
+
+    // 語速：currentTime 走的是媒體時間，所以 KTV 高亮會自動跟著變速
+    const rateSel = document.getElementById("k-rate");
+    let curRate = 1;
+    const setRate = (v) => {
+      curRate = v;
+      lesson.playbackRate = v;
+      if ("preservesPitch" in lesson) lesson.preservesPitch = true;
+      rateSel.value = String(v);
+      try { localStorage.setItem("lesson-rate", String(v)); } catch (_) {}
+    };
+    let saved = 1;
+    try { saved = parseFloat(localStorage.getItem("lesson-rate")) || 1; } catch (_) {}
+    setRate(saved);
+    rateSel.addEventListener("change", () => setRate(parseFloat(rateSel.value)));
+
+    const paint = () => {
+      const t = lesson.currentTime;
+      let i = K.lines.findIndex((l) => t < l.at + l.dur);
+      if (i < 0) i = K.lines.length - 1;
+      if (i === K.idx) return;
+      K.idx = i;
+      K.nodes.forEach((n, j) => {
+        n.classList.toggle("now", j === i);
+        n.classList.toggle("done", j < i);
+      });
+      if (K.auto && K.nodes[i]) K.nodes[i].scrollIntoView({ block: "center", behavior: "smooth" });
+    };
+    /* ---------- 原聲 ⇄ 翻譯配音 ---------- */
+    // 章節列是伺服器算好的（原聲軌），換軌時就地改時間
+    const chapBtns = [...document.querySelectorAll(".lesson ol button[data-at]")];
+    const syncChapters = () => {
+      const cs = tracks[mode].chapters || [];
+      chapBtns.forEach((b, i) => {
+        if (!cs[i]) return;
+        b.dataset.at = cs[i].at;
+        b.querySelector(".t").textContent = ts(cs[i].at);
+      });
+    };
+    // 兩軌的 block 一一對應（同一個 i），所以用「第幾個 block + 在裡面的比例」換算時間
+    const mapTime = (t, from, to) => {
+      const a = tracks[from].timeline, b = tracks[to].timeline;
+      let i = a.findIndex((e) => t < e.at + e.dur);
+      if (i < 0) i = a.length - 1;
+      const e = a[i], o = b[i] || b[b.length - 1];
+      const frac = e.dur > 0 ? Math.min(1, Math.max(0, (t - e.at) / e.dur)) : 0;
+      return o.at + frac * o.dur;
+    };
+    const setMode = (m) => {
+      if (!tracks[m] || m === mode) return;
+      const playing = !lesson.paused;
+      const t = mapTime(lesson.currentTime, mode, m);
+      mode = m;
+      try { localStorage.setItem("lesson-mode", m); } catch (_) {}
+      document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+      lesson.addEventListener("loadedmetadata", () => {
+        lesson.currentTime = t; setRate(curRate); paint();
+        if (playing) lesson.play();
+      }, { once: true });
+      lesson.src = tracks[m].href;
+      lesson.load();
+      buildScript(tracks[m].timeline);
+      syncChapters();
+      K.tot.textContent = ts(tracks[m].duration);
+    };
+    document.querySelectorAll("[data-mode]").forEach((b) => {
+      b.addEventListener("click", () => setMode(b.dataset.mode));
+    });
+    let savedMode = null;
+    try { savedMode = localStorage.getItem("lesson-mode"); } catch (_) {}
+    if (savedMode && tracks[savedMode]) setMode(savedMode);
+
+    lesson.addEventListener("timeupdate", () => { K.cur.textContent = ts(lesson.currentTime); paint(); });
+    lesson.addEventListener("play", () => { K.toggle.textContent = KSTR.pause; });
+    lesson.addEventListener("pause", () => { K.toggle.textContent = KSTR.play; });
+
+    // 只有使用者主動捲動才停止自動捲；程式自己捲（scrollIntoView）不會觸發這些事件
+    const userScrolled = () => { K.auto = false; K.back.hidden = false; };
+    ["wheel", "touchmove"].forEach((ev) => K.body.addEventListener(ev, userScrolled, { passive: true }));
+    K.body.addEventListener("keydown", (e) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key)) userScrolled();
+    });
+    K.back.addEventListener("click", () => {
+      K.auto = true; K.back.hidden = true;
+      if (K.nodes[K.idx]) K.nodes[K.idx].scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+
+    const openK = () => { K.el.hidden = false; document.body.style.overflow = "hidden"; K.idx = -1; paint(); };
+    const closeK = () => { K.el.hidden = true; document.body.style.overflow = ""; };
+    document.getElementById("kara-open").addEventListener("click", () => { openK(); if (lesson.paused) lesson.play(); });
+    lesson.addEventListener("play", () => { if (K.el.hidden && !lesson.dataset.opened) { lesson.dataset.opened = "1"; openK(); } });
+    K.el.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-k]")?.dataset.k;
+      if (a === "close") closeK();
+      else if (a === "restart") { seekTo(0); K.auto = true; K.back.hidden = true; }
+      else if (a === "toggle") lesson.paused ? lesson.play() : lesson.pause();
+    });
+    addEventListener("keydown", (e) => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+      if (typing) return;
+      if (e.key === " ") {                      // 空白鍵隨時可播放／暫停
+        e.preventDefault();
+        lesson.paused ? lesson.play() : lesson.pause();
+      } else if (!K.el.hidden && e.key === "Escape") { e.preventDefault(); closeK(); }
+      else if (!K.el.hidden && e.key === "Home") { e.preventDefault(); seekTo(0); }
+      else if (tracks.dub && (e.key === "d" || e.key === "D")) { e.preventDefault(); setMode(mode === "dub" ? "orig" : "dub"); }
+    });
+  }
+
+
+</script>
+</body>
+</html>
