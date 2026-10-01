@@ -2,12 +2,6 @@
 
 **English** · [繁體中文](docs/README.zh-TW.md)
 
-### 🔗 [See it for yourself](https://chaoliou.github.io/TheWayToLearn/demo/en/)
-
-A real run on a TED talk about sleep — read the text breakdown, press play on the 12-minute audio breakdown, flip through the practice. Nothing to install.
-Everything you see there was produced from the talk's English transcript: the text breakdown, the notes, the practice and the narration.
-<sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)</sub>
-
 **This is a [Claude Code](https://claude.com/claude-code) plugin.** Once installed, hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
 
 You use it by typing one line in Claude Code (`/pacer:learn <url>`). No programming required. Never used Claude Code before? [Getting started](#getting-started) below walks you through it from the install.
@@ -15,6 +9,12 @@ You use it by typing one line in Claude Code (`/pacer:learn <url>`). No programm
 Why you'd want it: you watch an hour-long video called "Why Sleep Matters", nodding along the whole way — and the next day all that's left is "uh, sleep is important."
 
 PACER Learn turns that hour into something that stays with you.
+
+### 🔗 [DEMO](https://chaoliou.github.io/TheWayToLearn/demo/en/)
+
+A real run on a TED talk about sleep — read the text breakdown, press play on the 12-minute audio breakdown, flip through the practice. Nothing to install.
+Everything you see there was produced from the talk's English transcript: the text breakdown, the notes, the practice and the narration.
+<sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)</sub>
 
 ## What you get
 
