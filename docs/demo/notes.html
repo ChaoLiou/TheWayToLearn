@@ -1,0 +1,482 @@
+
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>筆記</title>
+<style>
+  :root { --fg:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --accent:#0969da; --overlay:rgba(0,0,0,.85);
+          --wrong:#cf222e; --wrong-bg:#ffebe9; --debat:#bc4c00; --debat-bg:#fff1e5; --ok:#1a7f37; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --muted:#9198a1; --bg:#0d1117; --card:#161b22; --line:#30363d; --accent:#4493f8; --overlay:rgba(0,0,0,.9);
+            --wrong:#ff7b72; --wrong-bg:#3c1618; --debat:#f0883e; --debat-bg:#3a2210; --ok:#3fb950; }
+  }
+  body { margin:0; padding:1.4rem 1rem; background:var(--bg); color:var(--fg);
+         font:16px/1.7 system-ui, "Noto Sans TC", sans-serif; }
+  main { max-width: 820px; margin: 0 auto; }
+  h1 { font-size:1.7rem; margin:.2rem 0 .3rem; }
+  h2 { border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:2.2rem; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem 1.2rem; margin:1rem 0; }
+  a { color:var(--accent); }
+  code { background:var(--card); padding:.1rem .35rem; border-radius:4px; }
+  .topnav { display:flex; gap:.4rem 1rem; flex-wrap:wrap; font-size:.9rem; margin:0 0 1rem; }
+  .topnav a { text-decoration:none; color:var(--muted); } .topnav a.on { color:var(--fg); font-weight:700; }
+  .stats { display:flex; gap:1.2rem; flex-wrap:wrap; color:var(--muted); font-size:.9rem; margin:.2rem 0 1rem; }
+
+  
+  /* ---- 搜尋列：條件做成 chip，彼此是 AND ---- */
+  .search { position:relative; margin:.6rem 0 .3rem; }
+  .sbox { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.45rem .6rem;
+          background:var(--card); border:1px solid var(--line); border-radius:10px; cursor:text; }
+  .sbox:focus-within { border-color:var(--accent); }
+  .sbox .ico { color:var(--muted); }
+  .sbox input { flex:1; min-width:11rem; border:none; outline:none; background:none; color:var(--fg); font:inherit; padding:.15rem 0; }
+  .chip { display:inline-flex; align-items:center; gap:.35rem; background:var(--accent); color:#fff;
+          border-radius:999px; padding:.1rem .3rem .1rem .55rem; font-size:.83rem; white-space:nowrap; }
+  .chip .k { opacity:.75; font-size:.75rem; }
+  .chip button { background:none; border:none; color:#fff; cursor:pointer; font-size:.95rem; line-height:1; padding:0 .2rem; }
+  .ac { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; margin:0; padding:.25rem 0; list-style:none;
+        background:var(--bg); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+        max-height:17rem; overflow:auto; }
+  .ac[hidden] { display:none; }
+  .ac li { display:flex; align-items:center; gap:.5rem; padding:.35rem .7rem; cursor:pointer; font-size:.92rem; }
+  .ac li.on { background:var(--card); }
+  .ac .k { font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3rem; }
+  .ac .n { margin-left:auto; color:var(--muted); font-size:.8rem; }
+  .shint { font-size:.8rem; color:var(--muted); display:flex; gap:1rem; flex-wrap:wrap; margin:.35rem .2rem 1.4rem; }
+  .shint button { background:none; border:none; color:var(--accent); cursor:pointer; font:inherit; padding:0; }
+  #no-match { color:var(--muted); }
+
+  .search { margin-bottom:0; }
+  .filters { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.4rem 0 1.2rem; position:sticky; top:0;
+             background:var(--bg); padding:.5rem 0; z-index:5; border-bottom:1px solid var(--line); }
+  .filters button { font:inherit; font-size:.85rem; padding:.2rem .7rem; border-radius:999px; border:1px solid var(--line);
+                    background:var(--card); color:var(--fg); cursor:pointer; }
+  .filters button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .filters .sp { flex:1; } .filters .n { font-size:.82rem; color:var(--muted); }
+  .filters .tool { border-style:dashed; font-size:.8rem; }
+  /* ---- 一站 ---- */
+  .st { margin:1.6rem 0; }
+  .st .hd { display:grid; grid-template-columns: 5.2rem 1fr; gap:.7rem; align-items:center; margin-bottom:.4rem; }
+  .st .hd img { width:5.2rem; aspect-ratio:16/9; object-fit:cover; border-radius:6px; background:var(--card); }
+  .st h2 { margin:0; border:none; padding:0; font-size:1.05rem; line-height:1.35; }
+  .st h2 a { color:var(--fg); text-decoration:none; } .st h2 a:hover { color:var(--accent); }
+  .st .meta { font-size:.8rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:.2rem .7rem; }
+  .st .meta a { color:var(--muted); } .st .meta a:hover { color:var(--accent); }
+  .st .meta .cat { cursor:pointer; border:1px solid var(--line); border-radius:999px; padding:0 .5rem; }
+  .st .meta .cat:hover { border-color:var(--accent); color:var(--accent); }
+  .st[hidden] { display:none; }
+  /* ---- 一條筆記 ---- */
+  .nt { display:grid; grid-template-columns: 3.2rem 1fr auto; gap:.3rem .7rem; align-items:start;
+        padding:.55rem .6rem; border-left:3px solid var(--line); margin:.3rem 0; border-radius:0 8px 8px 0; background:var(--card); }
+  .nt .k { font-size:.7rem; font-weight:700; text-align:center; border-radius:4px; padding:.1rem .2rem; color:#fff; margin-top:.25rem; }
+  .nt[data-kind="concept"] .k { background:#4e79a7; } .nt[data-kind="skill"] .k { background:#59a14f; } .nt[data-kind="insight"] .k { background:#b07aa1; }
+  .nt .tx { font-size:.98rem; line-height:1.55; }
+  .nt .dt { font-size:.86rem; color:var(--muted); margin-top:.15rem; }
+  .nt .src { font-size:.78rem; margin-top:.2rem; } .nt .src a { text-decoration:none; }
+  .nt .terms { font-size:.75rem; color:var(--muted); } .nt .terms code { font-size:.75rem; }
+  .nt .kd { display:flex; gap:.25rem; }
+  .nt .kd button { font:inherit; font-size:.78rem; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer; }
+  .nt .kd button:hover { border-color:var(--accent); color:var(--accent); }
+  .nt[data-st="keep"] { border-left-color:var(--ok); }
+  .nt[data-st="keep"] .kd .keep { background:var(--ok); color:#fff; border-color:var(--ok); }
+  .nt[data-st="drop"] { border-left-color:var(--wrong); opacity:.55; }
+  .nt[data-st="drop"] .tx { text-decoration:line-through; }
+  .nt[data-st="drop"] .kd .drop { background:var(--wrong); color:#fff; border-color:var(--wrong); }
+  .nt[hidden] { display:none; }
+  @media (max-width:520px) { .nt { grid-template-columns: 3rem 1fr; } .nt .kd { grid-column:2; } }
+
+</style>
+</head>
+<body>
+
+<main>
+<p class="topnav">
+  <a href="atlas.html">📄 全部影片</a>
+  <a href="listen.html">🎧 語音解析</a>
+  <a class="on" href="notes.html">📝 筆記</a>
+  <a href="digest.html">✍️ 練習</a>
+</p>
+<h1>📝 筆記</h1>
+<p class="muted">每一篇學習素材留下的觀念與技巧。新的在上面；每條都連回原本的段落。</p>
+<p class="stats"><span>1 站</span><span>8 條</span><span id="kept"></span><span>更新於 2026-10-01 18:45</span></p>
+
+
+
+<div class="search">
+  <div class="sbox" id="sbox">
+    <span class="ico">🔍</span>
+    <input id="sinput" type="text" placeholder="搜尋作者、標題、分類…" autocomplete="off"
+           aria-label="搜尋作者、標題、分類…" aria-expanded="false" role="combobox" aria-controls="ac">
+  </div>
+  <ul class="ac" id="ac" role="listbox" hidden></ul>
+</div>
+<p class="shint"><span id="count">顯示 1 / 1 站</span><span>按空白鍵或 Enter 加下一個條件；條件之間是 AND</span><button id="clear" type="button" hidden>清除全部</button></p>
+<p id="no-match" hidden>沒有符合條件的站。</p>
+
+<div class="filters" id="filters">
+  <button type="button" class="on" data-f="all">全部</button>
+  <button type="button" data-f="keep">只看留下的</button>
+  <button type="button" data-f="undecided">還沒決定</button>
+  <button type="button" data-f="drop">已刪</button>
+  <span class="sp"></span>
+  <button type="button" class="tool" id="export" title="下載 notes.keep.json，放到 workspace/ 後重跑 notes.py 就會記住">⬇ 匯出留／刪狀態</button>
+  <button type="button" class="tool" id="reset">清掉本機狀態</button>
+</div>
+
+
+<section class="st" id="t0kACis_dJE" data-id="t0kACis_dJE" data-title="6 tips for better sleep | Sleeping with Science, a TED series" data-channel="TED"
+         data-category="睡眠" data-text="體內時鐘的週期約 24.2 小時，每天要靠光重新對時。
+入睡的前提是核心體溫先降約一度，熱是從手腳散掉的。
+褪黑激素是報時訊號，不是鎮靜劑——它管時機，不管昏睡。
+睡前要先關頭頂的大燈，而不是只收手機。
+睡不著就下床，而且用感覺估時間、不要盯著鐘看。
+咖啡因不給你能量，它只是把睏意的通知擋在門外。
+躺下十到二十分鐘才睡著是正常的，秒睡反而是警訊。
+睡眠衛生是訓練菜單，治不了受傷的腳踝。">
+  <div class="hd">
+    <img src="https://i.ytimg.com/vi/t0kACis_dJE/mqdefault.jpg" alt="" loading="lazy">
+    <div>
+      <h2><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">6 tips for better sleep | Sleeping with Science, a TED series</a></h2>
+      <div class="meta">
+        <span>TED</span>
+        <span class="cat" data-cat="睡眠" title="分類">睡眠</span>
+        <span>產生於 2026-10-01</span>
+        <a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html">開啟文字解析</a>
+        <a href="listen.html#t0kACis_dJE">🎧 語音解析</a>
+        <a href="https://www.youtube.com/watch?v=t0kACis_dJE" target="_blank" rel="noopener">🔗 在 YouTube 看</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:1" data-kind="concept" data-st="">
+    <span class="k">觀念</span>
+    <div>
+      <div class="tx">體內時鐘的週期約 24.2 小時，每天要靠光重新對時。</div>
+      <div class="dt">所以固定起床時間、起床後盡快見到亮光，比固定上床時間更有效——真正在替時鐘對時的是早上那道光，上床時間會自己跟上。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s2">第 2 段 →</a>
+        <span class="muted">一：規律，連假日也一樣</span>
+        <span class="terms"> · <code>circadian rhythm</code> <code>zeitgeber</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:2" data-kind="concept" data-st="">
+    <span class="k">觀念</span>
+    <div>
+      <div class="tx">入睡的前提是核心體溫先降約一度，熱是從手腳散掉的。</div>
+      <div class="dt">知道這個機制才解得開「睡前洗熱水澡反而更好睡」的矛盾：熱水讓末梢血管大開，洗完散熱更快，核心體溫掉得更快。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s3">第 3 段 →</a>
+        <span class="muted">二：溫度，涼一點才睡得著</span>
+        <span class="terms"> · <code>core body temperature</code> <code>distal vasodilation</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:3" data-kind="insight" data-st="">
+    <span class="k">體悟</span>
+    <div>
+      <div class="tx">褪黑激素是報時訊號，不是鎮靜劑——它管時機，不管昏睡。</div>
+      <div class="dt">這解釋了為什麼拿它當安眠藥常常失望，但對付時差與輪班卻有效：後者要修的正是時機。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s4">第 4 段 →</a>
+        <span class="muted">三：暗，傍晚就要開始</span>
+        <span class="terms"> · <code>melatonin</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:4" data-kind="skill" data-st="">
+    <span class="k">技巧</span>
+    <div>
+      <div class="tx">睡前要先關頭頂的大燈，而不是只收手機。</div>
+      <div class="dt">一般使用距離下，手機送進眼睛的光量遠少於整室照明。把屋裡的燈亮度減半，效益可能高於關掉螢幕。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s4">第 4 段 →</a>
+        <span class="muted">三：暗，傍晚就要開始</span>
+        
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:5" data-kind="skill" data-st="">
+    <span class="k">技巧</span>
+    <div>
+      <div class="tx">睡不著就下床，而且用感覺估時間、不要盯著鐘看。</div>
+      <div class="dt">這是 stimulus control：在床上清醒愈久，大腦愈把床學成「睡不著的地方」。盯著時鐘本身會製造壓力，反而餵養警醒。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s5">第 5 段 →</a>
+        <span class="muted">四：睡不著就下床</span>
+        <span class="terms"> · <code>stimulus control</code> <code>conditioned arousal</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:6" data-kind="concept" data-st="">
+    <span class="k">觀念</span>
+    <div>
+      <div class="tx">咖啡因不給你能量，它只是把睏意的通知擋在門外。</div>
+      <div class="dt">腺苷持續累積，咖啡因只是佔住受體，所以藥效退掉會突然很累。半衰期 5–6 小時：下午三點那杯，半夜還剩四分之一。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s6">第 6 段 →</a>
+        <span class="muted">五：酒精與咖啡因</span>
+        <span class="terms"> · <code>adenosine</code> <code>half-life</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:7" data-kind="insight" data-st="">
+    <span class="k">體悟</span>
+    <div>
+      <div class="tx">躺下十到二十分鐘才睡著是正常的，秒睡反而是警訊。</div>
+      <div class="dt">健康成人的入睡潛伏期約 10–20 分鐘。每晚一沾枕頭就斷電，通常代表睡眠嚴重不足，不是睡得好。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s7">第 7 段 →</a>
+        <span class="muted">六：睡前慣例，睡覺像降落不像關燈</span>
+        <span class="terms"> · <code>sleep onset latency</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+  <div class="nt" data-key="t0kACis_dJE:8" data-kind="insight" data-st="">
+    <span class="k">體悟</span>
+    <div>
+      <div class="tx">睡眠衛生是訓練菜單，治不了受傷的腳踝。</div>
+      <div class="dt">六條建議都預設睡眠機器本身是好的。失眠症或呼吸中止症該做的是就醫，順序不能顛倒——這條邊界比六條建議本身更該記住。</div>
+      <div class="src"><a href="6%20tips%20for%20better%20sleep%20Sleeping%20with%20Science%2C%20a%20TED%20series/plan.html#t0kACis_dJE-s8">第 8 段 →</a>
+        <span class="muted">但這些祕訣治不了睡眠障礙</span>
+        <span class="terms"> · <code>sleep hygiene</code> <code>obstructive sleep apnea</code></span>
+      </div>
+    </div>
+    <div class="kd">
+      <button type="button" class="keep" data-set="keep">留</button>
+      <button type="button" class="drop" data-set="drop">刪</button>
+    </div>
+  </div>
+  
+</section>
+
+
+</main>
+
+
+
+<script id="ui-data" type="application/json">{"any": "\u4efb\u610f", "author": "\u4f5c\u8005", "category": "\u5206\u985e", "showing": "\u986f\u793a {n} / {total} \u7ad9", "title": "\u6a19\u984c", "video": "\u5f71\u7247"}</script>
+
+<script id="ui-str" type="application/json">{"dropped": "\u522a\u6389 {n}", "kept": "\u7559\u4e0b {n}"}</script>
+
+<script>
+
+(() => {
+  const T = JSON.parse(document.getElementById("ui-str").textContent);
+  const LS_KEY = "notes-keep";
+  const LS = { get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+               del: (k) => { try { localStorage.removeItem(k); } catch (_) {} } };
+  // 預設狀態來自 notes.keep.json（已寫在 data-st），瀏覽器裡的操作蓋在上面
+  let local = {};
+  try { local = JSON.parse(LS.get(LS_KEY) || "{}"); } catch (_) { local = {}; }
+  const notes = [...document.querySelectorAll(".nt")];
+  const stateOf = (el) => local[el.dataset.key] ?? (el.dataset.st || "");
+  let filter = "all";
+  if (!notes.length) return;
+
+  // 留／刪篩選先決定每條筆記的顯示，搜尋列（作者／分類／標題／任意，含筆記內文）再決定站；
+  // 一站的筆記全被留／刪篩掉就整站隱藏（extra_ok 給 _search.html.j2 的 refilter 用）。
+  const applyNotes = () => {
+    let kept = 0, dropped = 0;
+    notes.forEach((el) => {
+      const st = stateOf(el);
+      el.dataset.st = st;
+      if (st === "keep") kept++; if (st === "drop") dropped++;
+      el.hidden = !(filter === "all" || (filter === "undecided" ? st === "" : st === filter));
+    });
+    document.getElementById("kept").textContent = `${T.kept.replace("{n}", kept)} · ${T.dropped.replace("{n}", dropped)}`;
+  };
+  function extra_ok(sec) { return [...sec.querySelectorAll(".nt")].some((n) => !n.hidden); }
+  applyNotes();
+
+  /* ---------- 搜尋：作者 / 標題 / 分類，多個條件 AND（templates/_search.html.j2） ---------- */
+  const card_sel = ".st", group_sel = null;
+  const UI = JSON.parse(document.getElementById("ui-data").textContent);
+  const CARDS = [...document.querySelectorAll(card_sel)].map((el) => ({
+    el, id: el.dataset.id || "", title: el.dataset.title || "",
+    channel: el.dataset.channel || "", category: el.dataset.category || "",
+    text: el.dataset.text || "",
+  }));
+  const extraOk = typeof extra_ok === "function" ? extra_ok : () => true;
+  const box = document.getElementById("sbox"), input = document.getElementById("sinput"),
+        acEl = document.getElementById("ac"), countEl = document.getElementById("count"),
+        clearEl = document.getElementById("clear"), noMatch = document.getElementById("no-match");
+  const KIND = { author: UI.author, category: UI.category, title: UI.title, any: UI.any, vid: UI.video };
+  const chips = [];
+  let acItems = [], acIdx = -1;
+
+  const uniq = (key) => {
+    const m = new Map();
+    CARDS.forEach((c) => { const v = c[key]; if (v) m.set(v, (m.get(v) || 0) + 1); });
+    return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  };
+  const AUTHORS = uniq("channel"), CATS = uniq("category");
+  const has = (hay, needle) => hay.toLowerCase().includes(needle.toLowerCase());
+  const match = (c, ch) => ch.kind === "vid" ? c.id === ch.value
+    : ch.kind === "author" ? has(c.channel, ch.value)
+    : ch.kind === "category" ? has(c.category, ch.value)
+    : ch.kind === "title" ? has(c.title, ch.value)
+    : has(c.title, ch.value) || has(c.channel, ch.value) || has(c.category, ch.value) || has(c.text, ch.value);
+
+  const refilter = () => {
+    let shown = 0;
+    CARDS.forEach((c) => {
+      const ok = extraOk(c.el) && chips.every((ch) => match(c, ch));
+      c.el.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (group_sel) document.querySelectorAll(group_sel).forEach((sec) => {
+      sec.hidden = ![...sec.querySelectorAll(card_sel)].some((w) => !w.hidden);
+    });
+    countEl.textContent = UI.showing.replace("{n}", shown).replace("{total}", CARDS.length);
+    clearEl.hidden = chips.length === 0;
+    noMatch.hidden = shown > 0;
+  };
+
+  const drawChips = () => {
+    box.querySelectorAll(".chip").forEach((e) => e.remove());
+    chips.forEach((ch, i) => {
+      const el = document.createElement("span");
+      el.className = "chip";
+      el.innerHTML = `<span class="k"></span><span class="v"></span><button type="button" aria-label="remove">×</button>`;
+      el.querySelector(".k").textContent = KIND[ch.kind] + "：";
+      el.querySelector(".v").textContent = ch.label || ch.value;
+      el.querySelector("button").addEventListener("click", () => { chips.splice(i, 1); drawChips(); refilter(); input.focus(); });
+      box.insertBefore(el, input);
+    });
+  };
+  const addChip = (kind, value, label) => {
+    value = value.trim();
+    if (!value || chips.some((c) => c.kind === kind && c.value === value)) { input.value = ""; hideAc(); return; }
+    chips.push({ kind, value, label });
+    input.value = "";
+    drawChips(); refilter(); hideAc();
+  };
+
+  const hideAc = () => { acEl.hidden = true; acItems = []; acIdx = -1; input.setAttribute("aria-expanded", "false"); };
+  const drawAc = () => {
+    const q = input.value.trim();
+    acItems = [];
+    if (q) acItems.push({ kind: "any", value: q, n: null });
+    AUTHORS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "author", value: v, n }));
+    CATS.filter(([v]) => !q || has(v, q)).slice(0, 6).forEach(([v, n]) => acItems.push({ kind: "category", value: v, n }));
+    if (!acItems.length) return hideAc();
+    acEl.replaceChildren(...acItems.map((it, i) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.innerHTML = `<span class="k"></span><span class="v"></span>`;
+      li.querySelector(".k").textContent = KIND[it.kind];
+      li.querySelector(".v").textContent = it.value;
+      if (it.n !== null) { const n = document.createElement("span"); n.className = "n"; n.textContent = it.n; li.appendChild(n); }
+      li.addEventListener("mousedown", (e) => { e.preventDefault(); addChip(it.kind, it.value); });
+      li.addEventListener("mouseenter", () => { acIdx = i; paintAc(); });
+      return li;
+    }));
+    acIdx = q ? 0 : -1;
+    paintAc();
+    acEl.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  };
+  const paintAc = () => [...acEl.children].forEach((li, i) => li.classList.toggle("on", i === acIdx));
+  const commit = () => {
+    if (acIdx >= 0 && acItems[acIdx]) addChip(acItems[acIdx].kind, acItems[acIdx].value);
+    else if (input.value.trim()) addChip("any", input.value);
+  };
+
+  box.addEventListener("click", (e) => { if (!e.target.closest(".chip")) input.focus(); });
+  input.addEventListener("input", drawAc);
+  input.addEventListener("focus", drawAc);
+  input.addEventListener("blur", () => setTimeout(hideAc, 120));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (acEl.hidden) return drawAc();
+      acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acItems.length) % acItems.length;
+      paintAc();
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (e.key === " " && !input.value.trim() && acIdx < 0) return;
+      e.preventDefault(); commit();
+    } else if (e.key === "Escape") { hideAc(); }
+    else if (e.key === "Backspace" && !input.value && chips.length) { chips.pop(); drawChips(); refilter(); }
+  });
+  clearEl.addEventListener("click", () => { chips.length = 0; drawChips(); refilter(); input.focus(); });
+
+  /* ?only=<video_id>：從某支影片的文字解析點過來，預設只留那一支（× 或「清掉全部」可解除）。
+     autocomplete 不提供這種條件，它只從網址來。找不到對應卡片時照樣加，讓使用者看到 0 筆而不是全部。 */
+  const only = new URLSearchParams(location.search).get("only");
+  if (only) {
+    const c = CARDS.find((x) => x.id === only);
+    chips.push({ kind: "vid", value: only, label: c ? c.title : only });
+    drawChips();
+  }
+  refilter();
+
+  document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
+  const apply = () => { applyNotes(); refilter(); };
+
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-set]");
+    if (b) {
+      const el = b.closest(".nt"), want = b.dataset.set;
+      local[el.dataset.key] = stateOf(el) === want ? "" : want;   // 再按一次 = 取消
+      LS.set(LS_KEY, JSON.stringify(local));
+      apply();
+      return;
+    }
+    const f = ev.target.closest("[data-f]");
+    if (f) {
+      filter = f.dataset.f;
+      document.querySelectorAll("[data-f]").forEach((x) => x.classList.toggle("on", x === f));
+      apply();
+    }
+  });
+
+  document.getElementById("export")?.addEventListener("click", () => {
+    const out = {};
+    notes.forEach((el) => { const st = stateOf(el); if (st) out[el.dataset.key] = st; });
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "notes.keep.json"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); apply(); });
+
+  // 從 listen.html / plan.html 帶 #<vid> 進來：捲到那一站
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
+})();
+
+</script>
+</body>
+</html>
