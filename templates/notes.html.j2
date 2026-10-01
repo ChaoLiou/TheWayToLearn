@@ -64,8 +64,6 @@
   {% for st in stations %}{% set k = st.category or S.unplaced %}{% set _ = cats.update({k: cats.get(k, 0) + 1}) %}{% endfor %}
   {% set items = [] %}
   {% for k, n in cats | dictsort %}{% set _ = items.append({"name": k, "n": n, "color": none}) %}{% endfor %}
-  {{ shell.cats(S, items, stations|length) }}
-  <hr>
   <p class="grp">{{ S.side_filters }}</p>
   <div class="filters" id="filters">
     <button type="button" class="on" data-f="all">{{ S.notes_all }}</button>
@@ -75,12 +73,14 @@
     <span class="sp"></span>
   </div>
   <hr>
+  {{ shell.cats(S, items, stations|length) }}
+  <hr>
   <button type="button" class="tool" id="export" title="{{ S.notes_export_hint }}">{{ S.notes_export }}</button>
   <button type="button" class="tool" id="reset">{{ S.notes_reset }}</button>
   {% endif %}
 </nav>
 <main>
-<p class="muted">{{ S.notes_sub }}</p>
+{% if S.notes_sub %}<p class="muted">{{ S.notes_sub }}</p>{% endif %}
 
 {% if not stations %}
 <p class="card">{{ S.no_notes | safe }}</p>

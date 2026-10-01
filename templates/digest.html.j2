@@ -115,8 +115,6 @@
   {% for st in stations %}{% set k = st.category or S.unplaced %}{% set _ = cats.update({k: cats.get(k, 0) + 1}) %}{% endfor %}
   {% set items = [] %}
   {% for k, n in cats | dictsort %}{% set _ = items.append({"name": k, "n": n, "color": none}) %}{% endfor %}
-  {{ shell.cats(S, items, stations|length) }}
-  <hr>
   <p class="grp">{{ S.side_filters }}</p>
   <div class="filters" id="filters">
     <button type="button" data-f="todo" class="on">{{ S.d_todo }}</button>
@@ -125,17 +123,20 @@
     <span class="sp"></span>
   </div>
   <hr>
+  {{ shell.cats(S, items, stations|length) }}
+  <hr>
   <button type="button" class="tool" id="export" title="{{ S.d_export_hint }}">{{ S.d_export }}</button>
   <button type="button" class="tool" id="export-anki">{{ S.d_export_anki }}</button>
   <button type="button" class="tool" id="reset">{{ S.d_reset }}</button>
   {% endif %}
 </nav>
 <main>
-<p class="muted">{{ S.digest_sub }}</p>
+{% if S.digest_sub %}<p class="muted">{{ S.digest_sub }}</p>{% endif %}
 
 {% if not stations %}
 <p class="card">{{ S.d_no_stations | safe }}</p>
 {% else %}
+{{ search.hint(S, stations|length) }}
 <div class="card today" id="today">
   <span class="big">{{ S.d_today }}</span>
   <span id="t-cards"></span><span id="t-reh"></span><span id="t-back" class="muted"></span>
@@ -147,12 +148,11 @@
   <p>{{ S.d_cc_body }}</p>
   <p class="steps">{{ S.d_cc_steps }}</p>
   <div class="row">
+    <button type="button" class="tool" id="export-2" title="{{ S.d_export_hint }}">{{ S.d_export }}</button>
     <button type="button" class="cp" data-cp="{{ cmd }} today" title="{{ S.d_cc_hint }}">{{ S.d_cc_today }}</button>
     <button type="button" class="cp" data-cp="{{ cmd }} do due" title="{{ S.d_cc_hint }}">{{ S.d_cc_due }}</button>
   </div>
 </section>
-
-{{ search.hint(S, stations|length) }}
 
 {% for s in stations %}
 <section class="st" id="{{ s.id }}" data-id="{{ s.id }}" data-title="{{ s.title }}" data-channel="{{ s.channel or '' }}"
@@ -354,7 +354,13 @@
     document.getElementById("start-recall").disabled = n.R === 0;
     refilter();
   };
-  function extra_ok(sec) { return [...sec.querySelectorAll(".it")].some((n) => !n.hidden); }
+  /* #11 的坑：paint() 會把「還沒按讀完了」那些站的每一筆都 hidden（設計上不計入今天），
+     如果 extra_ok 照字面回 false，整站就會被 refilter 藏掉——53 站只剩 2 站，搜尋看起來全壞。
+     未讀的站要留在列表裡（收起來、可以按 📖 讀完了），只有「讀過而且這次篩選沒命中」才隱藏。 */
+  function extra_ok(sec) {
+    if (!isRead(sec)) return true;
+    return [...sec.querySelectorAll(".it")].some((n) => !n.hidden);
+  }
 {{ search.js(".st", none) }}
   document.querySelectorAll(".st .cat").forEach((el) => el.addEventListener("click", () => addChip("category", el.dataset.cat)));
   applyAll();
@@ -426,18 +432,23 @@
     local[readKey(sec)] = isRead(sec) ? {} : { read: nowIso() };
     LS.set(LS_KEY, JSON.stringify(local)); applyAll();
   }));
-  document.getElementById("export")?.addEventListener("click", () => {
+  /* 匯出進度：側邊欄與「到 Claude Code 練習」卡片各有一顆（步驟①就在那裡，不該叫人去別處找） */
+  const exportState = () => {
     const out = {}; items.forEach((el) => { const st = stateOf(el); if (Object.keys(st).length) out[el.dataset.key] = st; });
     document.querySelectorAll(".st").forEach((sec) => { const r = readOf(sec); if (r) out[readKey(sec)] = { read: r }; });
     download("digest.state.json", JSON.stringify(out, null, 2), "application/json");
-  });
+  };
+  document.querySelectorAll("#export, #export-2").forEach((b) => b.addEventListener("click", exportState));
   document.getElementById("export-anki")?.addEventListener("click", () => {
     const esc = (s) => s.replace(/\t/g, " ").replace(/\n/g, "<br>");
     const rows = items.filter((el) => el.dataset.kind === "R").map((el) =>
       [esc(el.querySelector(".q").textContent), esc(el.querySelector(".a").textContent), el.closest(".st").dataset.title.replace(/\s+/g, "_")].join("\t"));
     download("digest.anki.tsv", rows.join("\n") + "\n", "text/tab-separated-values");
   });
-  document.getElementById("reset")?.addEventListener("click", () => { local = {}; LS.del(LS_KEY); applyAll(); });
+  document.getElementById("reset")?.addEventListener("click", () => {
+    local = {}; LS.del(LS_KEY);
+    location.reload();   // applyAll() 不會清掉已經打進 textarea 的字，整頁重載才乾淨
+  });
 
   if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: "start" });
 {{ shell.cats_js() }}

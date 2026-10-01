@@ -94,9 +94,9 @@ def test_listen_render(tmp_path):
     assert "cdn.jsdelivr" not in html            # 離線也要能開
     # 有 notes.json 就連過去：那頁遲早會產出（/learn-notes 寫完 json 就會跑 notes.py）。
     # 判準是「資料在不在」而不是「html 這一刻產了沒」，否則先產的頁會永久少一個頁籤。
-    assert "notes.html#zzzzzzzzzzz" in html
+    assert "notes.html?only=zzzzzzzzzzz#zzzzzzzzzzz" in html
     notes.render(ws)
-    assert "notes.html#zzzzzzzzzzz" in listen.render(ws).read_text()
+    assert "notes.html?only=zzzzzzzzzzz#zzzzzzzzzzz" in listen.render(ws).read_text()
 
 
 def test_topnav_does_not_depend_on_render_order(tmp_path):
@@ -316,3 +316,16 @@ def test_search_macro_supports_only_param():
     assert 'ch.kind === "vid" ? c.id === ch.value' in js      # 精確比對，不是 includes
     assert "vid: UI.video" in js
     assert 'acItems.push({ kind: "vid"' not in js             # autocomplete 不提供
+
+
+def test_search_clears_url_state_on_change():
+    """?only= / #hash 只是進頁面時的初始狀態。使用者一改條件就把網址洗乾淨，
+    否則重新整理會把 ?only= 又套回去、網址也不再代表畫面上的東西。"""
+    js = (Path(__file__).parent.parent / "templates/_search.html.j2").read_text(encoding="utf-8")
+    assert "const dropUrlState" in js
+    assert 'history.replaceState(null, "", location.pathname)' in js
+    # 四個會改動條件的地方都要清：加條件、移掉單一 chip、Backspace、清掉全部
+    assert js.count("dropUrlState();") == 4
+    # 初始 seeding 不能清（不然 ?only= 進來就自己把自己洗掉）
+    assert "if (!seeded || (!location.search && !location.hash)) return;" in js
+    assert js.index("refilter();\n  seeded = true;") > js.index("const dropUrlState")

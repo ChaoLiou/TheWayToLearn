@@ -90,7 +90,7 @@
   {% endif %}
 </nav>
 <main>
-<p class="muted">{{ S.listen_sub }}</p>
+{% if S.listen_sub %}<p class="muted">{{ S.listen_sub }}</p>{% endif %}
 
 {% if not episodes %}
 <p class="card">{{ S.no_episodes | safe }}</p>
@@ -119,7 +119,8 @@
     <div class="acts">
       <button type="button" class="play" data-act="play">{{ S.play }}</button>
       {% if e.has_plan %}<a href="{{ e.plan }}">{{ S.ep_plan }}</a>{% endif %}
-      {% if e.has_notes and has_notes %}<a href="notes.html#{{ e.id }}">{{ S.ep_notes }}</a>{% endif %}
+      {% if e.has_notes and has_notes %}<a href="notes.html?only={{ e.id }}#{{ e.id }}">{{ S.ep_notes }}</a>{% endif %}
+      {% if e.has_digest and has_digest %}<a href="digest.html?only={{ e.id }}#{{ e.id }}">{{ S.ep_digest }}</a>{% endif %}
       {% if e.url %}<a href="{{ e.url }}" target="_blank" rel="noopener">{{ "🔗 " ~ (S.blog_link if e.kind == "blog" else S.watch_yt) }}</a>{% endif %}
     </div>
   </div>

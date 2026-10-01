@@ -132,14 +132,14 @@
 <nav class="side">
   {{ shell.nav(S, "atlas", true, has_listen, has_notes, has_digest) }}
   <hr>
+  <p class="grp">{{ S.side_filters }}</p>
+  <button type="button" class="err-f" data-err-filter="err">{{ ic.danger() }}<span class="lab">{{ S.only_err }}</span></button>
+  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">{{ S.only_clean }}</span></button>
+  <hr>
   {% set cats = [] %}
   {% for r in regions %}{% set _ = cats.append({"name": r.name, "n": r.members|length, "color": r.color, "tip": r.blurb}) %}{% endfor %}
   {% if unplaced %}{% set _ = cats.append({"name": S.unplaced, "n": unplaced|length, "color": none, "tip": S.unplaced_desc}) %}{% endif %}
   {{ shell.cats(S, cats, waypoints|length) }}
-  <hr>
-  <p class="grp">{{ S.side_filters }}</p>
-  <button type="button" class="err-f" data-err-filter="err">{{ ic.danger() }}<span class="lab">{{ S.only_err }}</span></button>
-  <button type="button" class="err-f" data-err-filter="clean">✓<span class="lab">{{ S.only_clean }}</span></button>
 </nav>
 <main>
 {{ search.hint(S, waypoints|length) }}

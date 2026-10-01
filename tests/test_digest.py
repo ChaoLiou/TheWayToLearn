@@ -283,3 +283,28 @@ def test_brain_export_merges_concepts_across_stations(tmp_path):
     assert "- [ ] 作者用 3 個案例證明 B" not in st and "案例 1/2/3 都在 10 秒內收斂 → 證明 [[X]]" in st
     assert "plan.html" in st and "[[X]]" in (ws / "brain" / "README.md").read_text()
     assert brain.safe('a/b:c*"d') == "a-b-c-d"
+
+
+def test_unread_stations_stay_in_the_list(tmp_path):
+    """#11 的回歸：paint() 會把未讀站的每一筆設 hidden（設計上不計入「今天」），
+    但 extra_ok 不能因此把整站藏掉——否則 53 站只剩 2 站，搜尋看起來全壞。"""
+    ws, _ = _ws(tmp_path)
+    html = digest.render(ws).read_text(encoding="utf-8")
+    assert "if (!isRead(sec)) return true;" in html
+    # 「清掉本機狀態」要整頁重載，不是只重畫
+    assert "location.reload()" in html
+    # 匯出進度同時出現在側邊欄與 Claude Code 卡片裡（說明的步驟①就在那裡）
+    assert 'id="export"' in html and 'id="export-2"' in html
+    assert '#export, #export-2' in html
+
+
+def test_digest_layout_tweaks(tmp_path):
+    """搜尋統計移到最上面；空的說明文不要印出空 <p>；複製鈕名稱看得出是複製 prompt。"""
+    ws, _ = _ws(tmp_path)
+    html = digest.render(ws).read_text(encoding="utf-8")
+    assert '<p class="muted"></p>' not in html
+    assert html.index('class="shint"') < html.index('class="card cc"')
+    assert "📋" in html
+    # 側邊欄：篩選在主題區之前
+    side = html[html.index('<nav class="side">'):html.index("</nav>")]
+    assert side.index("篩選") < side.index('data-cat')

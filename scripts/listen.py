@@ -109,6 +109,7 @@ def load_episodes(ws: Path) -> list[dict]:
             "dub": f"{quote(d.name)}/{quote(dub['file'])}" if dub else None,
             "cap": f"{quote(d.name)}/captions.js",
             "has_notes": (d / "notes.json").exists(), "has_plan": (d / "plan.html").exists(),
+            "has_digest": (d / "digest.json").exists(),
             "thumb": thumb(d),
             "yt_thumb": (meta.get("thumbnail") or None) if is_blog(meta)
             else f"https://i.ytimg.com/vi/{meta['video_id']}/mqdefault.jpg",
