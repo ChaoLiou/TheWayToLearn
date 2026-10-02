@@ -211,4 +211,4 @@ Any stage can be re-run on its own, no starting over: bad section breaks, `/pace
 
 ## Want to know how it works underneath
 
-→ [How it works (technical, in Chinese)](docs/how-it-works.zh-TW.md): the full pipeline, who does what at each stage, the engineering trade-offs, how to run each stage on its own, and how to change the rules.
+→ [How it works (technical)](docs/how-it-works.md): the full pipeline, who does what at each stage, the engineering trade-offs, how to run each stage on its own, and how to change the rules.

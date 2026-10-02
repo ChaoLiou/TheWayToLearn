@@ -1,10 +1,10 @@
 # 底層怎麼做的（技術版）
 
+**繁體中文** · [English](how-it-works.md)
+
 > 這份是給想知道內部怎麼跑的人。只想用的話看 [README](README.zh-TW.md)（[English](../README.md)）就夠了。
 
-**一條把長影片變成可導覽文字成品的管線（pipeline）。** 給一支 YouTube 連結，它取源、切段、抽幀、逐段分析，產出線性推進的解析頁（plan.html），再把每支影片連成一份可搜尋的影片解析列表（atlas.html）；要用聽的，它會把 TTS 講解與作者原聲合成一軌。由 Claude Code 驅動：**skill 只負責判斷，Python script 負責抓取、截圖、合軌、驗證與排版。**
-
-> **English**: a pipeline that turns long-form video into navigable text artifacts. It pulls the source and timestamped captions (`yt-dlp`), has an agent segment the video and pick the frames worth grabbing, extracts them (`ffmpeg`), analyses it segment by segment, renders an HTML explainer page, muxes a narrated audio version (edge-tts + original audio), and links every video into a searchable index. Skills make the judgment calls; Python scripts do the fetching, frame extraction, muxing, validation and rendering. Every stage is anchored to a timecode.
+**一條把長影片變成可導覽文字成品的管線（pipeline）。** 給一支 YouTube 連結，它取源、切段、抽幀、逐段分析，產出線性推進的解析頁（plan.html），再把每支影片連成一份可搜尋的影片解析列表（atlas.html）；要用聽的，它會把 TTS 講解與作者原聲合成一軌。由 agent 驅動：**skill 只負責判斷，Python script 負責抓取、截圖、合軌、驗證與排版。**
 
 ---
 
@@ -49,9 +49,9 @@ flowchart LR
 
 **4. agent 的產出一律過兩道驗證。** `schemas/*.json` 擋結構，`validate.py` 擋語意硬規則（例如「不准前向參照後面的段落」、一站的概念節點上限）。沒過不進下一階段。
 
-**5. 規則可覆寫，不必改程式。** `rules/`、`config/`、`templates/` 可以複製到專案裡的 `./learn.rules/` 再改；`uv run scripts/paths.py` 會印出每個規則實際讀哪一份。plugin 更新不會蓋掉你的客製。
+**5. 規則可覆寫，不必改程式。** `rules/`、`config/`、`templates/` 可以複製到專案裡的 `./learn.rules/` 再改；`pacer paths` 會印出每個規則實際讀哪一份。更新不會蓋掉你的客製。
 
-**6. 每個階段都是獨立 CLI。** `uv run scripts/<stage>.py` 可以單獨跑、單獨重跑；`prune.py` 回收「重跑就會再有」的中間檔。
+**6. 每個階段都是獨立 CLI。** `pacer <stage>` 可以單獨跑、單獨重跑；`pacer prune` 回收「重跑就會再有」的中間檔。
 
 ---
 
@@ -63,7 +63,7 @@ workspace/<影片標題>/lesson.mp3   # 語音版（講解 × 原聲交錯），
 workspace/atlas.html              # 影片解析列表：各站、相鄰站（route）、主題區，可搜尋
 workspace/listen.html             # podcast 頁：置底播放器、karaoke 講稿、記住聽到哪裡
 workspace/notes.html              # 成長筆記：每條連回 plan.html 的那一段
-workspace/brain/                  # Obsidian vault（`uv run scripts/brain.py`）：一站一檔、一概念一檔、[[wikilink]] 互連
+workspace/brain/                  # Obsidian vault（`pacer brain`）：一站一檔、一概念一檔、[[wikilink]] 互連
 dist/                             # publish 後的靜態站
 ```
 
@@ -71,30 +71,40 @@ dist/                             # publish 後的靜態站
 
 ## 需求
 
-- [Claude Code](https://claude.com/claude-code)
+- 一個 coding agent：[Claude Code](https://claude.com/claude-code)，或任何讀 `SKILL.md` 的 agent（Cursor、Codex、Gemini CLI、OpenCode、Copilot…）
 - [uv](https://docs.astral.sh/uv/)（自動裝 Python 依賴，含 `yt-dlp`）
 - `ffmpeg`：`sudo apt install ffmpeg` / `brew install ffmpeg`
 - 語音版另需網路（edge-tts，免費免金鑰）
 
 ## 安裝
 
-**當 plugin 用（任何專案目錄都能跑）**
+**當 Claude Code plugin 用（任何專案目錄都能跑）**
 
 ```
-/plugin marketplace add <本 repo 的 GitHub 位址或本機路徑>
+/plugin marketplace add https://github.com/TheWayToLearn/PACER-Learn
 /plugin install pacer@thewaytolearn
 ```
 
 之後在任何目錄：`/pacer:learn https://youtu.be/...`。學習紀錄放在該目錄的 `./workspace/`（或設 `LEARN_WORKSPACE`）。
 
+**裝進其他 agent**
+
+```bash
+npx skills add TheWayToLearn/PACER-Learn                           # 14 份 SKILL.md
+uv tool install git+https://github.com/TheWayToLearn/PACER-Learn   # skill 裡呼叫的 `pacer` 指令
+```
+
+`npx skills add` 只把說明檔搬到那家 agent 放 skill 的位置，所以第二行才是把程式帶過去。裝完用 `pacer paths` 確認；`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths` 可以不安裝跑一次。
+
 **clone 下來用**
 
 ```
-git clone <this-repo> && cd PACER-Learn && uv sync
+git clone https://github.com/TheWayToLearn/PACER-Learn && cd PACER-Learn && uv sync
+uv tool install -e .     # 讓 `pacer …` 指到這份工作目錄
 claude
 ```
 
-然後 `/learn https://youtu.be/...`。想少一點權限提示：在 `.claude/settings.json` 的 `permissions.allow` 加 `"Bash(uv run *)"`。
+然後 `/learn https://youtu.be/...`。想少一點權限提示：在 `.claude/settings.json` 的 `permissions.allow` 加 `"Bash(pacer *)"`。
 
 ## 指令
 
@@ -108,12 +118,14 @@ claude
 | `/learn-atlas` `/learn-notes` `/learn-digest` `/learn-canvas` | 影片解析列表、筆記、PACER 練習、tldraw 畫布 |
 | `/learn-publish` | 整理 `dist/` 並部署到 Cloudflare Pages |
 
+Claude Code 的 plugin 模式會在前面加 `/pacer:`。
+
 ## 開發
 
 ```
-uv run pytest -q          # 129 passed
-uv run scripts/paths.py   # 印出每個規則／範本實際讀哪一份
-uv run scripts/prune.py   # 列出可回收的中間檔（加 --delete 才真的刪）
+uv run pytest -q    # 183 passed
+pacer paths         # 印出每個規則／範本實際讀哪一份
+pacer prune         # 列出可回收的中間檔（加 --delete 才真的刪）
 ```
 
-14 個 skill 在 `skills/`，對應的執行腳本在 `scripts/`，每支都能單獨當 CLI 跑；agent 產出的結構定義在 `schemas/`，語意硬規則在 `rules/`。
+14 個 skill 在 `skills/`，對應的執行腳本在 `scripts/`，`pacer <名稱>` 可以單獨跑任何一支（dispatcher 是 `scripts/cli.py`，`tests/test_cli.py` 會在 script 與 SKILL.md 走鐘時擋下來）；agent 產出的結構定義在 `schemas/`，語意硬規則在 `rules/`。
