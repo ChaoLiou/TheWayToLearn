@@ -2,9 +2,9 @@
 
 **English** · [繁體中文](docs/README.zh-TW.md)
 
-**This is a [Claude Code](https://claude.com/claude-code) plugin.** Once installed, hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
+**This is a set of agent skills.** It installs as a [Claude Code](https://claude.com/claude-code) plugin, or into any other coding agent — Cursor, Codex, Gemini CLI, OpenCode, Copilot and 75+ more — with one `npx skills add`. Hand it the link to a YouTube video (or a blog post) and it turns the content into something you can actually read, review, and listen to.
 
-You use it by typing one line in Claude Code (`/pacer:learn <url>`). No programming required. Never used Claude Code before? [Getting started](#getting-started) below walks you through it from the install.
+You use it by typing one line (`/pacer:learn <url>` in Claude Code, `/learn <url>` elsewhere — or just ask in plain words). No programming required. Never used an agent like this before? [Getting started](#getting-started) below walks you through it from the install.
 
 Why you'd want it: you watch an hour-long video called "Why Sleep Matters", nodding along the whole way — and the next day all that's left is "uh, sleep is important."
 
@@ -77,7 +77,7 @@ A summary gets closed and forgotten. Here, each video yields 3–8 one-line take
 
 ## Getting started
 
-You need a computer (Mac, Windows or Linux) and Claude Code. About 10 minutes.
+You need a computer (Mac, Windows or Linux) and a coding agent. This walkthrough uses Claude Code; if you use something else, step 3 is the only one that changes. About 10 minutes.
 
 ### 1. Install Claude Code
 
@@ -118,7 +118,7 @@ Open `claude` and type these two lines:
 /plugin install pacer@thewaytolearn
 ```
 
-### 3b. Not using Claude Code?
+### 3b. Using another agent instead?
 
 The skills are plain `SKILL.md` files, so any other agent can install them too:
 
@@ -163,7 +163,7 @@ Why bother: each folder gets its own index of videos and its own practice list, 
 
 ## Things you'll actually type
 
-Say it to Claude Code in whatever language you prefer:
+Say it to your agent in whatever language you prefer. The `/pacer:` prefix is the Claude Code plugin's; installed via `npx skills add` the same skills are `/learn`, `/learn-digest` and so on:
 
 | What you want | Type this |
 | --- | --- |
@@ -186,7 +186,7 @@ It asks once before each run, or you can pass them on the command:
 - **Screenshots** `--shots auto|none|many` — by default it only grabs frames you need to *see* to follow along. For a talking-head video, `none` is faster.
 - **Whether the AI looks at each screenshot** `--vision true|false` — looking helps it understand, but costs more quota. Turn it off to save.
 - **Output language** — by default it writes in whatever language you gave the command in, and the web pages follow suit. To pin it down, say "always use English", or run
-  `uv run scripts/options.py learn --save output_lang=en` yourself (stored in that folder's `settings.json`, so `sleep/` can stay Chinese while `cooking/` is English). English and Traditional Chinese interfaces ship today.
+  `pacer options learn --save output_lang=en` yourself (stored in that folder's `settings.json`, so `sleep/` can stay Chinese while `cooking/` is English). English and Traditional Chinese interfaces ship today.
 
 ---
 
@@ -205,7 +205,7 @@ Under `workspace/` in the folder you ran the command from, one folder per video,
 No. `/pacer:learn-publish` packages everything for deployment to Cloudflare Pages, after which you just read and listen in your phone's browser.
 
 **What if I don't like what it produced?**
-Any stage can be re-run on its own, no starting over: bad section breaks, `/pacer:learn-segment`; weak explanations, `/pacer:learn-analyze`. To change how it writes, the rules in `rules/` are written in plain prose — edit the text and the behavior changes. No code involved.
+Any stage can be re-run on its own, no starting over: bad section breaks, `/pacer:learn-segment`; weak explanations, `/pacer:learn-analyze`. To change how it writes, the rules in `rules/` are written in plain prose — edit the text and the behavior changes (`pacer paths` prints where they live, and a `learn.rules/` folder next to your workspace overrides them). No code involved.
 
 ---
 

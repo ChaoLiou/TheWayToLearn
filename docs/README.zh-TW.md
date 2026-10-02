@@ -2,9 +2,9 @@
 
 [English](../README.md) · **繁體中文**
 
-**這是一個 [Claude Code](https://claude.com/claude-code) plugin。** 安裝上去之後，你只要使用此 skill 接著一支 YouTube 影片（或一篇部落格文章）的網址，它幫你把內容整理成讀得懂、能複習、也能用聽的學習資源。
+**這是一組 agent skill。** 可以當 [Claude Code](https://claude.com/claude-code) plugin 安裝，也可以用一行 `npx skills add` 裝進其他 agent（Cursor、Codex、Gemini CLI、OpenCode、Copilot…共 75 家以上）。裝好之後給它一支 YouTube 影片（或一篇部落格文章）的網址，它幫你把內容整理成讀得懂、能複習、也能用聽的學習資源。
 
-用的方式就是在 Claude Code 裡打一行字（`/pacer:learn <網址>`），不用寫程式。沒用過 Claude Code 也沒關係，下面〈[開始用](#開始用)〉從安裝它開始帶你完成。
+用的方式就是打一行字（Claude Code 裡是 `/pacer:learn <網址>`，其他 agent 是 `/learn <網址>`，講白話也可以），不用寫程式。沒用過這類工具也沒關係，下面〈[開始用](#開始用)〉從安裝開始帶你完成。
 
 為什麼需要它：看完一支一小時的教學影片標題是「為何睡眠很重要」，看的當下頻頻點頭，隔天回想卻只剩一句「嗯，睡眠很重要」。
 
@@ -82,7 +82,7 @@ PACER Learn 的工作就是把那一小時變成你留得住的東西。
 
 ## 開始用
 
-需要一台電腦（Mac / Windows / Linux 都行）和 Claude Code。大約 10 分鐘。
+需要一台電腦（Mac / Windows / Linux 都行）和一個 coding agent。下面以 Claude Code 示範；用別家的話只有第 3 步不一樣。大約 10 分鐘。
 
 ### 1. 裝 Claude Code
 
@@ -123,7 +123,7 @@ winget install Gyan.FFmpeg
 /plugin install pacer@thewaytolearn
 ```
 
-### 3b. 不是用 Claude Code？
+### 3b. 想用其他 agent？
 
 skill 就是一般的 `SKILL.md`，其他 agent 也裝得起來：
 
@@ -168,7 +168,7 @@ uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths
 
 ## 常用的幾句話
 
-直接打給 Claude Code，中文就可以：
+直接打給你的 agent，中文就可以。`/pacer:` 這個前綴是 Claude Code plugin 的；用 `npx skills add` 裝的話同一批 skill 就是 `/learn`、`/learn-digest` 這樣叫：
 
 
 | 你想做的        | 打這句                          |
@@ -193,7 +193,7 @@ uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths
 - **要不要截圖** `--shots auto|none|many`：預設只截「看了才懂」的畫面。純講話的影片設 `none` 比較快。
 - **要不要讓 AI 逐張看截圖** `--vision true|false`：看圖比較懂，但比較花額度。想省就關掉。
 - **輸出語言**：預設跟著你下指令的語言走（中文問就寫中文），網頁介面也會跟著換。想固定下來就說「以後都用英文」，或自己跑一次
-  `uv run scripts/options.py learn --save output_lang=en`（記進該資料夾的 `settings.json`，所以「睡眠/ 用中文、cooking/ 用英文」可以各自記）。目前介面有繁體中文與英文兩套。
+  `pacer options learn --save output_lang=en`（記進該資料夾的 `settings.json`，所以「睡眠/ 用中文、cooking/ 用英文」可以各自記）。目前介面有繁體中文與英文兩套。
 
 ---
 
@@ -212,7 +212,7 @@ uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths
 `/pacer:learn-publish` 會把成果整理好，可以部署到 Cloudflare Pages，之後手機瀏覽器直接看、直接聽。
 
 **出來的內容不滿意怎麼辦？**
-每個階段都能單獨重跑，不用從頭來：覺得段落切得爛就 `/pacer:learn-segment`，覺得解說寫得爛就 `/pacer:learn-analyze`。想改它的寫作風格，`rules/` 底下都是白話寫的規則檔，改文字就會改行為，不用碰程式。
+每個階段都能單獨重跑，不用從頭來：覺得段落切得爛就 `/pacer:learn-segment`，覺得解說寫得爛就 `/pacer:learn-analyze`。想改它的寫作風格，`rules/` 底下都是白話寫的規則檔，改文字就會改行為（`pacer paths` 印出它們實際在哪，workspace 旁邊放一個 `learn.rules/` 就能覆寫），不用碰程式。
 
 ---
 
