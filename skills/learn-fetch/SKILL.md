@@ -1,6 +1,6 @@
 ---
 name: learn-fetch
-description: [步驟 2/11·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片；部落格網址則抓正文段落當 transcript。重抓資源、換字幕語言時用。
+description: "[步驟 2/11·抓字幕] 抓 YouTube transcript（含時間戳）與 metadata 到 workspace/<影片標題>/，不下載影片；部落格網址則抓正文段落當 transcript。重抓資源、換字幕語言時用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

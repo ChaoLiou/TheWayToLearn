@@ -1,6 +1,6 @@
 ---
 name: learn-estimate
-description: [步驟 1/11·估成本] 只給 YouTube 連結或部落格網址就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
+description: "[步驟 1/11·估成本] 只給 YouTube 連結或部落格網址就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

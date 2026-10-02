@@ -1,6 +1,6 @@
 ---
 name: learn-render
-description: [步驟 8/11·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產文字解析、不重抓資源時用。
+description: "[步驟 8/11·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產文字解析、不重抓資源時用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

@@ -1,6 +1,6 @@
 ---
 name: learn-publish
-description: [工具] 把 workspace 裡的 atlas.html（全部影片，當首頁）、listen.html、notes.html、digest.html、各站 plan.html、截圖與語音解析整理成 dist/，可直接部署到 Cloudflare Pages，讓你在手機或其他電腦隨時看。
+description: "[工具] 把 workspace 裡的 atlas.html（全部影片，當首頁）、listen.html、notes.html、digest.html、各站 plan.html、截圖與語音解析整理成 dist/，可直接部署到 Cloudflare Pages，讓你在手機或其他電腦隨時看。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

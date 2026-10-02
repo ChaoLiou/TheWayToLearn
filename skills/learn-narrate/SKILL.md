@@ -1,6 +1,6 @@
 ---
 name: learn-narrate
-description: [步驟 10/11·產出語音解析] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
+description: "[步驟 10/11·產出語音解析] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

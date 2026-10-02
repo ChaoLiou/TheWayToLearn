@@ -1,6 +1,6 @@
 ---
 name: learn-analyze
-description: [步驟 5/11·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
+description: "[步驟 5/11·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

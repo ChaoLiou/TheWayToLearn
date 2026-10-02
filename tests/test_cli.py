@@ -64,3 +64,20 @@ def test_skill_commands_exist(f):
 def test_skill_states_how_to_install(f):
     """每份都要能單獨使用，所以安裝說明不能只寫在 /learn 裡。"""
     assert "uv tool install" in f.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("f", SKILLS, ids=lambda f: f.parent.name)
+def test_skill_frontmatter_is_valid_yaml(f):
+    """frontmatter 要能被標準 YAML parser 讀。
+
+    Claude Code 的 parser 很寬鬆，`description: [步驟 8/11…` 這種開頭照樣吃；但 YAML 會把開頭的
+    `[` 當 flow sequence，標準 parser 直接報錯 —— `npx skills add` 就是這樣默默漏掉 9 個 skill
+    （只裝了 5 個）。所以描述以 `[` 或 `{` 開頭時一定要加引號。
+    """
+    import yaml
+
+    text = f.read_text(encoding="utf-8")
+    assert text.startswith("---\n"), f
+    meta = yaml.safe_load(text.split("---\n")[1])
+    assert meta["name"] == f.parent.name
+    assert isinstance(meta["description"], str) and meta["description"].strip()

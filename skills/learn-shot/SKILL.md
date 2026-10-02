@@ -1,6 +1,6 @@
 ---
 name: learn-shot
-description: [步驟 4/11·截圖] 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 workspace/<影片標題>/frames/；部落格站則下載挑到的文中圖片。改了時間點後重截時用。
+description: "[步驟 4/11·截圖] 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 workspace/<影片標題>/frames/；部落格站則下載挑到的文中圖片。改了時間點後重截時用。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

@@ -1,6 +1,6 @@
 ---
 name: learn-atlas
-description: [步驟 9/11·連結各站] 影片解析（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字解析的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。
+description: "[步驟 9/11·連結各站] 影片解析（atlas.html）：把 workspace 下所有影片（waypoint）用 route 連起來、分成主題區（region），產出 workspace/atlas.html——所有文字解析的列表，可搜尋、可點進各站、看相鄰站。有 ≥ 2 支影片時，每新增一支就跑一次。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。

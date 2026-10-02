@@ -1,6 +1,6 @@
 ---
 name: learn-segment
-description: [步驟 3/11·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。
+description: "[步驟 3/11·切段] 讀 transcript.json，由 agent 切成意義段落、挑截圖時間點、決定 vision 模式，寫出 segments.json。覺得切得不好時重切。"
 ---
 
 > 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
