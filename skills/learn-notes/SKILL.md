@@ -3,6 +3,10 @@ name: learn-notes
 description: "[步驟 7/11·筆記] 把某一站（或全部站）留給我的觀念／技巧／體悟擷取成 notes.json，彙整成 workspace/notes.html，每條連回 plan.html 的那一段。使用者說「做筆記」「這支我學到什麼」「整理筆記」時使用。"
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-notes　—　步驟 7/11 筆記（`/learn --notes false` 可跳過；也可以隨時單獨跑）
 
 用法：`/learn-notes <video_id|url|all> [--force]`
@@ -29,15 +33,15 @@ description: "[步驟 7/11·筆記] 把某一站（或全部站）留給我的�
   ```
 - 驗證：
   ```
-  uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py notes "workspace/<影片標題>/notes.json"
+  pacer validate notes "workspace/<影片標題>/notes.json"
   ```
   沒過就改到過為止（常見：`seg_id` 不存在、`text` 超過 80 字、超過 12 條）。
 
 ## 3. 彙整成網頁（script）
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/notes.py
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/listen.py     # 讓 listen.html 的「📝 筆記」連結出現
+pacer notes
+pacer listen     # 讓 listen.html 的「📝 筆記」連結出現
 ```
 script 執行完用一行說這站擷取了幾條、各是哪種 kind，並給 `workspace/notes.html` 的絕對路徑。
 

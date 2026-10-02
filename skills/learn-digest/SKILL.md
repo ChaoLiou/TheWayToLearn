@@ -3,6 +3,10 @@ name: learn-digest
 description: "[步驟 6/11·練習] PACER：把某一站每一筆資訊標成 P/A/C/E/R 並寫下該做的消化動作（digest.json → workspace/digest.html）；或用對話帶使用者做練習、批判類比、畫地圖、演練證據、回想參考，做完寫進 digest.state.json。使用者說「做練習」「幫我消化這支」「我要練習／演練／回想」「今天該做什麼」時使用。"
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-digest　—　練習（第 6 步；`/learn --digest false` 可跳過。`do` / `today` 模式是工具，隨時可用）
 
 ```
@@ -25,12 +29,12 @@ description: "[步驟 6/11·練習] PACER：把某一站每一筆資訊標成 P/
 3. 寫 `workspace/<影片標題>/digest.json`（`schemas/digest.schema.json`）。分類單位是**一筆資訊**，一段 2–5 筆、一站 10–40 筆。每類必填見 rules；範例：`tests/fixtures/ws/測試影片 C/digest.json`。
 4. 驗證，沒過就改到過：
    ```
-   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py digest "workspace/<影片標題>/digest.json"
+   pacer validate digest "workspace/<影片標題>/digest.json"
    ```
    常見錯：`relations[].to` 指到不存在的 concept（先確認同站有那筆 C，或它是 analysis 的 term）、E 的 `supports` 指到 term 而不是 C、同一 concept 開了兩筆。
 5. 產頁：
    ```
-   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/digest.py
+   pacer digest
    ```
    該站**已經有 `plan.html`** 時再重 render 一次讓每段長出 PACER 標籤（`scripts/render.py <video_id>`）；還沒 render 過就不用，第 7 步會做。
 6. 回報：`digest.py` 印的積欠行與 `[6/10] ✔ …` 兩行原樣照抄，再一行說五類各幾筆、`digest.html` 絕對路徑。最後一句固定是**現在就能做的一件事**（通常是第一筆 P 的 `practice_task`）。
@@ -38,7 +42,7 @@ description: "[步驟 6/11·練習] PACER：把某一站每一筆資訊標成 P/
 ## 模式 read：標「讀完了」
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/digest.py --mark <vid> read      # 標回未讀：unread
+pacer digest --mark <vid> read      # 標回未讀：unread
 ```
 回報 `digest.py` 印的積欠行（這站的筆現在算進去了），再一句「現在就能做的一件事」= 這站第一筆 P 的 `practice_task`。
 
@@ -56,7 +60,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/d
 
 1. 取未做的筆（只會列**已標讀完**的站；使用者要做的站還沒標，先問「這支讀完了嗎？」，是就先 `--mark <vid> read`）：
    ```
-   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/digest.py --pending [<video_id>|due]
+   pacer digest --pending [<video_id>|due]
    ```
    輸出 JSON，含答案卷欄位（`relations` / `critique_key` / `a`）——那是給你對照用的，**不要先貼給使用者**。有指定類別就只挑那類；沒指定依 P → E → A → C → R 順序（P 最怕拖，R 網頁自己翻就好）。一次只做一筆，做完問要不要下一筆；使用者說停就停。
 2. 每類怎麼帶：
@@ -69,7 +73,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/d
    | R | 貼 `q`，等使用者回答再貼 `a` | 問「忘了／難／會」 | `--mark <key> grade 0|3|5` |
 3. 記錄用：
    ```
-   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/digest.py --mark <vid>:<id> <動作> [值]
+   pacer digest --mark <vid>:<id> <動作> [值]
    ```
    它會寫 `workspace/digest.state.json`（有檔案鎖）並重產 `digest.html`，網頁與 CLI 看同一份；使用者在網頁上做的要按「匯出進度」放到 `workspace/` 才會被這裡看到。
 4. 一輪結束回報：做了哪幾筆、`digest.py` 印的積欠行原樣照抄。`--mark` 每次都會順便重匯 `workspace/brain/`（Obsidian vault），不用另外跑。
@@ -81,7 +85,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/d
 ## `today`
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/digest.py --backlog
+pacer digest --backlog
 ```
 原樣印出，再加一句：積欠 > 0 就建議 `/learn-digest do due` 先消化；為 0 才建議吸收新的（`/learn <url>`）。
 

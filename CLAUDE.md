@@ -2,11 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 兩種使用模式
+## 三種使用模式
 
-同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（plugin 名 `pacer`，marketplace 名 `thewaytolearn`；指令前綴 `/pacer:`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
+同一份 repo 可以 (1) clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink）、(2) 當 Claude Code plugin 安裝（plugin 名 `pacer`，marketplace 名 `thewaytolearn`；指令前綴 `/pacer:`）、(3) 裝進任何其他 agent（`npx skills add TheWayToLearn/PACER-Learn`，它只搬 SKILL.md 到該 agent 該放的位置，支援 75+ 家與共用的 `~/.agents/skills/`）。
+所以 SKILL.md 裡所有指令都是 **`pacer <子指令>`**（`scripts/cli.py` 的 dispatcher），不依賴 cwd、也不依賴只有 Claude Code 才有的 `${CLAUDE_PLUGIN_ROOT}`：
+- 裝一次：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 的 repo 裡 `uv tool install -e .`）；單次用 `uvx --from git+…/PACER-Learn pacer <子指令>`
+- wheel 的「程式根目錄」是 `pacer_home/`——repo 裡那是一組指回 `scripts` / `rules` / `config` / `templates` / `schemas` 的 symlink（跟 `.claude/skills` 同一個手法），所以 `common.ROOT`（`__file__` 往上兩層）裝起來之後照樣找得到規則檔，不必改目錄結構、editable 安裝也還能用
+- 新增 script 要同步加進 `cli.COMMANDS`，SKILL.md 不可以再出現 `${CLAUDE_PLUGIN_ROOT}`，兩件都由 `tests/test_cli.py` 擋
 - workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
-- 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
+- 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`pacer paths` 印出實際生效路徑
 - 改 skill 就改 `skills/<name>/SKILL.md`
 
 ## 常用指令
@@ -235,14 +239,3 @@ binding 宣告在 repo 根的 `wrangler.toml`（`[[r2_buckets]] binding = "MEDIA
 - 每個階段的輸入/輸出落地成檔案（transcript JSON、segments JSON、截圖目錄），讓中間結果可重用、失敗可從中斷點重跑，不必重抓影片。
 - 每支影片獨立資料夾、獨立 `plan.html` 與 `_overview.json`（預設不合併）；使用者明確要求時才用 `render.py --combined` 合併多支。
 - skill 定義（給 agent 的指令）與程式碼分開放：skill 負責「何時、如何呼叫」，程式負責確定性的抓取/切段/截圖；LLM 判斷（分段語意、術語、說明）留在 analyze 階段。
-
-## 兩種使用模式
-
-同一份 repo 既可 clone 進來直接用（`.claude/skills` 是 `skills/` 的 symlink），也可當 Claude Code plugin 安裝（plugin 名 `pacer`，marketplace 名 `thewaytolearn`；指令前綴 `/pacer:`）。SKILL.md 裡所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`，兩種模式都能跑。
-- workspace：`$LEARN_WORKSPACE` > 目前目錄 `./workspace/`
-- 規則覆寫：`$LEARN_RULES` > 目前目錄 `./learn.rules/`（同名檔案覆蓋 `rules/`、`config/`、`templates/`），`scripts/paths.py` 印出實際生效路徑
-- 改 skill 就改 `skills/<name>/SKILL.md`
-
-## 常用指令
-
-（尚無。加入 build / test / lint 指令後在此補上，含「跑單一測試」的方式。）

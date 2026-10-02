@@ -3,10 +3,14 @@ name: learn-shot
 description: [步驟 4/11·截圖] 依 segments.json 的 shots 下載影片並用 ffmpeg 抽幀到 workspace/<影片標題>/frames/；部落格站則下載挑到的文中圖片。改了時間點後重截時用。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-shot　—　步驟 4/11 截圖
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/screenshot.py <id> [--force] [--keep-video]
+pacer screenshot <id> [--force] [--keep-video]
 ```
 
 - 需要 `ffmpeg`（`sudo apt install ffmpeg`）。
@@ -18,7 +22,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/s
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-shot [--set k=v ...]
+pacer options learn-shot [--set k=v ...]
 ```
 1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
 2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。

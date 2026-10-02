@@ -3,12 +3,16 @@ name: learn-estimate
 description: [步驟 1/11·估成本] 只給 YouTube 連結或部落格網址就估「下載、分析各階段時間、token、磁碟」，分階段列出並加總，不下載影片。/learn 的第一步，也可單獨用。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-estimate　—　步驟 1/11 估成本
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <url> [<url> ...] [--shots auto|none|many] [--vision true|false|auto]
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py <playlist_url> [--playlist-items 1-10|--playlist-limit N]
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/estimate.py --input input.yaml
+pacer estimate <url> [<url> ...] [--shots auto|none|many] [--vision true|false|auto]
+pacer estimate <playlist_url> [--playlist-items 1-10|--playlist-limit N]
+pacer estimate --input input.yaml
 ```
 
 - 把 script 印出的表格**原樣**貼給使用者（每支影片分階段 + 小計；最後全部總和 + 跨影片彙整）。
@@ -24,7 +28,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/e
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-estimate [--set k=v ...]
+pacer options learn-estimate [--set k=v ...]
 ```
 1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
 2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。

@@ -3,6 +3,10 @@ name: learn-canvas
 description: "[工具] 把某支影片畫成 tldraw 畫布。兩種模式：(1) 逐段圖解 analysis.json，只畫真正重要的角色；(2) `map`：PACER C 類「先畫再對答案」——只丟概念節點不丟線，使用者自己連，連完 /learn-digest do C 對照答案卷。使用者說「畫出來」「用畫的理解」「在 tldraw 畫」「第 N 段」「我要畫地圖」時使用。"
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-canvas　—　把 plan.html 的內容畫成 tldraw 白板（工具，不在 10 步流程內）
 
 不是重新排版 plan.html，是**重新設計**：每段挑 2–5 個真正決定這段在講什麼的角色，砍掉其餘，用方塊＋箭頭＋一句紅字（這段的推論／心態轉折）畫出來。目標是使用者「有理解到重要的角色」，不是畫得完整。

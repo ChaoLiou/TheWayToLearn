@@ -3,6 +3,10 @@ name: learn
 description: 使用者貼 YouTube 連結或部落格文章網址並要求學習、整理、做筆記、做文字解析時使用。總指揮：先估時間成本與消化積欠，再依序跑 fetch → segment → shot → analyze → digest → notes → render 產出 plan.html、PACER 練習與筆記。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn — 總指揮（10 個步驟）
 
 ```
@@ -50,7 +54,7 @@ description: 使用者貼 YouTube 連結或部落格文章網址並要求學習�
 
 1. 先展開，看到清單內容再決定做幾支：
    ```
-   uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/playlist.py <url> [--items 1-10] [--limit N]
+   pacer playlist <url> [--items 1-10] [--limit N]
    ```
    把它印出的編號列表**原樣**給使用者看（清單名、幾支、總時長、每支標題與長度）。列表下方的「跳過：…」是清單裡抓不到的影片（會員限定、私人、已刪除）——**一定要講**，尤其整份清單只剩一兩支能做時，先說清楚再問要不要繼續。
 2. 用 AskUserQuestion 問一次要做幾支，選項例如「前 3 支（先試水溫，推薦）」「前 10 支」「全部 N 支」「自己指定範圍」。
@@ -71,7 +75,7 @@ description: 使用者貼 YouTube 連結或部落格文章網址並要求學習�
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn [--set k=v ...]
+pacer options learn [--set k=v ...]
 ```
 1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
 2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。
@@ -83,9 +87,10 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 5. `/learn` 只在開頭問一次，涵蓋整條流程；後面各階段不要再問。
 
 ## 執行位置
-- 以 plugin 安裝時 `${CLAUDE_PLUGIN_ROOT}` 指向 plugin 目錄；clone repo 使用時未設定，`${CLAUDE_PLUGIN_ROOT:-.}` 會落到目前目錄。所有指令都寫成 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/<x>.py"`。
+- 所有指令都是 `pacer <子指令>`，跟 cwd 與 agent 無關；`pacer paths` 印出程式根目錄（= wheel 裝在哪）。
+- 沒有 `pacer` 時：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`，或在 clone 的 repo 裡 `uv tool install -e .`；單次用 `uvx --from git+…/PACER-Learn pacer <子指令>`。
 - workspace 在使用者目前目錄的 `./workspace/`（或 `$LEARN_WORKSPACE`）。
-- **第 0 步之前先跑** `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}/scripts/paths.py"`：它印出每個規則檔實際在哪（使用者可用 `./learn.rules/` 覆寫），之後讀規則就讀它印的路徑。
+- **第 0 步之前先跑** `pacer paths`：它印出每個規則檔實際在哪（使用者可用 `./learn.rules/` 覆寫），之後讀規則就讀它印的路徑。
 
 ## 流程（每步都用對應的階段 skill，不要自己重做它的工作）
 
@@ -93,7 +98,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - 跑 `paths.py` 確認規則檔實際路徑。
 - **判定輸出語言**：順序是**使用者這次明說的 > `workspace/settings.json` 的 `output_lang` > 這次下指令用的語言**（中文 → `zh-TW`，英文 → `en`，其他語言用 BCP-47 碼）。寫進 `workspace/input.yaml` 的 `output_lang`，`/learn-fetch` 時帶 `--output-lang`（存進該站 `meta.json`，之後所有階段與 HTML 介面都跟著它）。
   - **`settings.json` 還沒有 `output_lang`（第一次用）時，在「確認參數」那一步順便問一次**：選項給「跟著我的對話語言（推薦）」／「English」／「繁體中文」。使用者選了就跑
-    `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn --save output_lang=<值>`
+    `pacer options learn --save output_lang=<值>`
     記起來，以後這個 workspace 都不用再問。使用者說「以後都用英文」之類的話也是跑這行。
   - 已經產好的站不受影響（各站以自己 `meta.json` 的 `output_lang` 為準）；要整份換語言就改 `settings.json` 後把各站 `meta.json` 的 `output_lang` 一起改，再重跑 render / atlas / listen / digest / notes。
 - 沒有 `input.yaml` 就依參數寫一份到 `workspace/input.yaml`（格式見 `input.example.yaml`）；**已經有就先讀進來、依 `url` 去重後合併再寫回**，不要整份覆蓋（同一個 workspace 可能有另一個 /learn 正在跑）。
@@ -114,7 +119,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 **[2/11]–[4/11]**：每支影片依序 `/learn-fetch` → `/learn-segment` → `/learn-shot`。
 - 每階段先看輸出檔是否已存在，存在就跳過（除非 `--force` 或 `--from` 指定要重做）；跳過也要說「[N/10] X 跳過：<檔案> 已存在」。
-- agent 產的 JSON 一定要過 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py <kind> <file>`，不過就修到過。
+- agent 產的 JSON 一定要過 `pacer validate <kind> <file>`，不過就修到過。
 
 **[5/11] analyze：一定用 subagent 跑，不要在主對話裡做。**
 逐段分析會把整份 transcript 片段、所有截圖、每段的 analysis 累積進 context（實測 150–200k tokens），
@@ -122,7 +127,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 - 用 Agent（Task）tool 開一個 `general-purpose` subagent，一支影片一個；多支影片可以同時開。
 - prompt 至少要寫清楚：
-  1. 「照 `skills/learn-analyze/SKILL.md` 做」＋ 影片資料夾絕對路徑 ＋ `${CLAUDE_PLUGIN_ROOT:-.}` 的實際值。
+  1. 「照 `skills/learn-analyze/SKILL.md` 做」＋ 影片資料夾絕對路徑 ＋ `pacer paths` 印出的程式根目錄。
   2. `--vision` / `--force` 這次的值。
   3. 「自己讀 `rules/narrative.md`、`schemas/analysis.schema.json`、`segments.json`、`meta.json`，不要問我」。
   4. 「寫完跑 validate.py，不過就自己修到過」。
@@ -139,7 +144,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 **[8/11] render**：
 - 若 `--narrate true`，**render 之前**先跑一次
-  `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> --mark-pending`，
+  `pacer narrate <id> --mark-pending`，
   這樣產出的 `plan.html` 會顯示「🎧 語音解析產生中…」，並在完成後自動偵測、自動重新整理。
 - 每支影片各自 `/learn-render`（每支一份 `plan.html`，在自己的資料夾）。使用者明確要合併時才用 `--combined`。
 - **render 完成後立刻把 `plan.html` 路徑給使用者**，告訴他可以先開始讀，語音解析還在做。

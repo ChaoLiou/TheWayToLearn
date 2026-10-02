@@ -3,6 +3,10 @@ name: learn-analyze
 description: [步驟 5/11·逐段分析] 由 agent 逐段寫「承上／推理／AI 補充／術語／留給下一段」，遵守線性推進規則，寫出 analysis.json。換 vision 模式或重寫說明時用。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-analyze（agent 自己做，沒有 script）　—　步驟 5/11 逐段分析
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
@@ -21,7 +25,7 @@ description: [步驟 5/11·逐段分析] 由 agent 逐段寫「承上／推理�
    不要一次把整份 transcript 讀進來寫全部段落。
 3. 每段填 `builds_on`（若這段有明顯錯誤或過時內容，另填 `issues`：逐字引文 + level + note，見 rules/narrative.md 第 6 條）（回應上一段 leads_to）、`reasoning`、`explanation`、`terms`、`leads_to`。每個 term：`term` 原文、`zh` 中文、`definition` 一句話、`more` 更多說明、`related` 寫成 `[{"term": "B", "rel": "關係 ≤12 字"}]`（見 rules/narrative.md 第 5 條）。
 4. `vision_used` 填實際有沒有看圖；`frames` 填有看的圖路徑。
-5. 寫檔後跑 `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py analysis workspace/<影片標題>/analysis.json`，不過就修。
+5. 寫檔後跑 `pacer validate analysis workspace/<影片標題>/analysis.json`，不過就修。
 6. 把耗時寫進 `timings.json` 的 `analyze`，格式和其他階段一致——**值是物件不是數字**：
    `{"analyze": {"sec": 780, "at": "2026-09-08T22:10:17+08:00"}}`（`at` 用當地時間 ISO 8601；用 `python -c` 讀進來改再寫回，不要覆蓋既有欄位）。
 
@@ -47,7 +51,7 @@ description: [步驟 5/11·逐段分析] 由 agent 逐段寫「承上／推理�
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-analyze [--set k=v ...]
+pacer options learn-analyze [--set k=v ...]
 ```
 1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
 2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。
@@ -59,6 +63,6 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 ## 跑完印進度
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/progress.py analyze "<一句話結果，例如 9 段>"
+pacer progress analyze "<一句話結果，例如 9 段>"
 ```
 把它印出的兩行原樣回報給使用者。

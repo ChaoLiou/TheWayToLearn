@@ -3,6 +3,10 @@ name: learn-narrate
 description: [步驟 10/11·產出語音解析] 把 plan.html 的內容變成可以用聽的：TTS 口語講解與作者原聲片段交錯，產出 lesson.mp3 與章節。通勤、走路時學習用。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-narrate　—　步驟 10/11 產出語音解析
 
 把 `analysis.json` 改寫成**寫給耳朵**的講稿，中間穿插作者的原聲片段，合成一份 `lesson.mp3`。
@@ -13,7 +17,7 @@ description: [步驟 10/11·產出語音解析] 把 plan.html 的內容變成可
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-narrate [--set k=v ...]
+pacer options learn-narrate [--set k=v ...]
 ```
 把表原樣顯示，再用 AskUserQuestion 問一次要不要調整（第一個選項固定「用預設」）。使用者已指定的不要再問。
 
@@ -32,7 +36,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 
 被 `/learn` 呼叫時，步驟 6 render 之前應該已經跑過 `--mark-pending`；單獨執行這支 skill 時不需要，`narrate.py` 自己會標記狀態。
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/narrate.py <id> [--voice ...] [--rate +15%] [--dub-voice ...] [--no-dub] [--force]
+pacer narrate <id> [--voice ...] [--rate +15%] [--dub-voice ...] [--no-dub] [--force]
 ```
 - 需要網路（edge-tts）與 ffmpeg；會自動只下載音訊（`-f ba`，比影片小很多）。
 - 產出 `lesson.mp3` 與 `lesson.json`（章節、時間軸、逐句字幕）。

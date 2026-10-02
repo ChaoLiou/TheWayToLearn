@@ -11,6 +11,24 @@ dependencies = [
   "trafilatura>=2.2.0",
 ]
 
+[project.scripts]
+# 跨 agent 的統一入口：裝起來之後哪個 cwd 都能跑，不必靠 ${CLAUDE_PLUGIN_ROOT}。
+pacer = "pacer_home.scripts.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# wheel 裡的「程式根目錄」是 pacer_home/，裡面是指回 scripts / rules / config / templates / schemas
+# 的 symlink（跟 .claude/skills 一樣的手法）。這樣 scripts 旁邊就是規則檔，common.ROOT（從 __file__
+# 往上兩層）在安裝後依然指到有規則檔的那一層，而且不必動 repo 的目錄結構、editable 安裝也還能用。
+[tool.hatch.build.targets.wheel]
+packages = ["pacer_home"]
+
+[tool.hatch.build.targets.sdist]
+include = ["scripts", "rules", "config", "templates", "schemas", "skills", "docs", "tests",
+           "README.md", "CLAUDE.md", "pyproject.toml"]
+
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.5"]
 

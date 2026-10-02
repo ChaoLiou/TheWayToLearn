@@ -118,6 +118,23 @@ Open `claude` and type these two lines:
 /plugin install pacer@thewaytolearn
 ```
 
+### 3b. Not using Claude Code?
+
+The skills are plain `SKILL.md` files, so any other agent can install them too:
+
+```bash
+npx skills add TheWayToLearn/PACER-Learn      # Cursor, Codex, Gemini CLI, OpenCode, Copilot, Amp … (75+)
+uv tool install git+https://github.com/TheWayToLearn/PACER-Learn   # the `pacer` CLI those skills call
+```
+
+`npx skills add` only copies the instructions into wherever your agent keeps skills; `uv tool install`
+brings the programs, so `pacer estimate <url>` works from any folder. `pacer paths` prints where the
+rules and templates are being read from. To try it without installing anything:
+
+```bash
+uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths
+```
+
 ### 4. Paste a link
 
 ```

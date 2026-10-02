@@ -123,6 +123,23 @@ winget install Gyan.FFmpeg
 /plugin install pacer@thewaytolearn
 ```
 
+### 3b. 不是用 Claude Code？
+
+skill 就是一般的 `SKILL.md`，其他 agent 也裝得起來：
+
+```bash
+npx skills add TheWayToLearn/PACER-Learn      # Cursor、Codex、Gemini CLI、OpenCode、Copilot、Amp…（75+ 家）
+uv tool install git+https://github.com/TheWayToLearn/PACER-Learn   # skill 裡呼叫的 `pacer` 指令
+```
+
+`npx skills add` 只搬說明檔到你那家 agent 放 skill 的位置；`uv tool install` 才是把程式帶過去，
+裝完 `pacer estimate <網址>` 在任何資料夾都能跑。`pacer paths` 會印出規則檔與模板實際讀哪裡。
+什麼都不想裝、只想跑一次：
+
+```bash
+uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer paths
+```
+
 ### 4. 貼連結
 
 ```

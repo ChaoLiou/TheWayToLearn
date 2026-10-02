@@ -3,6 +3,10 @@ name: learn-render
 description: [步驟 8/11·產出 plan.html] 已有 analysis.json 時，產生該影片的 _overview.json 並組成 plan.html（HTML + Mermaid）。只想重新產文字解析、不重抓資源時用。
 ---
 
+> 指令前綴是 `pacer`（本專案的 CLI，裝一次之後任何 agent、任何目錄都能跑）。
+> 還沒裝：`uv tool install git+https://github.com/TheWayToLearn/PACER-Learn`（clone 下來的 repo 裡用 `uv tool install -e .`）。
+> 只想跑一次：`uvx --from git+https://github.com/TheWayToLearn/PACER-Learn pacer <子指令> …`。
+
 # /learn-render　—　步驟 8/11 產出 plan.html
 
 **語言**：所有內文用該站 `meta.json` 的 `output_lang`（術語原文保留英文）。
@@ -12,7 +16,7 @@ description: [步驟 8/11·產出 plan.html] 已有 analysis.json 時，產生�
 ## 開始前：確認參數
 
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/options.py learn-render [--set k=v ...]
+pacer options learn-render [--set k=v ...]
 ```
 1. 使用者在指令裡已指定的參數用 `--set` 傳進去（例如 `--set shots=none`），它們會標成「你已指定」，**不要再問**。
 2. 把 script 印出的表**原樣**給使用者看：每個參數的目前值、意義、可選值。
@@ -26,13 +30,13 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/o
 - 讀 `rules/overview.md`（實際路徑看 `paths.py`，可能被 `./learn.rules/` 覆寫）。
 - 讀該影片的 `analysis.json` 與 `meta.json`。
 - 寫 `workspace/<影片標題>/_overview.json`（格式 `schemas/overview.schema.json`）：topic、prerequisites、outline（一支影片就一條）、summary、**固定三個** next_steps。
-- `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/validate.py overview "workspace/<影片標題>/_overview.json"`。
+- `pacer validate overview "workspace/<影片標題>/_overview.json"`。
 - `--only-plan`：`_overview.json` 已存在就跳過這步。
 
 ## 2. 組 HTML（script）
 ```
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py <id|url>           # 指定影片
-uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py                    # workspace 下全部，各自 render
+pacer render <id|url>           # 指定影片
+pacer render                    # workspace 下全部，各自 render
 ```
 - 版面在 `templates/plan.html.j2`，段落順序規則在 `rules/output.md`。
 - 沒有 Mermaid 圖：推理鏈是收合的文字列表，術語就地標在內文裡，都由 script 從 analysis 自動產生。
@@ -40,7 +44,7 @@ uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/r
 
 ## 合併多支（使用者明確要求時才用）
 - agent 讀所有影片的 analysis，寫 `workspace/_overview.json`（outline 決定順序）。
-- `uv run --project "${CLAUDE_PLUGIN_ROOT:-.}" "${CLAUDE_PLUGIN_ROOT:-.}"/scripts/render.py --combined [--out workspace/plan.html] <id> <id> ...`
+- `pacer render --combined [--out workspace/plan.html] <id> <id> ...`
 
 ## 進度
 script 執行完會自己印 `[N/10] ✔ … 下一步 …` 兩行，把它原樣回報給使用者，不要改寫。
