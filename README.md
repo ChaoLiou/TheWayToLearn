@@ -10,11 +10,11 @@ Why you'd want it: you watch an hour-long video called "Why Sleep Matters", nodd
 
 PACER Learn turns that hour into something that stays with you.
 
-### 🔗 [DEMO](https://chaoliou.github.io/TheWayToLearn/demo/en/)
+### 🔗 [DEMO](https://thewaytolearn.github.io/PACER-Learn/demo/en/)
 
 A real run on a TED talk about sleep — read the text breakdown, press play on the 12-minute audio breakdown, flip through the practice. Nothing to install.
 Everything you see there was produced from the talk's English transcript: the text breakdown, the notes, the practice and the narration.
-<sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)</sub>
+<sub>Prefer Chinese? The same talk, analysed in 繁體中文: [中文版 demo](https://thewaytolearn.github.io/PACER-Learn/demo/zh-TW/)</sub>
 
 ## What you get
 
@@ -114,7 +114,7 @@ winget install Gyan.FFmpeg
 Open `claude` and type these two lines:
 
 ```
-/plugin marketplace add https://github.com/ChaoLiou/TheWayToLearn
+/plugin marketplace add https://github.com/TheWayToLearn/PACER-Learn
 /plugin install pacer@thewaytolearn
 ```
 

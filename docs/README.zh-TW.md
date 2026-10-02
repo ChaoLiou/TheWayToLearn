@@ -10,11 +10,11 @@
 
 PACER Learn 的工作就是把那一小時變成你留得住的東西。
 
-### 🔗 [DEMO](https://chaoliou.github.io/TheWayToLearn/demo/zh-TW/)
+### 🔗 [DEMO](https://thewaytolearn.github.io/PACER-Learn/demo/zh-TW/)
 
 拿一支 TED 的睡眠影片真的跑出來的結果：文字解析可以讀、12 分鐘的語音解析可以按下去聽、練習可以點。什麼都不用裝。
 你看到的每一樣都是從那支影片的字幕產出來的：解析、筆記、練習、講稿。
-<sub>想看英文的？同一支演講、以英文字幕分析的版本：[English demo](https://chaoliou.github.io/TheWayToLearn/demo/en/)</sub>
+<sub>想看英文的？同一支演講、以英文字幕分析的版本：[English demo](https://thewaytolearn.github.io/PACER-Learn/demo/en/)</sub>
 
 
 ## 你會拿到五樣東西
@@ -119,7 +119,7 @@ winget install Gyan.FFmpeg
 開 `claude`，打這兩行：
 
 ```
-/plugin marketplace add https://github.com/ChaoLiou/TheWayToLearn
+/plugin marketplace add https://github.com/TheWayToLearn/PACER-Learn
 /plugin install pacer@thewaytolearn
 ```
 

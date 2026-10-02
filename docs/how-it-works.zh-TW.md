@@ -90,7 +90,7 @@ dist/                             # publish 後的靜態站
 **clone 下來用**
 
 ```
-git clone <this-repo> && cd TheWayToLearn && uv sync
+git clone <this-repo> && cd PACER-Learn && uv sync
 claude
 ```
 
