@@ -199,9 +199,9 @@ def test_pipeline_and_next_actions(tmp_path):
 
     w = next(x for x in atlas.load_waypoints(ws) if x["dir"] == d.name)
     acts = atlas.next_actions(w, atlas.pipeline(d, True, True, S), S)
-    assert [a["prompt"] for a in acts if a["prompt"].startswith("/atlas:learn-estimate")]  # 單一階段就給指令
+    assert [a["prompt"] for a in acts if a["prompt"].startswith("/learn-estimate")]  # 單一階段就給指令
     # 沒做完的是 estimate / digest / notes / render / narrate / listen，做到最後一步就把六步都寫進 prompt
-    assert acts[-1]["prompt"].count("/atlas:learn-") == 6
+    assert acts[-1]["prompt"].count("/learn-") == 6
     assert S.n_no_clips not in acts[-1]["prompt"] and "rules/narration.md" in acts[-1]["prompt"]
 
 

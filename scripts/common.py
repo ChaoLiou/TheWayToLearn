@@ -329,7 +329,10 @@ STEPS: list[tuple[str, str]] = [
     ("narrate", "產出語音解析"),
     ("listen", "podcast 頁"),
 ]
-STEP_CMD = {k: f"/atlas:learn-{k}" for k, _ in STEPS}
+# 複製給使用者貼進 agent 的指令。skill 名就叫 learn-<階段>（clone 模式）；
+# 裝成 plugin 時 Claude Code 接受 /pacer:learn-<階段>，但不要寫死前綴——
+# 其他 agent（npx skills add）也只認 skill 名本身。
+STEP_CMD = {k: f"/learn-{k}" for k, _ in STEPS}
 
 
 def step_no(key: str) -> int:
